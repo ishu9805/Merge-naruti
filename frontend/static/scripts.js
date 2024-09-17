@@ -1,10 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('search-form');
-    const collectionResultsDiv = document.getElementById('collection-results');
+    const searchResultsDiv = document.getElementById('search-results');
     const prevPageButton = document.getElementById('prev-page');
     const nextPageButton = document.getElementById('next-page');
     let currentPage = 1;
     const pageSize = 15;
+
+    // Array of background images
+    const backgroundImages = [
+        'https://files.catbox.moe/9jbemn.jpg',
+        'https://files.catbox.moe/l5g4xp.jpg',
+        'https://files.catbox.moe/7tdou5.jpg',
+        'https://files.catbox.moe/4sgb37.jpg',
+        'https://files.catbox.moe/qggqe3.jpg'
+    ];
+
+    // Set a random background image
+    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
 
     const updatePaginationButtons = (hasNextPage) => {
         prevPageButton.disabled = currentPage === 1;
@@ -12,12 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadCharacters = async (page) => {
-        collectionResultsDiv.innerHTML = 'Loading...';
+        searchResultsDiv.innerHTML = 'Loading...';
         try {
             const response = await fetch(`/waifus?page=${page}&size=${pageSize}`);
             const data = await response.json();
             if (data.results && data.results.length > 0) {
-                collectionResultsDiv.innerHTML = data.results.map(item => `
+                searchResultsDiv.innerHTML = data.results.map(item => `
                     <div class="character-item">
                         <img src="${item.image_url}" alt="${item.character_name}">
                         <h3>${item.character_name}</h3>
@@ -28,11 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('');
                 updatePaginationButtons(data.hasNextPage);
             } else {
-                collectionResultsDiv.innerHTML = 'No characters found.';
+                searchResultsDiv.innerHTML = 'No characters found.';
                 updatePaginationButtons(false);
             }
         } catch (error) {
-            collectionResultsDiv.innerHTML = 'Error fetching results.';
+            searchResultsDiv.innerHTML = 'Error fetching results.';
             console.error('Error:', error);
         }
     };
@@ -56,15 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
     searchForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const query = document.getElementById('search-query').value;
-        const resultsDiv = document.getElementById('search-results');
-        resultsDiv.innerHTML = 'Loading...';
+        searchResultsDiv.innerHTML = 'Loading...';
 
         try {
             const response = await fetch(`/waifus/search?query=${encodeURIComponent(query)}`);
             const data = await response.json();
 
             if (data.results && data.results.length > 0) {
-                resultsDiv.innerHTML = data.results.map(item => `
+                searchResultsDiv.innerHTML = data.results.map(item => `
                     <div class="character-item">
                         <img src="${item.image_url}" alt="${item.character_name}">
                         <h3>${item.character_name}</h3>
@@ -74,10 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('');
             } else {
-                resultsDiv.innerHTML = 'No results found.';
+                searchResultsDiv.innerHTML = 'No results found.';
             }
         } catch (error) {
-            resultsDiv.innerHTML = 'Error fetching results.';
+            searchResultsDiv.innerHTML = 'Error fetching results.';
             console.error('Error:', error);
         }
     });
