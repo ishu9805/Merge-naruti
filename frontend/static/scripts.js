@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCharacters(currentPage);
     });
 
-    searchForm.addEventListener('submit', async (event) => {
+    searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
         updateFilters();
         loadCharacters(currentPage);
