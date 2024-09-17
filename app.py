@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, send_from_directory
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
+import re
 
 app = Flask(__name__, static_folder='frontend/static')
 
@@ -31,7 +32,9 @@ async def get_waifus():
 
 @app.route('/waifus/<string:character_name>', methods=['GET'])
 async def get_waifu(character_name):
-    waifu = await collection.find_one({'character_name': character_name})
+    # Use regex for a case-insensitive search
+    regex_pattern = re.compile(character_name, re.IGNORECASE)
+    waifu = await collection.find_one({'character_name': regex_pattern})
     if waifu:
         return jsonify({
             'character_name': waifu['character_name'],
