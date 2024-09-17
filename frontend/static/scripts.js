@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.results && data.results.length > 0) {
                 collectionResultsDiv.innerHTML = data.results.map(item => `
                     <div class="character-item">
+                        <img src="${item.image_url}" alt="${item.character_name}">
                         <h3>${item.character_name}</h3>
                         <p>Anime: ${item.anime_name}</p>
                         <p>Rarity: ${item.rarity}</p>
-                        <img src="${item.image_url}" alt="${item.character_name}">
                         <p>ID: ${item.id}</p>
                     </div>
                 `).join('');
@@ -65,11 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.results && data.results.length > 0) {
                 resultsDiv.innerHTML = data.results.map(item => `
-                    <div class="result">
+                    <div class="character-item">
+                        <img src="${item.image_url}" alt="${item.character_name}">
                         <h3>${item.character_name}</h3>
                         <p>Anime: ${item.anime_name}</p>
                         <p>Rarity: ${item.rarity}</p>
-                        <img src="${item.image_url}" alt="${item.character_name}" style="max-width: 200px;">
+                        <p>ID: ${item.id}</p>
                     </div>
                 `).join('');
             } else {
