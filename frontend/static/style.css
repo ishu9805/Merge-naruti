@@ -98,7 +98,7 @@ form button:hover {
     margin: 20px 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .applied-filter {
@@ -133,8 +133,8 @@ form button:hover {
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    width: 200px;
+    padding: 10px;
+    width: 150px;
     text-align: center;
     cursor: pointer; /* Show a pointer cursor for images */
 }
