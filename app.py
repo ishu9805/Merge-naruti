@@ -2,7 +2,7 @@ from flask import Flask, jsonify, send_from_directory
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 import re
-
+import requests
 app = Flask(__name__, static_folder='frontend/static')
 
 # MongoDB connection URL
