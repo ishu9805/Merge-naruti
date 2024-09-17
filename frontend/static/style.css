@@ -73,7 +73,7 @@ form {
 form input[type="text"] {
     padding: 10px;
     font-size: 1rem;
-    width: 70%;
+    width: 20%;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
@@ -93,7 +93,35 @@ form button:hover {
     transition: 0.3s;
 }
 
-/* Results & Collection Display */
+/* Applied Filters */
+#applied-filters {
+    margin: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.applied-filter {
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+}
+
+.applied-filter span {
+    margin-right: 10px;
+}
+
+.applied-filter button {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Results */
 #search-results, #collection-results {
     display: flex;
     flex-wrap: wrap;
