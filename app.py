@@ -22,17 +22,38 @@ def serve_static(filename):
 
 @app.route('/waifus/search', methods=['GET'])
 def search_waifus():
-    query = request.args.get('query', '')
-    regex_pattern = re.compile(f".*{re.escape(query)}.*", re.IGNORECASE)
-    waifus = list(collection.find({'name': regex_pattern}))
-    results = [{
-        'character_name': waifu['name'],
-        'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'),
-        'id': waifu.get('id', 'N/A')
-    } for waifu in waifus]
-    return jsonify({'results': results})
+    # Get query parameters from the request
+    name_query = request.args.get('name', '')
+    anime_query = request.args.get('anime', '')
+    rarity_query = request.args.get('rarity', '')
+    id_query = request.args.get('id', '')
+
+    # Build the query dictionary based on provided filter
+    query = {}
+    if name_query:
+        query['name'] = {'$regex': f'.*{re.escape(name_query)}.*', '$options': 'i'}  # Case-insensitive partial match
+    elif anime_query:
+        query['anime'] = {'$regex': f'.*{re.escape(anime_query)}.*', '$options': 'i'}
+    elif rarity_query:
+        query['rarity'] = {'$regex': f'.*{re.escape(rarity_query)}.*', '$options': 'i'}
+    elif id_query:
+        query['id'] = id_query  # Assuming ID is an exact match
+    else:
+        return jsonify({'results': [], 'message': 'No filter provided'}), 400
+
+    try:
+        waifus = list(collection.find(query))
+        results = [{
+            'character_name': waifu.get('name', 'Unknown'),
+            'anime_name': waifu.get('anime', 'Unknown'),
+            'image_url': waifu.get('img_url', ''),
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
+        } for waifu in waifus]
+        return jsonify({'results': results})
+    except Exception as e:
+        app.logger.error(f"Error occurred: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/waifus', methods=['GET'])
 def get_characters():
@@ -47,31 +68,35 @@ def get_characters():
 
         waifus = list(collection.find().skip(skip).limit(limit))
         results = [{
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
+            'character_name': waifu.get('name', 'Unknown'),
+            'anime_name': waifu.get('anime', 'Unknown'),
+            'image_url': waifu.get('img_url', ''),
             'rarity': waifu.get('rarity', 'Unknown'),
             'id': waifu.get('id', 'N/A')
         } for waifu in waifus]
 
         return jsonify({'results': results, 'hasNextPage': has_next_page})
     except Exception as e:
+        app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/waifus/<string:character_name>', methods=['GET'])
 def get_waifu(character_name):
-    regex_pattern = re.compile(f".*{re.escape(character_name)}.*", re.IGNORECASE)
-    waifu = collection.find_one({'name': regex_pattern})
-    if waifu:
-        return jsonify({
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        })
-    else:
-        return jsonify({'error': 'Waifu not found'}), 404
+    try:
+        waifu = collection.find_one({'name': {'$regex': f'.*{re.escape(character_name)}.*', '$options': 'i'}})
+        if waifu:
+            return jsonify({
+                'character_name': waifu.get('name', 'Unknown'),
+                'anime_name': waifu.get('anime', 'Unknown'),
+                'image_url': waifu.get('img_url', ''),
+                'rarity': waifu.get('rarity', 'Unknown'),
+                'id': waifu.get('id', 'N/A')
+            })
+        else:
+            return jsonify({'error': 'Waifu not found'}), 404
+    except Exception as e:
+        app.logger.error(f"Error occurred: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
