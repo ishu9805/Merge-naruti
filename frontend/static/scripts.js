@@ -15,23 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'https://files.catbox.moe/qggqe3.jpg'
     ];
 
-    // Function to change the background images based on scroll position
-    const changeBackgroundImage = () => {
-        const scrollPosition = window.scrollY;
-        const windowHeight = window.innerHeight;
-        if (scrollPosition > windowHeight) {
-            document.getElementById('background-top').style.backgroundImage = `url('${backgroundImages[0]}')`;
-            document.getElementById('background-bottom').style.backgroundImage = `url('${backgroundImages[1]}')`;
-        } else {
-            document.getElementById('background-top').style.backgroundImage = `url('${backgroundImages[0]}')`;
-            document.getElementById('background-bottom').style.backgroundImage = 'none';
-        }
-    };
-
-    // Initial background image
-    document.getElementById('background-top').style.backgroundImage = `url('${backgroundImages[0]}')`;
-
-    window.addEventListener('scroll', changeBackgroundImage);
+    // Set a random background image
+    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
 
     const updatePaginationButtons = (hasNextPage) => {
         prevPageButton.disabled = currentPage === 1;
@@ -76,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCharacters(currentPage);
     });
 
+    // Initial load
+    loadCharacters(currentPage);
+
     // Handle search form submission
     searchForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -97,14 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('');
             } else {
-                searchResultsDiv.innerHTML = 'No characters found.';
+                searchResultsDiv.innerHTML = 'No results found.';
             }
         } catch (error) {
             searchResultsDiv.innerHTML = 'Error fetching results.';
             console.error('Error:', error);
         }
     });
-
-    // Load initial characters on page load
-    loadCharacters(currentPage);
 });
