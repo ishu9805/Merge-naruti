@@ -5,78 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blade Network</title>
     <style>
-        body, html {
+        /* Global styles */
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
-            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
 
-        /* Hero Section Styling */
-        .hero {
-            background-image: url('background.jpg'); /* Replace with your background image */
-            height: 100vh;
+        body, html {
+            height: 100%;
+        }
+
+        /* Background image for both the homepage and search page */
+        body {
+            background-image: url('background.jpg');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
+            color: white;
+        }
+
+        /* Hero section for homepage */
+        .hero {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
-            text-align: center;
+            height: 100vh;
         }
 
-        /* Blade Network Title */
-        .hero h1 {
-            font-size: 4rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Search Bar Styling */
+        /* Search bar style */
         .search-bar {
-            margin-top: 20px;
+            width: 300px;
             padding: 10px;
-            width: 50%;
-            background-color: rgba(255, 255, 255, 0.7);
-            border: none;
-            font-size: 20px;
-            outline: none;
+            font-size: 18px;
+            border: 1px solid white;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.5);
+            color: black;
         }
 
-        /* Other content on homepage (e.g., headers, footers) */
-        .content {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.5rem;
-            color: #333;
-        }
-
-        /* Grid Layout */
+        /* Grid layout for results page */
         .grid {
-            display: none; /* Initially hidden */
+            display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
+            gap: 15px;
             padding: 20px;
-            margin-top: 20px;
-            max-width: 1200px;
-            margin: auto;
         }
 
+        /* Individual grid item */
         .grid img {
             width: 100%;
             height: auto;
+            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .grid img:hover {
             transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* Modal for Image Details */
+        /* Modal for displaying image details */
         .modal {
-            display: none; /* Hidden initially */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -85,89 +78,98 @@
             background-color: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
-            z-index: 10;
         }
 
         .modal-content {
             background-color: white;
             padding: 20px;
+            border-radius: 10px;
             max-width: 800px;
             width: 100%;
-            text-align: center;
         }
 
         .modal img {
-            max-width: 100%;
+            width: 100%;
             height: auto;
         }
 
-        .details {
+        .modal .details {
             margin-top: 10px;
-            font-size: 16px;
             color: #333;
+            font-size: 16px;
+        }
+
+        /* Button to close modal */
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- Hero Section -->
+    <!-- Home page with background and search bar -->
     <div class="hero">
-        <h1>Blade Network</h1> <!-- Title for the homepage -->
-        <input type="text" class="search-bar" placeholder="Search for characters...">
+        <form id="searchForm" action="search.html" method="GET">
+            <input type="text" name="query" class="search-bar" placeholder="Search for characters...">
+        </form>
     </div>
 
-    <!-- Other content below the hero section -->
-    <div class="content">
-        <p>Welcome to Blade Network, your ultimate character hub.</p>
-        <p>Explore amazing characters by searching above.</p>
-    </div>
-
-    <!-- Grid Layout for Search Results -->
+    <!-- This section only appears on the search results page -->
     <div class="grid">
-        <img src="image1.jpg" alt="Image 1">
-        <img src="image2.jpg" alt="Image 2">
-        <img src="image3.jpg" alt="Image 3">
-        <!-- Add more images for the search results -->
+        <!-- Placeholder images for grid (use your own images) -->
+        <img src="image1.jpg" alt="Character 1">
+        <img src="image2.jpg" alt="Character 2">
+        <img src="image3.jpg" alt="Character 3">
+        <img src="image4.jpg" alt="Character 4">
+        <img src="image5.jpg" alt="Character 5">
+        <img src="image6.jpg" alt="Character 6">
+        <img src="image7.jpg" alt="Character 7">
+        <!-- Add more images as needed -->
     </div>
 
-    <!-- Modal for Image Details -->
+    <!-- Modal for displaying large image -->
     <div class="modal" id="imageModal">
+        <button class="close-modal" onclick="closeModal()">Close</button>
         <div class="modal-content">
             <img id="modalImage" src="" alt="">
-            <div class="details" id="modalDetails">Image Details</div>
+            <div class="details" id="modalDetails">Image details here</div>
         </div>
     </div>
 
     <script>
-        const searchBar = document.querySelector('.search-bar');
-        const grid = document.querySelector('.grid');
-        const modal = document.getElementById('imageModal');
-        const modalImage = document.getElementById('modalImage');
-        const modalDetails = document.getElementById('modalDetails');
-
-        // Show the grid when the user types in the search bar
-        searchBar.addEventListener('input', () => {
-            if (searchBar.value.trim() !== '') {
-                grid.style.display = 'grid'; // Show grid on search
-            } else {
-                grid.style.display = 'none'; // Hide grid when input is empty
-            }
-        });
-
-        // Handle image click for modal
+        // Function to open modal when clicking an image
         document.querySelectorAll('.grid img').forEach(img => {
             img.addEventListener('click', () => {
-                modal.style.display = 'flex';
-                modalImage.src = img.src;
-                modalDetails.textContent = img.alt;
+                const modal = document.getElementById('imageModal');
+                const modalImage = document.getElementById('modalImage');
+                const modalDetails = document.getElementById('modalDetails');
+                
+                modal.style.display = 'flex'; // Show modal
+                modalImage.src = img.src; // Set the image in modal
+                modalDetails.textContent = img.alt; // Show image alt text as details
             });
         });
 
-        // Close the modal when clicking outside the image
-        modal.addEventListener('click', () => {
+        // Function to close modal
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
             modal.style.display = 'none';
-        });
-    </script>
+        }
 
+        // Hide the grid on the home page
+        window.onload = function() {
+            const grid = document.querySelector('.grid');
+            if (window.location.pathname === '/index.html' || window.location.pathname === '/') {
+                grid.style.display = 'none'; // Hide grid on home page
+            }
+        };
+    </script>
 </body>
 </html>
