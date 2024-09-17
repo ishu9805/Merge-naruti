@@ -29,7 +29,7 @@ async def search_waifus():
         results.append({
             'character_name': document['character_name'],
             'anime_name': document['anime_name'],
-            'image_url': document['image_url'],
+            'img_url': document['img_url'],
             'rarity': document.get('rarity', 'Unknown')  # Add rarity if present
         })
     return jsonify(results)
@@ -42,7 +42,7 @@ async def get_waifu(character_name):
         return jsonify({
             'character_name': waifu['character_name'],
             'anime_name': waifu['anime_name'],
-            'image_url': waifu['image_url']
+            'img_url': waifu['img_url']
         })
     else:
         return jsonify({'error': 'Waifu not found'}), 404
