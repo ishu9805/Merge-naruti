@@ -18,35 +18,41 @@
             </ul>
         </nav>
     </header>
+
     <main>
         <section id="home">
             <h2>Welcome</h2>
-            <p>Explore the world of characters and anime!</p>
+            <p>Explore the world of characters and anime! Use the search tool below to find your favorite characters.</p>
         </section>
+
         <section id="search">
             <h2>Search Characters</h2>
             <form id="search-form">
-                <input type="text" id="search-query" placeholder="Search by name or anime...">
+                <input type="text" id="search-query" placeholder="Search by name or anime..." required>
                 <button type="submit">Search</button>
             </form>
             <div id="search-results"></div>
         </section>
+
         <section id="user-collection">
             <h2>Your Collection</h2>
-            <div id="user-collection-data"></div>
+            <div id="user-collection-data">No collection data available.</div>
         </section>
+
         <section id="collection">
             <h2>Character Collection</h2>
             <form id="collection-search-form">
-                <input type="text" id="collection-query" placeholder="Search by name, anime, or rarity...">
+                <input type="text" id="collection-query" placeholder="Search by name, anime, or rarity..." required>
                 <button type="submit">Search</button>
             </form>
             <div id="collection-results"></div>
         </section>
     </main>
+
     <footer>
         <p>&copy; 2024 Character Collection</p>
     </footer>
+
     <script src="scripts.js"></script>
 </body>
 </html>
