@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPageButton = document.getElementById('next-page');
     const appliedFiltersDiv = document.getElementById('applied-filters');
     let currentPage = 1;
-    const pageSize = 15;
+    const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
 
     const backgroundImages = [
         'https://files.catbox.moe/9jbemn.jpg',
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'https://files.catbox.moe/qggqe3.jpg'
     ];
 
+    // Set a random background image
     document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
 
     const updatePaginationButtons = (hasNextPage) => {
@@ -24,10 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateFilters = () => {
         const filters = [];
-        const nameQuery = document.getElementById('name-query').value;
-        const animeQuery = document.getElementById('anime-query').value;
-        const rarityQuery = document.getElementById('rarity-query').value;
-        const idQuery = document.getElementById('id-query').value;
+        const nameQuery = document.getElementById('name-query').value.trim();
+        const animeQuery = document.getElementById('anime-query').value.trim();
+        const rarityQuery = document.getElementById('rarity-query').value.trim();
+        const idQuery = document.getElementById('id-query').value.trim();
 
         if (nameQuery) filters.push(`Name: ${nameQuery}`);
         if (animeQuery) filters.push(`Anime: ${animeQuery}`);
@@ -41,18 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadCharacters = async (page) => {
         searchResultsDiv.innerHTML = 'Loading...';
-        const nameQuery = document.getElementById('name-query').value;
-        const animeQuery = document.getElementById('anime-query').value;
-        const rarityQuery = document.getElementById('rarity-query').value;
-        const idQuery = document.getElementById('id-query').value;
+        const nameQuery = document.getElementById('name-query').value.trim();
+        const animeQuery = document.getElementById('anime-query').value.trim();
+        const rarityQuery = document.getElementById('rarity-query').value.trim();
+        const idQuery = document.getElementById('id-query').value.trim();
 
         try {
             const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
             const data = await response.json();
+
             if (data.results && data.results.length > 0) {
                 searchResultsDiv.innerHTML = data.results.map(item => `
                     <div class="character-item">
-                        <img src="${item.image_url}" alt="${item.character_name}">
+                        <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
                         <h3>${item.character_name}</h3>
                         <p>Anime: ${item.anime_name}</p>
                         <p>Rarity: ${item.rarity}</p>
