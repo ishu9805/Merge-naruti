@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsDiv.innerHTML = 'Loading...';
 
         try {
-            const response = await fetch(`https:weblearningnaruto-8d06c84d5de0.herokuapp.com/api/search?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`https:weblearningnaruto-8d06c84d5de0.herokuapp.com/waifus/search?query=${encodeURIComponent(query)}`);
             const data = await response.json();
             resultsDiv.innerHTML = data.results.map(item => `<p>${item.name} - ${item.anime}</p>`).join('');
         } catch (error) {
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsDiv.innerHTML = 'Loading...';
 
         try {
-            const response = await fetch(`https://weblearningnaruto-8d06c84d5de0.herokuapp.com/api/collection?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`https://weblearningnaruto-8d06c84d5de0.herokuapp.com/waifus/collection?query=${encodeURIComponent(query)}`);
             const data = await response.json();
             resultsDiv.innerHTML = data.results.map(item => `<p>${item.name} - ${item.anime} - ${item.rarity}</p>`).join('');
         } catch (error) {
