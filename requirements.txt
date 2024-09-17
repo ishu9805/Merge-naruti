@@ -2,3 +2,4 @@ motor
 pymongo
 flask
 pymongo[srv]
+gunicorn
