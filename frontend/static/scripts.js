@@ -10,17 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsDiv.innerHTML = 'Loading...';
 
         try {
-            const response = await fetch(`https://weblearningnaruto-8d06c84d5de0.herokuapp.com/waifus/${encodeURIComponent(query)}`);
+            const response = await fetch(`https://weblearningnaruto-8d06c84d5de0.herokuapp.com/waifus/search?query=${encodeURIComponent(query)}`);
             const data = await response.json();
-            
-            if (data.error) {
-                resultsDiv.innerHTML = 'No results found.';
+
+            if (data.results && data.results.length > 0) {
+                resultsDiv.innerHTML = data.results.map(item => `
+                    <div class="result">
+                        <h3>${item.character_name}</h3>
+                        <p>Anime: ${item.anime_name}</p>
+                        <p>Rarity: ${item.rarity}</p>
+                        <img src="${item.image_url}" alt="${item.character_name}" style="max-width: 200px;">
+                    </div>
+                `).join('');
             } else {
-                resultsDiv.innerHTML = `
-                    <p>Character Name: ${data.character_name}</p>
-                    <p>Anime Name: ${data.anime_name}</p>
-                    <p><img src="${data.image_url}" alt="${data.character_name}" style="max-width: 200px;"></p>
-                `;
+                resultsDiv.innerHTML = 'No results found.';
             }
         } catch (error) {
             resultsDiv.innerHTML = 'Error fetching results.';
@@ -38,14 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`https://weblearningnaruto-8d06c84d5de0.herokuapp.com/waifus/search?query=${encodeURIComponent(query)}`);
             const data = await response.json();
-            
-            if (data.error) {
-                resultsDiv.innerHTML = 'No results found.';
-            } else {
-                resultsDiv.innerHTML = data.map(item => `
-                    <p>Character Name: ${item.character_name} - Anime Name: ${item.anime_name} - Rarity: ${item.rarity}</p>
-                    <p><img src="${item.image_url}" alt="${item.character_name}" style="max-width: 200px;"></p>
+
+            if (data.results && data.results.length > 0) {
+                resultsDiv.innerHTML = data.results.map(item => `
+                    <div class="result">
+                        <h3>${item.character_name}</h3>
+                        <p>Anime: ${item.anime_name}</p>
+                        <p>Rarity: ${item.rarity}</p>
+                        <img src="${item.image_url}" alt="${item.character_name}" style="max-width: 200px;">
+                    </div>
                 `).join('');
+            } else {
+                resultsDiv.innerHTML = 'No results found.';
             }
         } catch (error) {
             resultsDiv.innerHTML = 'Error fetching results.';
