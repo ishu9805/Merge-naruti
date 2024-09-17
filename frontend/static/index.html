@@ -105,13 +105,17 @@
             </ul>
         </nav>
     </header>
-    <main>
+    <main>        
         <section id="search">
             <h2>Search Characters</h2>
-            <form id="search-form">
-                <input type="text" id="search-query" placeholder="Search by name or anime...">
+            <form id="multi-search-form">
+                <input type="text" id="name-query" placeholder="Search by name">
+                <input type="text" id="anime-query" placeholder="Search by anime">
+                <input type="text" id="rarity-query" placeholder="Search by rarity">
+                <input type="text" id="id-query" placeholder="Search by ID">
                 <button type="submit">Search</button>
             </form>
+            <div id="applied-filters"></div>
             <div id="search-results" class="character-grid"></div>
             <div class="pagination">
                 <button id="prev-page" disabled>Previous</button>
