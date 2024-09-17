@@ -62,10 +62,12 @@
             height: auto;
         }
         .character-item img {
-            max-width: 100%;
-            height: auto;
+            width: 100px; /* Adjust width */
+            height: 100px; /* Adjust height */
+            object-fit: cover; /* Maintain aspect ratio */
             border-bottom: 1px solid #ddd;
             margin-bottom: 10px;
+            loading: lazy; /* Lazy load images */
         }
         .character-item h3 {
             margin: 10px 0 5px;
