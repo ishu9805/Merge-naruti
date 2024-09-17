@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, send_from_directory, request
-from motor.motor_asyncio import AsyncIOMotorClient
-import asyncio
+from flask_cors import CORS
+from pymongo import MongoClient
 import re
-import requests
+
 app = Flask(__name__, static_folder='frontend/static')
+CORS(app)
 
 # MongoDB connection URL
 mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-client = AsyncIOMotorClient(mongo_url)
+client = MongoClient(mongo_url)
 db = client['Character_catcher']
 collection = db['anime_characters_lol']
 
@@ -20,29 +21,28 @@ def serve_static(filename):
     return send_from_directory('frontend/static', filename)
 
 @app.route('/waifus/search', methods=['GET'])
-async def search_waifus():
+def search_waifus():
     query = request.args.get('query', '')
-    regex_pattern = re.compile(query, re.IGNORECASE)
-    cursor = collection.find({'character_name': regex_pattern})
-    results = []
-    async for document in cursor:
-        results.append({
-            'character_name': document['character_name'],
-            'anime_name': document['anime_name'],
-            'img_url': document['img_url'],
-            'rarity': document.get('rarity', 'Unknown')  # Add rarity if present
-        })
-    return jsonify(results)
+    regex_pattern = re.compile(f".*{re.escape(query)}.*", re.IGNORECASE)
+    waifus = list(collection.find({'character_name': regex_pattern}))
+    results = [{
+        'character_name': waifu['character_name'],
+        'anime_name': waifu['anime_name'],
+        'image_url': waifu['image_url'],
+        'rarity': waifu.get('rarity', 'Unknown')
+    } for waifu in waifus]
+    return jsonify({'results': results})
 
 @app.route('/waifus/<string:character_name>', methods=['GET'])
-async def get_waifu(character_name):
-    regex_pattern = re.compile(character_name, re.IGNORECASE)
-    waifu = await collection.find_one({'character_name': regex_pattern})
+def get_waifu(character_name):
+    regex_pattern = re.compile(f".*{re.escape(character_name)}.*", re.IGNORECASE)
+    waifu = collection.find_one({'character_name': regex_pattern})
     if waifu:
         return jsonify({
             'character_name': waifu['character_name'],
             'anime_name': waifu['anime_name'],
-            'img_url': waifu['img_url']
+            'image_url': waifu['image_url'],
+            'rarity': waifu.get('rarity', 'Unknown')
         })
     else:
         return jsonify({'error': 'Waifu not found'}), 404
