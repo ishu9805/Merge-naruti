@@ -10,15 +10,32 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            margin-top: 20px;
         }
         .character-item {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .character-item img {
             max-width: 100%;
             height: auto;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .character-item h3 {
+            margin: 10px 0 5px;
+            font-size: 1.2em;
+        }
+        .character-item p {
+            margin: 5px 0;
+            font-size: 0.9em;
         }
         .pagination {
             text-align: center;
@@ -26,6 +43,16 @@
         }
         .pagination button {
             margin: 0 5px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
         }
     </style>
 </head>
