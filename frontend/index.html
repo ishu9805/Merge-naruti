@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Collection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Character Collection</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#search">Search</a></li>
+                <li><a href="#user-collection">User Collection</a></li>
+                <li><a href="#collection">Collection</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="home">
+            <h2>Welcome</h2>
+            <p>Explore the world of characters and anime!</p>
+        </section>
+        <section id="search">
+            <h2>Search Characters</h2>
+            <form id="search-form">
+                <input type="text" id="search-query" placeholder="Search by name or anime...">
+                <button type="submit">Search</button>
+            </form>
+            <div id="search-results"></div>
+        </section>
+        <section id="user-collection">
+            <h2>Your Collection</h2>
+            <!-- Placeholder for user collection details -->
+            <div id="user-collection-data"></div>
+        </section>
+        <section id="collection">
+            <h2>Character Collection</h2>
+            <form id="collection-search-form">
+                <input type="text" id="collection-query" placeholder="Search by name, anime, or rarity...">
+                <button type="submit">Search</button>
+            </form>
+            <div id="collection-results"></div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Character Collection</p>
+    </footer>
+    <script src="scripts.js"></script>
+</body>
+</html>
