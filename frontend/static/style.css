@@ -125,7 +125,7 @@ form button:hover {
 #search-results, #collection-results {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 5px;
     justify-content: center;
 }
 
@@ -134,7 +134,7 @@ form button:hover {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 10px;
-    width: 150px;
+    width: 120px;
     text-align: center;
     cursor: pointer; /* Show a pointer cursor for images */
 }
