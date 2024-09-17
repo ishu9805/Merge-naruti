@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevPageButton = document.getElementById('prev-page');
     const nextPageButton = document.getElementById('next-page');
     const appliedFiltersDiv = document.getElementById('applied-filters');
+    const modal = document.getElementById('image-popup');
+    const modalImg = document.getElementById('popup-image');
+    const closeBtn = document.querySelector('.modal .close');
     let currentPage = 1;
     const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
 
@@ -97,6 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`${key.toLowerCase()}-query`).value = '';
             updateFilters();
             loadCharacters(currentPage);
+        } else if (event.target.tagName === 'IMG' && event.target.closest('.character-item')) {
+            // Open modal with image
+            modal.style.display = 'block';
+            modalImg.src = event.target.src;
+        }
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
         }
     });
 
