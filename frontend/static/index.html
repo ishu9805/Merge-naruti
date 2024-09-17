@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Website</title>
+    <title>Blade Network</title>
     <style>
         body, html {
             margin: 0;
@@ -11,39 +11,72 @@
             height: 100%;
             font-family: Arial, sans-serif;
         }
+
+        /* Hero Section Styling */
         .hero {
-            background-image: url('background.jpg'); /* Set your background image */
+            background-image: url('background.jpg'); /* Replace with your background image */
             height: 100vh;
             background-size: cover;
+            background-position: center;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            color: white;
+            text-align: center;
         }
+
+        /* Blade Network Title */
+        .hero h1 {
+            font-size: 4rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Search Bar Styling */
         .search-bar {
+            margin-top: 20px;
             padding: 10px;
+            width: 50%;
             background-color: rgba(255, 255, 255, 0.7);
             border: none;
             font-size: 20px;
             outline: none;
         }
+
+        /* Other content on homepage (e.g., headers, footers) */
+        .content {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        /* Grid Layout */
         .grid {
-            display: none; /* Initially hide the grid */
+            display: none; /* Initially hidden */
             grid-template-columns: repeat(7, 1fr);
             gap: 10px;
             padding: 20px;
-            animation: fadeIn 1s;
+            margin-top: 20px;
+            max-width: 1200px;
+            margin: auto;
         }
+
         .grid img {
             width: 100%;
             height: auto;
             cursor: pointer;
             transition: transform 0.3s ease;
         }
+
         .grid img:hover {
             transform: scale(1.05);
         }
+
+        /* Modal for Image Details */
         .modal {
-            display: none; /* Initially hidden */
+            display: none; /* Hidden initially */
             position: fixed;
             top: 0;
             left: 0;
@@ -54,26 +87,24 @@
             align-items: center;
             z-index: 10;
         }
+
         .modal-content {
-            position: relative;
             background-color: white;
             padding: 20px;
             max-width: 800px;
             width: 100%;
             text-align: center;
         }
+
         .modal img {
             max-width: 100%;
             height: auto;
         }
+
         .details {
             margin-top: 10px;
             font-size: 16px;
             color: #333;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
 </head>
@@ -81,18 +112,25 @@
 
     <!-- Hero Section -->
     <div class="hero">
-        <input type="text" class="search-bar" placeholder="Search images...">
+        <h1>Blade Network</h1> <!-- Title for the homepage -->
+        <input type="text" class="search-bar" placeholder="Search for characters...">
     </div>
 
-    <!-- Grid Layout -->
+    <!-- Other content below the hero section -->
+    <div class="content">
+        <p>Welcome to Blade Network, your ultimate character hub.</p>
+        <p>Explore amazing characters by searching above.</p>
+    </div>
+
+    <!-- Grid Layout for Search Results -->
     <div class="grid">
         <img src="image1.jpg" alt="Image 1">
         <img src="image2.jpg" alt="Image 2">
         <img src="image3.jpg" alt="Image 3">
-        <!-- Add more images here, up to 7 in a row -->
+        <!-- Add more images for the search results -->
     </div>
 
-    <!-- Modal for image details -->
+    <!-- Modal for Image Details -->
     <div class="modal" id="imageModal">
         <div class="modal-content">
             <img id="modalImage" src="" alt="">
@@ -107,21 +145,25 @@
         const modalImage = document.getElementById('modalImage');
         const modalDetails = document.getElementById('modalDetails');
 
-        // Show grid when user searches
+        // Show the grid when the user types in the search bar
         searchBar.addEventListener('input', () => {
-            grid.style.display = 'grid';
+            if (searchBar.value.trim() !== '') {
+                grid.style.display = 'grid'; // Show grid on search
+            } else {
+                grid.style.display = 'none'; // Hide grid when input is empty
+            }
         });
 
-        // Handle image click
+        // Handle image click for modal
         document.querySelectorAll('.grid img').forEach(img => {
             img.addEventListener('click', () => {
                 modal.style.display = 'flex';
                 modalImage.src = img.src;
-                modalDetails.textContent = img.alt; // Example details based on image alt text
+                modalDetails.textContent = img.alt;
             });
         });
 
-        // Close modal when clicking outside of the image
+        // Close the modal when clicking outside the image
         modal.addEventListener('click', () => {
             modal.style.display = 'none';
         });
