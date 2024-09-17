@@ -1,5 +1,5 @@
 motor
 pymongo
-flask
+flask[async]
 pymongo[srv]
 gunicorn
