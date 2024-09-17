@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Character Collection</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .character-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .character-item img {
+            max-width: 100%;
+            height: auto;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 5px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,41 +41,35 @@
             </ul>
         </nav>
     </header>
-
     <main>
         <section id="home">
             <h2>Welcome</h2>
-            <p>Explore the world of characters and anime! Use the search tool below to find your favorite characters.</p>
+            <p>Explore the world of characters and anime!</p>
         </section>
-
         <section id="search">
             <h2>Search Characters</h2>
             <form id="search-form">
-                <input type="text" id="search-query" placeholder="Search by name or anime..." required>
+                <input type="text" id="search-query" placeholder="Search by name or anime...">
                 <button type="submit">Search</button>
             </form>
-            <div id="search-results"></div>
+            <div id="search-results" class="character-grid"></div>
         </section>
-
         <section id="user-collection">
             <h2>Your Collection</h2>
-            <div id="user-collection-data">No collection data available.</div>
+            <div id="user-collection-data"></div>
         </section>
-
         <section id="collection">
             <h2>Character Collection</h2>
-            <form id="collection-search-form">
-                <input type="text" id="collection-query" placeholder="Search by name, anime, or rarity..." required>
-                <button type="submit">Search</button>
-            </form>
-            <div id="collection-results"></div>
+            <div id="collection-results" class="character-grid"></div>
+            <div class="pagination">
+                <button id="prev-page" disabled>Previous</button>
+                <button id="next-page">Next</button>
+            </div>
         </section>
     </main>
-
     <footer>
         <p>&copy; 2024 Character Collection</p>
     </footer>
-
     <script src="scripts.js"></script>
 </body>
 </html>
