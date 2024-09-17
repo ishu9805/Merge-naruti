@@ -19,20 +19,23 @@ def home():
 def serve_static(filename):
     return send_from_directory('frontend/static', filename)
 
-@app.route('/waifus', methods=['GET'])
-async def get_waifus():
-    waifus = []
-    async for document in collection.find():
-        waifus.append({
+@app.route('/waifus/search', methods=['GET'])
+async def search_waifus():
+    query = request.args.get('query', '')
+    regex_pattern = re.compile(query, re.IGNORECASE)
+    cursor = collection.find({'character_name': regex_pattern})
+    results = []
+    async for document in cursor:
+        results.append({
             'character_name': document['character_name'],
             'anime_name': document['anime_name'],
-            'image_url': document['image_url']
+            'image_url': document['image_url'],
+            'rarity': document.get('rarity', 'Unknown')  # Add rarity if present
         })
-    return jsonify(waifus)
+    return jsonify(results)
 
 @app.route('/waifus/<string:character_name>', methods=['GET'])
 async def get_waifu(character_name):
-    # Use regex for a case-insensitive search
     regex_pattern = re.compile(character_name, re.IGNORECASE)
     waifu = await collection.find_one({'character_name': regex_pattern})
     if waifu:
