@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const searchForm = document.getElementById('search-form');
+    const searchForm = document.getElementById('multi-search-form');
     const searchResultsDiv = document.getElementById('search-results');
     const prevPageButton = document.getElementById('prev-page');
     const nextPageButton = document.getElementById('next-page');
+    const appliedFiltersDiv = document.getElementById('applied-filters');
     let currentPage = 1;
     const pageSize = 15;
 
-    // Array of background images
     const backgroundImages = [
         'https://files.catbox.moe/9jbemn.jpg',
         'https://files.catbox.moe/l5g4xp.jpg',
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'https://files.catbox.moe/qggqe3.jpg'
     ];
 
-    // Set a random background image
     document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
 
     const updatePaginationButtons = (hasNextPage) => {
@@ -23,10 +22,32 @@ document.addEventListener('DOMContentLoaded', () => {
         nextPageButton.disabled = !hasNextPage;
     };
 
+    const updateFilters = () => {
+        const filters = [];
+        const nameQuery = document.getElementById('name-query').value;
+        const animeQuery = document.getElementById('anime-query').value;
+        const rarityQuery = document.getElementById('rarity-query').value;
+        const idQuery = document.getElementById('id-query').value;
+
+        if (nameQuery) filters.push(`Name: ${nameQuery}`);
+        if (animeQuery) filters.push(`Anime: ${animeQuery}`);
+        if (rarityQuery) filters.push(`Rarity: ${rarityQuery}`);
+        if (idQuery) filters.push(`ID: ${idQuery}`);
+
+        appliedFiltersDiv.innerHTML = filters.map(filter => `
+            <span>${filter} <button class="remove-filter" data-filter="${filter}">x</button></span>
+        `).join(' ');
+    };
+
     const loadCharacters = async (page) => {
         searchResultsDiv.innerHTML = 'Loading...';
+        const nameQuery = document.getElementById('name-query').value;
+        const animeQuery = document.getElementById('anime-query').value;
+        const rarityQuery = document.getElementById('rarity-query').value;
+        const idQuery = document.getElementById('id-query').value;
+
         try {
-            const response = await fetch(`/waifus?page=${page}&size=${pageSize}`);
+            const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
             const data = await response.json();
             if (data.results && data.results.length > 0) {
                 searchResultsDiv.innerHTML = data.results.map(item => `
@@ -61,35 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCharacters(currentPage);
     });
 
-    // Initial load
-    loadCharacters(currentPage);
-
-    // Handle search form submission
     searchForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const query = document.getElementById('search-query').value;
-        searchResultsDiv.innerHTML = 'Loading...';
+        updateFilters();
+        loadCharacters(currentPage);
+    });
 
-        try {
-            const response = await fetch(`/waifus/search?query=${encodeURIComponent(query)}`);
-            const data = await response.json();
-
-            if (data.results && data.results.length > 0) {
-                searchResultsDiv.innerHTML = data.results.map(item => `
-                    <div class="character-item">
-                        <img src="${item.image_url}" alt="${item.character_name}">
-                        <h3>${item.character_name}</h3>
-                        <p>Anime: ${item.anime_name}</p>
-                        <p>Rarity: ${item.rarity}</p>
-                        <p>ID: ${item.id}</p>
-                    </div>
-                `).join('');
-            } else {
-                searchResultsDiv.innerHTML = 'No results found.';
-            }
-        } catch (error) {
-            searchResultsDiv.innerHTML = 'Error fetching results.';
-            console.error('Error:', error);
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-filter')) {
+            const filter = event.target.getAttribute('data-filter');
+            const [key, value] = filter.split(': ');
+            document.getElementById(`${key.toLowerCase()}-query`).value = '';
+            updateFilters();
+            loadCharacters(currentPage);
         }
     });
+
+    // Initial load
+    loadCharacters(currentPage);
 });
