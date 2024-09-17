@@ -139,10 +139,12 @@ form button:hover {
 }
 
 .result img {
-    max-width: 100%;
-    height: auto;
+    width: 100%; /* Ensures images fill their container */
+    height: auto; /* Maintains aspect ratio */
+    object-fit: cover; /* Ensures images cover the area without distortion */
     border-radius: 10px;
 }
+
 
 footer {
     text-align: center;
