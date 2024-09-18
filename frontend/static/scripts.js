@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     let currentFilters = {};
 
+    // Set background image
     document.body.style.backgroundImage = "url('https://files.catbox.moe/9jbemn.jpg')";
 
     const updatePaginationButtons = (hasNextPage) => {
