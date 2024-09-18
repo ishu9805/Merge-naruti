@@ -43,37 +43,41 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join(' ');
     };
 
-    const loadCharacters = async (page) => {
-        searchResultsDiv.innerHTML = 'Loading...';
-        const nameQuery = document.getElementById('name-query').value.trim();
-        const animeQuery = document.getElementById('anime-query').value.trim();
-        const rarityQuery = document.getElementById('rarity-query').value.trim();
-        const idQuery = document.getElementById('id-query').value.trim();
+const loadCharacters = async (page) => {
+    searchResultsDiv.innerHTML = 'Loading...';
+    const nameQuery = document.getElementById('name-query').value.trim();
+    const animeQuery = document.getElementById('anime-query').value.trim();
+    const rarityQuery = document.getElementById('rarity-query').value.trim();
+    const idQuery = document.getElementById('id-query').value.trim();
 
-        try {
-            const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
-            const data = await response.json();
+    try {
+        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
+        let data = await response.json();
 
-            if (data.results && data.results.length > 0) {
-                searchResultsDiv.innerHTML = data.results.map(item => `
-                    <div class="character-item">
-                        <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
-                        <h3>${item.character_name}</h3>
-                        <p>Anime: ${item.anime_name}</p>
-                        <p>Rarity: ${item.rarity}</p>
-                        <p>ID: ${item.id}</p>
-                    </div>
-                `).join('');
-                updatePaginationButtons(data.hasNextPage);
-            } else {
-                searchResultsDiv.innerHTML = 'No characters found.';
-                updatePaginationButtons(false);
-            }
-        } catch (error) {
-            searchResultsDiv.innerHTML = 'Error fetching results.';
-            console.error('Error:', error);
+        // Sort results in descending order by ID
+        data.results.sort((a, b) => b.id - a.id);
+
+        if (data.results && data.results.length > 0) {
+            searchResultsDiv.innerHTML = data.results.map(item => `
+                <div class="character-item">
+                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
+                    <h3>${item.character_name}</h3>
+                    <p>Anime: ${item.anime_name}</p>
+                    <p>Rarity: ${item.rarity}</p>
+                    <p>ID: ${item.id}</p>
+                </div>
+            `).join('');
+            updatePaginationButtons(data.hasNextPage);
+        } else {
+            searchResultsDiv.innerHTML = 'No characters found.';
+            updatePaginationButtons(false);
         }
-    };
+    } catch (error) {
+        searchResultsDiv.innerHTML = 'Error fetching results.';
+        console.error('Error:', error);
+    }
+};
+
 
     prevPageButton.addEventListener('click', () => {
         if (currentPage > 1) {
