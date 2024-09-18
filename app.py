@@ -10,7 +10,9 @@ mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?ret
 client = MongoClient(mongo_url)
 db = client['Character_catcher']
 collection = db['anime_characters_lol']
+user_collection = db['user_characters']  # Collection storing user collections with a 'characters' array
 
+# Serve homepage
 @app.route('/')
 def home():
     return send_from_directory('frontend/static', 'index.html')
@@ -19,6 +21,7 @@ def home():
 def serve_static(filename):
     return send_from_directory('frontend/static', filename)
 
+# Search waifus by name, anime, rarity, or ID
 @app.route('/waifus/search', methods=['GET'])
 def search_waifus():
     name_query = request.args.get('name', '')
@@ -46,6 +49,7 @@ def search_waifus():
     } for waifu in waifus]
     return jsonify({'results': results})
 
+# Get waifus with pagination
 @app.route('/waifus', methods=['GET'])
 def get_characters():
     try:
@@ -70,6 +74,7 @@ def get_characters():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Get specific waifu by character name
 @app.route('/waifus/<string:character_name>', methods=['GET'])
 def get_waifu(character_name):
     waifu = collection.find_one({'name': {'$regex': character_name, '$options': 'i'}})
@@ -83,6 +88,36 @@ def get_waifu(character_name):
         })
     else:
         return jsonify({'error': 'Waifu not found'}), 404
+
+# Search user by ID and get their characters array
+@app.route('/user/search', methods=['GET'])
+def search_user_collection():
+    user_id = request.args.get('user_id', '')
+    if user_id:
+        user = user_collection.find_one({'user_id': user_id})
+        if user:
+            characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+            return jsonify({
+                'user_id': user_id,
+                'characters': characters
+            })
+        else:
+            return jsonify({'error': 'User not found'}), 404
+    else:
+        return jsonify({'error': 'User ID is required'}), 400
+
+# Serve user's collection via URL
+@app.route('/user/<string:user_id>/collection', methods=['GET'])
+def get_user_collection(user_id):
+    user = user_collection.find_one({'user_id': user_id})
+    if user:
+        characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+        return jsonify({
+            'user_id': user_id,
+            'characters': characters
+        })
+    else:
+        return jsonify({'error': 'User not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
