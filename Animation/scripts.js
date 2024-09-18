@@ -1,27 +1,55 @@
 // script.js
-document.addEventListener('mousemove', function(e) {
-    const container = document.getElementById('animationTrigger');
+document.addEventListener('DOMContentLoaded', function() {
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const phoneInputSection = document.getElementById('phoneInputSection');
+    const noMessage = document.getElementById('noMessage');
+    const phoneInput = document.getElementById('phoneInput');
+    const submitPhoneBtn = document.getElementById('submitPhoneBtn');
+    const noPhoneBtn = document.getElementById('noPhoneBtn');
     
-    // Get the position of the mouse relative to the container
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left; // X coordinate inside the container
-    const y = e.clientY - rect.top;  // Y coordinate inside the container
-    
-    // Calculate the distance from the center
-    const centerX = container.offsetWidth / 2;
-    const centerY = container.offsetHeight / 2;
-    const distanceX = (x - centerX) / container.offsetWidth * 100;
-    const distanceY = (y - centerY) / container.offsetHeight * 100;
-    
-    // Create a radial gradient that reacts to the pointer
-    container.style.background = `radial-gradient(circle at ${x}px ${y}px, 
-        rgba(255, 87, 51, 1), 
-        rgba(51, 255, 87, 0.8), 
-        rgba(51, 87, 255, 0.6), 
-        rgba(255, 51, 161, 0.4))`;
-});
+    // Function to make hearts fall
+    function createHeart() {
+        const heart = document.createElement('div');
+        heart.classList.add('heart');
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = Math.random() * 3 + 2 + 's'; // Random speed
+        document.body.appendChild(heart);
+        setTimeout(() => {
+            heart.remove();
+        }, 5000); // Remove the heart after it finishes falling
+    }
 
-document.getElementById('animationTrigger').addEventListener('click', function() {
-    document.getElementById('heading').style.display = 'block'; // Show heading
-    document.getElementById('telegramLink').style.display = 'block'; // Show link
+    setInterval(createHeart, 300);
+
+    // Yes Button click
+    yesBtn.addEventListener('click', function() {
+        yesBtn.style.display = 'none';
+        noBtn.style.display = 'none';
+        phoneInputSection.style.display = 'block';
+    });
+
+    // Submit phone number click
+    submitPhoneBtn.addEventListener('click', function() {
+        alert(`Thank you! We'll contact you at ${phoneInput.value}`);
+        window.location.href = 'https://t.me/blade_x_support';
+    });
+
+    // No phone number button click
+    noPhoneBtn.addEventListener('click', function() {
+        alert('Okay, no problem!');
+        window.location.href = 'https://t.me/blade_x_support';
+    });
+
+    // No Button click (move button elsewhere)
+    noBtn.addEventListener('click', function() {
+        const randomX = Math.random() * window.innerWidth;
+        const randomY = Math.random() * window.innerHeight;
+        noBtn.style.left = randomX + 'px';
+        noBtn.style.top = randomY + 'px';
+
+        // Display heartbreak message
+        noMessage.style.display = 'block';
+        document.body.style.backgroundColor = '#ffcccc';
+    });
 });
