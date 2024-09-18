@@ -2,7 +2,7 @@ from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from pymongo import MongoClient
 
-app = Flask(__name__, static_folder='Animation')
+app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
 
 # MongoDB connection URL
@@ -13,11 +13,11 @@ collection = db['anime_characters_lol']
 
 @app.route('/')
 def home():
-    return send_from_directory('Animation', 'index.html')
+    return send_from_directory('frontend/static', 'index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    return send_from_directory('Animation', filename)
+    return send_from_directory('frontend/static', filename)
 
 @app.route('/waifus/search', methods=['GET'])
 def search_waifus():
