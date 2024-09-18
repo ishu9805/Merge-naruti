@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalImg = document.getElementById('popup-image');
     const closeBtn = document.querySelector('.modal .close');
     let currentPage = 1;
-    const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
 
     const backgroundImages = [
         'https://files.catbox.moe/9jbemn.jpg',
@@ -43,41 +42,39 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join(' ');
     };
 
-const loadCharacters = async (page) => {
-    searchResultsDiv.innerHTML = 'Loading...';
-    const nameQuery = document.getElementById('name-query').value.trim();
-    const animeQuery = document.getElementById('anime-query').value.trim();
-    const rarityQuery = document.getElementById('rarity-query').value.trim();
-    const idQuery = document.getElementById('id-query').value.trim();
+    const loadCharacters = async (page) => {
+        searchResultsDiv.innerHTML = 'Loading...';
+        const nameQuery = document.getElementById('name-query').value.trim();
+        const animeQuery = document.getElementById('anime-query').value.trim();
+        const rarityQuery = document.getElementById('rarity-query').value.trim();
+        const idQuery = document.getElementById('id-query').value.trim();
 
-    try {
-        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
-        let data = await response.json();
+        try {
+            const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}&page=${page}`);
+            const data = await response.json();
 
-        // Sort results in descending order by ID
-        data.results.sort((a, b) => b.id - a.id);
-
-        if (data.results && data.results.length > 0) {
-            searchResultsDiv.innerHTML = data.results.map(item => `
-                <div class="character-item">
-                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
-                    <h3>${item.character_name}</h3>
-                    <p>Anime: ${item.anime_name}</p>
-                    <p>Rarity: ${item.rarity}</p>
-                    <p>ID: ${item.id}</p>
-                </div>
-            `).join('');
-            updatePaginationButtons(data.hasNextPage);
-        } else {
-            searchResultsDiv.innerHTML = 'No characters found.';
-            updatePaginationButtons(false);
+            if (data.results && data.results.length > 0) {
+                // Sort by ID
+                data.results.sort((a, b) => b.id - a.id);
+                searchResultsDiv.innerHTML = data.results.map(item => `
+                    <div class="character-item">
+                        <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
+                        <h3>${item.character_name}</h3>
+                        <p>Anime: ${item.anime_name}</p>
+                        <p>Rarity: ${item.rarity}</p>
+                        <p>ID: ${item.id}</p>
+                    </div>
+                `).join('');
+                updatePaginationButtons(data.hasNextPage);
+            } else {
+                searchResultsDiv.innerHTML = 'No characters found.';
+                updatePaginationButtons(false);
+            }
+        } catch (error) {
+            searchResultsDiv.innerHTML = 'Error fetching results.';
+            console.error('Error:', error);
         }
-    } catch (error) {
-        searchResultsDiv.innerHTML = 'Error fetching results.';
-        console.error('Error:', error);
-    }
-};
-
+    };
 
     prevPageButton.addEventListener('click', () => {
         if (currentPage > 1) {
@@ -93,6 +90,7 @@ const loadCharacters = async (page) => {
 
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
+        currentPage = 1; // Reset to first page on search
         updateFilters();
         loadCharacters(currentPage);
     });
