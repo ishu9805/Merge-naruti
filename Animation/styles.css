@@ -1,41 +1,69 @@
 /* styles.css */
 body {
+    margin: 0;
+    font-family: Arial, sans-serif;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
-    font-family: Arial, sans-serif;
-}
-
-.animation-container {
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, #ff5733, #ff33a1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.5s ease;
+    background-color: #f0f8ff;
     position: relative;
     overflow: hidden;
 }
 
-h1, h2 {
-    color: #333;
+/* Heart Falling Animation */
+@keyframes falling-hearts {
+    0% { top: -10%; }
+    100% { top: 100%; }
+}
+
+.heart-container h1, .heart-container p {
+    text-align: center;
+    color: #ff69b4;
+}
+
+.heart-container button {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #ff69b4;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.heart-container button:hover {
+    transform: scale(1.1);
+}
+
+#noMessage p {
+    font-size: 24px;
+    color: #ff0000;
     text-align: center;
 }
 
-a {
-    margin-top: 20px;
-    font-size: 20px;
-    color: #333;
-    text-decoration: none;
+/* Style for No Button appearing elsewhere */
+#noBtn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-a:hover {
-    color: #ff5733;
+.hidden {
+    display: none;
+}
+
+/* Falling hearts */
+.heart {
+    position: absolute;
+    top: -10%;
+    width: 30px;
+    height: 30px;
+    background-color: #ff69b4;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    animation: falling-hearts 5s linear infinite;
 }
