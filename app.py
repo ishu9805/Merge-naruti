@@ -2,7 +2,7 @@ from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from pymongo import MongoClient
 
-app = Flask(__name__, static_folder='Animatiom')
+app = Flask(__name__, static_folder='Animation')
 CORS(app)
 
 # MongoDB connection URL
