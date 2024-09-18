@@ -13,11 +13,11 @@ collection = db['anime_characters_lol']
 
 @app.route('/')
 def home():
-    return send_from_directory('frontend/static', 'index.html')
+    return send_from_directory('Animation', 'index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    return send_from_directory('frontend/static', filename)
+    return send_from_directory('Animation', filename)
 
 @app.route('/waifus/search', methods=['GET'])
 def search_waifus():
