@@ -9,17 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.querySelector('.modal .close');
     let currentPage = 1;
 
-    const backgroundImages = [
-        'https://files.catbox.moe/9jbemn.jpg',
-        'https://files.catbox.moe/l5g4xp.jpg',
-        'https://files.catbox.moe/7tdou5.jpg',
-        'https://files.catbox.moe/4sgb37.jpg',
-        'https://files.catbox.moe/qggqe3.jpg'
-    ];
+    document.body.style.backgroundImage = "url('https://files.catbox.moe/9jbemn.jpg')";
 
-    // Set a random background image
-    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
-
+    
     const updatePaginationButtons = (hasNextPage) => {
         prevPageButton.disabled = currentPage === 1;
         nextPageButton.disabled = !hasNextPage;
