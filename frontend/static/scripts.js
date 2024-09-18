@@ -8,41 +8,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalImg = document.getElementById('popup-image');
     const closeBtn = document.querySelector('.modal .close');
     let currentPage = 1;
+    let currentFilters = {};
 
     document.body.style.backgroundImage = "url('https://files.catbox.moe/9jbemn.jpg')";
 
-    
     const updatePaginationButtons = (hasNextPage) => {
         prevPageButton.disabled = currentPage === 1;
         nextPageButton.disabled = !hasNextPage;
     };
 
     const updateFilters = () => {
-        const filters = [];
+        const filters = {};
         const nameQuery = document.getElementById('name-query').value.trim();
         const animeQuery = document.getElementById('anime-query').value.trim();
         const rarityQuery = document.getElementById('rarity-query').value.trim();
         const idQuery = document.getElementById('id-query').value.trim();
 
-        if (nameQuery) filters.push(`Name: ${nameQuery}`);
-        if (animeQuery) filters.push(`Anime: ${animeQuery}`);
-        if (rarityQuery) filters.push(`Rarity: ${rarityQuery}`);
-        if (idQuery) filters.push(`ID: ${idQuery}`);
+        if (nameQuery) filters.name = nameQuery;
+        if (animeQuery) filters.anime = animeQuery;
+        if (rarityQuery) filters.rarity = rarityQuery;
+        if (idQuery) filters.id = idQuery;
 
-        appliedFiltersDiv.innerHTML = filters.map(filter => `
-            <span>${filter} <button class="remove-filter" data-filter="${filter}">x</button></span>
+        currentFilters = filters;
+
+        appliedFiltersDiv.innerHTML = Object.entries(filters).map(([key, value]) => `
+            <span>${key.charAt(0).toUpperCase() + key.slice(1)}: ${value} 
+            <button class="remove-filter" data-filter="${key}">x</button></span>
         `).join(' ');
     };
 
     const loadCharacters = async (page) => {
         searchResultsDiv.innerHTML = 'Loading...';
-        const nameQuery = document.getElementById('name-query').value.trim();
-        const animeQuery = document.getElementById('anime-query').value.trim();
-        const rarityQuery = document.getElementById('rarity-query').value.trim();
-        const idQuery = document.getElementById('id-query').value.trim();
+        const params = new URLSearchParams(currentFilters);
+        params.append('page', page);
 
         try {
-            const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}&page=${page}`);
+            const response = await fetch(`/waifus/search?${params.toString()}`);
             const data = await response.json();
 
             if (data.results && data.results.length > 0) {
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updatePaginationButtons(false);
             }
         } catch (error) {
-            searchResultsDiv.innerHTML = 'Error fetching results.';
+            searchResultsDiv.innerHTML = 'Error fetching results. Please try again.';
             console.error('Error:', error);
         }
     };
@@ -89,9 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', (event) => {
         if (event.target.classList.contains('remove-filter')) {
-            const filter = event.target.getAttribute('data-filter');
-            const [key, value] = filter.split(': ');
-            document.getElementById(`${key.toLowerCase()}-query`).value = '';
+            const filterKey = event.target.getAttribute('data-filter');
+            document.getElementById(`${filterKey}-query`).value = '';
             updateFilters();
             loadCharacters(currentPage);
         } else if (event.target.tagName === 'IMG' && event.target.closest('.character-item')) {
