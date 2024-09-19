@@ -1,6 +1,12 @@
-from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from pymongo import MongoClient
+import requests
+from flask import Flask, jsonify, send_from_directory, request, Response
+
+
+
+# Other routes...
+
 
 app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
@@ -12,6 +18,16 @@ db = client['Character_catcher']
 collection = db['anime_characters_lol']
 user_collection = db['user_characters']  # Collection storing user collections with a 'characters' array
 
+@app.route('/proxy-image/<path:url>')
+def proxy_image(url):
+    telegraph_url = f"https://telegra.ph/{url}"
+    try:
+        response = requests.get(telegraph_url, stream=True)
+        response.raise_for_status()
+        return Response(response.content, mimetype=response.headers['Content-Type'])
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': 'Image not found or could not be retrieved'}), 404
+    
 # Serve homepage
 @app.route('/')
 def home():
@@ -49,7 +65,6 @@ def search_waifus():
     } for waifu in waifus]
     return jsonify({'results': results})
 
-# Get waifus with pagination
 @app.route('/waifus', methods=['GET'])
 def get_characters():
     try:
@@ -65,7 +80,7 @@ def get_characters():
         results = [{
             'character_name': waifu['name'],
             'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
+            'image_url': f"/proxy-image/{waifu['img_url'].replace('https://telegra.ph/', '')}",
             'rarity': waifu.get('rarity', 'Unknown'),
             'id': waifu.get('id', 'N/A')
         } for waifu in waifus]
@@ -73,6 +88,7 @@ def get_characters():
         return jsonify({'results': results, 'hasNextPage': has_next_page})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 # Get specific waifu by character name
 @app.route('/waifus/<string:character_name>', methods=['GET'])
