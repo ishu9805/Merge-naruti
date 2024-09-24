@@ -4,12 +4,52 @@ import requests
 from flask import Flask, jsonify, send_from_directory, request, Response
 
 
+from flask import Flask, jsonify
+from apscheduler.schedulers.background import BackgroundScheduler
+from pyrogram import Client
+import os
 
-# Other routes...
-
-
+# Initialize Flask app
 app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
+
+# Initialize Pyrogram bot with your token, API ID, and API hash
+BOT_TOKEN = "7540585353:AAHhU11Hpi_JtVHoaqLvlaAVMR0CWXKm9vs"
+API_ID = 22792918  # Your API ID
+API_HASH = "ff10095d2bb96d43d6eb7a7d9fc85f81"  # Your API Hash
+
+# Initialize bot instance
+bot = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+
+# Chat ID where the message will be sent (replace with your chat/group ID)
+CHAT_ID = "-1002434689265"
+
+# APScheduler to schedule jobs
+scheduler = BackgroundScheduler()
+
+# Function to send a message every minute
+def send_periodic_message():
+    with bot:
+        bot.send_message(CHAT_ID, "This is a periodic message sent every minute.")
+
+# Route to start the scheduler (triggers message sending every minute)
+@app.route('/start', methods=['POST'])
+def start_schedule():
+    scheduler.add_job(send_periodic_message, 'interval', minutes=1)  # Schedules the task every minute
+    scheduler.start()
+    return jsonify({"status": "Started sending messages every minute."})
+
+# Route to stop the scheduler
+@app.route('/stop', methods=['POST'])
+def stop_schedule():
+    scheduler.remove_all_jobs()  # Removes all scheduled jobs
+    return jsonify({"status": "Stopped sending messages."})
+
+
+
+
+
+
 
 # MongoDB connection URL
 mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
