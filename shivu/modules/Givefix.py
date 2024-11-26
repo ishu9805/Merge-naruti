@@ -6,13 +6,15 @@ from shivu import shivuu as app, user_collection
 global_user_collections = {}
 
 # Function to load all user collections into the global variable
+# Function to load up to 15,000 user collections into the global variable
 async def load_user_collections():
     total_characters = 0
-    async for user in user_collection.find():
+    async for user in user_collection.find().limit(15000):  # Limit to 15,000 documents
         characters = user.get('characters', [])
         global_user_collections[user['id']] = characters
         total_characters += len(characters)
     return total_characters
+    
 
 # Command to load all user collections into the global document
 @app.on_message(filters.command("loads") & filters.user(7378476666))
