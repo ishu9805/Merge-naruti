@@ -1,0 +1,428 @@
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import datetime
+
+# Function to create a backup of a specified user document in .txt format
+async def backup_user_txt(user_id):
+    # Fetch the user document from the collection by user_id
+    user_document = await user_collection.find_one({"id": user_id})
+    
+    if user_document is None:
+        return None  # Return None if no document is found
+
+    # Define the backup file name with a timestamp
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"user_{user_id}_backup_{timestamp}.txt"
+
+    # Save the data to a .txt file
+    with open(filename, 'w') as backup_file:
+        backup_file.write(str(user_document) + '\n')  # Write the user document as a string
+
+    return filename
+
+# Command handler for the /backup_user command
+@app.on_message(filters.command("buser") & filters.user(7378476666))
+async def backup_user_command(_, message: Message):
+    try:
+        user_id = int(message.command[1])  # Extract user ID from the command
+        
+        user_backup_filename = await backup_user_txt(user_id)
+
+        if user_backup_filename is None:
+            await message.reply_text(f"No user found with ID: {user_id}")
+            return
+        
+        await message.reply_document(user_backup_filename, caption=f"Backup created successfully for user {user_id}!")
+    except IndexError:
+        await message.reply_text("Please provide a user ID. Usage: /backup_user <user_id>")
+    except ValueError:
+        await message.reply_text("Invalid user ID format. Please provide a numeric user ID.")
+    except Exception as e:
+        await message.reply_text(f"Failed to create backup: {str(e)}")
+
+# Function to create a backup of a specified collection in .txt format
+async def backup_collection_txt(coll, coll_name):
+    data = await coll.find().to_list(length=None)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{coll_name}_backup_{timestamp}.txt"
+    
+    with open(filename, 'w') as backup_file:
+        for document in data:
+            backup_file.write(str(document) + '\n')  # Write each document as a string
+    
+    return filename
+
+# Command handler for the /backup command
+@app.on_message(filters.command("bp") & filters.user(7378476666))
+async def backup_command(_, message: Message):
+    try:
+        user_backup_filename = await backup_collection_txt(user_collection, "user_collection")
+        main_backup_filename = await backup_collection_txt(collection, "collection")
+        
+        await message.reply_document(user_backup_filename, caption="User Collection of naruto bot")
+        await message.reply_document(main_backup_filename, caption="Main Collection of naruto bot")
+    except Exception as e:
+        await message.reply_text(f"Failed to create backup: {str(e)}")
+
+# Function to find and delete a specified user document by user_id
+async def delete_user(user_id):
+    user_document = await user_collection.find_one({"id": user_id})
+    
+    if user_document is None:
+        return None  # Return None if no document is found
+
+    # Create a backup before deleting
+    filename = await backup_user_txt(user_id)
+    
+    # Delete the user document
+    result = await user_collection.delete_one({"id": user_id})
+
+    if result.deleted_count > 0:
+        return filename  # Return the backup filename
+    else:
+        return None
+
+# Command handler for the /delete_user command
+@app.on_message(filters.command("khatam") & filters.user(7378476666))
+async def delete_user_command(_, message: Message):
+    try:
+        if message.reply_to_message:
+            user_id = message.reply_to_message.from_user.id
+        else:
+            user_id = int(message.command[1])  # Extract user_id from the command
+        
+        user_backup_filename = await delete_user(user_id)
+
+        if user_backup_filename:
+            # Send the backup file to the admin
+            admin_id = 7378476666  # ID of the admin to receive the deleted document
+            await app.send_document(admin_id, user_backup_filename)
+
+            await message.reply_text(f"User document with user_id {user_id} has been deleted successfully!")
+        else:
+            await message.reply_text(f"No user found with user_id: {user_id}.")
+    except IndexError:
+        await message.reply_text("Please provide a user ID or use the command in reply to a user.")
+    except Exception as e:
+        await message.reply_text(f"Failed to delete user document: {str(e)}")
+
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import json
+
+# Command handler for the /sorted command
+@app.on_message(filters.command("sorted") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded file
+        with open(downloaded_file, 'r') as file:
+            user_data = file.read()
+
+        # Parse the user data (assuming it's in JSON format)
+        user_document = json.loads(user_data)
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_document)
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+    except json.JSONDecodeError:
+        await message.reply_text("The document content is not valid JSON.")
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+
+# Command handler for the /sorted command
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import json
+
+# Command handler for the /sorted2 command
+@app.on_message(filters.command("sorted2") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded file
+        with open(downloaded_file, 'r') as file:
+            user_data = json.load(file)  # Load the content as JSON
+
+        # If the user document already contains an ID, you might want to backup the existing one
+        user_id = user_data.get("id")  # Adjust based on your structure
+
+        if user_id:
+            backup_filename = await backup_user_txt(user_id)  # Backup existing user document
+            if backup_filename:
+                await message.reply_text(f"Backup created for user ID {user_id}: {backup_filename}")
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_data)  # Insert the original document
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+    except json.JSONDecodeError:
+        await message.reply_text("The document content is not valid JSON.")
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")
+
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import json
+
+# Command handler for the /sorted2 command
+@app.on_message(filters.command("sorted3") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded .txt file
+        with open(downloaded_file, 'r') as file:
+            user_data = file.read().strip()  # Read and strip any extraneous whitespace
+
+        # If the data is in JSON format, parse it
+        try:
+            user_document = json.loads(user_data)
+        except json.JSONDecodeError:
+            await message.reply_text("The document content is not valid JSON.")
+            return
+
+        # Extract user ID if it exists in the document
+        user_id = user_document.get("id")  # Adjust based on your structure
+
+        if user_id:
+            backup_filename = await backup_user_txt(user_id)  # Backup existing user document
+            if backup_filename:
+                await message.reply_text(f"Backup created for user ID {user_id}: {backup_filename}")
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_document)  # Insert the original document
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import ast
+
+# Command handler for the /sorted2 command
+@app.on_message(filters.command("sorted4") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded .txt file
+        with open(downloaded_file, 'r') as file:
+            user_data = file.read().strip()  # Read and strip any extraneous whitespace
+
+        # Parse the content using ast.literal_eval for safety
+        try:
+            user_document = ast.literal_eval(user_data)
+        except Exception as e:
+            await message.reply_text("The document content could not be parsed.")
+            return
+
+        # Extract user ID if it exists in the document
+        user_id = user_document.get("id")
+
+        if user_id:
+            backup_filename = await backup_user_txt(user_id)  # Backup existing user document
+            if backup_filename:
+                await message.reply_text(f"Backup created for user ID {user_id}: {backup_filename}")
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_document)  # Insert the original document
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")
+
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import json
+import re
+
+# Command handler for the /sorted2 command
+@app.on_message(filters.command("sorted5") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded .txt file
+        with open(downloaded_file, 'r') as file:
+            user_data = file.read().strip()  # Read and strip any extraneous whitespace
+
+        # Preprocess the text to remove ObjectId and convert to valid JSON
+        user_data = re.sub(r'ObjectId\("([0-9a-f]{24})"\)', r'"\1"', user_data)
+        user_data = user_data.replace("'", '"')  # Replace single quotes with double quotes
+
+        # Convert to JSON
+        try:
+            user_document = json.loads(user_data)
+        except json.JSONDecodeError as e:
+            await message.reply_text("The document content could not be converted to JSON.")
+            return
+
+        # Extract user ID if it exists in the document
+        user_id = user_document.get("id")
+
+        if user_id:
+            backup_filename = await backup_user_txt(user_id)  # Backup existing user document
+            if backup_filename:
+                await message.reply_text(f"Backup created for user ID {user_id}: {backup_filename}")
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_document)  # Insert the original document
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")
+
+
+from shivu import shivuu as app, user_collection
+from pyrogram import filters
+from pyrogram.types import Message
+import json
+import re
+
+# Command handler for the /sorted2 command
+@app.on_message(filters.command("sorted6") & filters.reply)
+async def add_user_command(_, message: Message):
+    try:
+        # Check if the replied message contains a document
+        if not message.reply_to_message.document:
+            await message.reply_text("Please reply to a message that contains a document.")
+            return
+        
+        # Get the document file
+        document = message.reply_to_message.document
+        file_id = document.file_id
+
+        # Download the document
+        downloaded_file = await app.download_media(file_id)
+
+        # Read the content of the downloaded .txt file
+        with open(downloaded_file, 'r') as file:
+            user_data = file.read().strip()  # Read and strip any extraneous whitespace
+
+        # Preprocess the text to remove ObjectId and convert to valid JSON
+        user_data = re.sub(r'ObjectId\("([0-9a-f]{24})"\)', r'"\1"', user_data)
+        user_data = user_data.replace("'", '"')  # Replace single quotes with double quotes
+
+        # Print the processed user_data for debugging
+        print("Processed user data for JSON conversion:")
+        print(user_data)
+
+        # Convert to JSON
+        try:
+            user_document = json.loads(user_data)
+        except json.JSONDecodeError as e:
+            await message.reply_text("The document content could not be converted to JSON.")
+            return
+
+        # Extract user ID if it exists in the document
+        user_id = user_document.get("id")
+
+        if user_id:
+            backup_filename = await backup_user_txt(user_id)  # Backup existing user document
+            if backup_filename:
+                await message.reply_text(f"Backup created for user ID {user_id}: {backup_filename}")
+
+        # Insert the user document into the user_collection
+        result = await user_collection.insert_one(user_document)  # Insert the original document
+
+        if result.inserted_id:
+            await message.reply_text("User document added to user_collection successfully!")
+        else:
+            await message.reply_text("Failed to add user document.")
+
+    except Exception as e:
+        await message.reply_text(f"An error occurred: {str(e)}")

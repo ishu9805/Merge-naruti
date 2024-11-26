@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "Kushina-boobs",
+  "builds": [
+    {
+      "src": "Dockerfile",
+      "use": "vercel-docker"
+    }
+  ]
+}

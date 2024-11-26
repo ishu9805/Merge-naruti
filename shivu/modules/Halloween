@@ -1,0 +1,160 @@
+import asyncio
+import time
+from pyrogram import filters, Client, types as t
+from shivu import shivuu as bot  # Assuming this is your bot instance
+from shivu import user_collection, collection
+
+# Global variable to track last selection time for each user
+last_selection_time = {}
+
+# Allowed group chat ID
+ALLOWED_GROUP_ID = -1002338924488
+# Allowed user ID for restricted commands
+ALLOWED_USER_ID = 7378476666
+
+# Command: /reset_all_halloween
+@bot.on_message(filters.command("resethn") & filters.group)
+async def reset_all_halloween(client, message: t.Message):
+    if message.from_user.id != ALLOWED_USER_ID:
+        await message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    # Reset elected characters for all users
+    await user_collection.update_many({}, {"$set": {"elected_characters": [], "trickortreat_used": False}})
+    await message.reply_text("✅ All users' selected Halloween characters have been reset! 🎃")
+
+# Command: /select_halloween <character_id>
+@bot.on_message(filters.command("select") & filters.group)
+async def select_character(client, message: t.Message):
+    user_id = message.from_user.id  # Get user ID from the message
+
+    # Check if the command is being used in the allowed group
+    if message.chat.id != ALLOWED_GROUP_ID:
+        await message.reply_text(
+            "🎃 You can only use this command in the Blade Support group. Join here: [Blade Support](https://t.me/+xJdjLviEJvpmYjM9)",
+            disable_web_page_preview=True
+        )
+        return
+
+    # Get the current time
+    current_time = time.time()
+
+    # Check if the user is allowed to select a character
+    if user_id in last_selection_time:
+        if current_time - last_selection_time[user_id] < 10:
+            remaining_time = 10 - (current_time - last_selection_time[user_id])
+            await message.reply_text(f"🕰️ Wait {int(remaining_time)} more seconds to select another Halloween character.")
+            return
+
+    try:
+        character_id = message.text.split()[1]
+    except (IndexError, ValueError):
+        await message.reply_text("👻 Please provide a valid character ID.")
+        return
+
+    # Check if the character exists in the character collection
+    character = await collection.find_one({"id": character_id})
+    if not character:
+        await message.reply_text(f"❌ character with ID **{character_id}** not found.")
+        return
+
+    rarity = character.get("rarity", "")
+    
+    # Prevent selection of "💸 Premium Edition" characters
+    if rarity == "💸 Premium Edition":
+        await message.reply_text("💸 Premium Edition characters cannot be selected for Halloween.")
+        return
+
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        user_data = {"id": user_id, "elected_characters": []}
+    elif "elected_characters" not in user_data:
+        user_data["elected_characters"] = []
+
+    # Ensure the user doesn't exceed 3 selected characters
+    if len(user_data["elected_characters"]) >= 3:
+        await message.reply_text("👻 You have selected the maximum of 3 characters. No more spooky selections allowed!")
+        return
+
+    if any(elected_character["id"] == character_id for elected_character in user_data["elected_characters"]):
+        await message.reply_text(f"⚠️ Character ID **{character_id}** is already in your spooky collection.")
+        return
+
+    user_data["elected_characters"].append(character)
+
+    await user_collection.update_one(
+        {"id": user_id},
+        {"$set": {"elected_characters": user_data["elected_characters"]}},
+        upsert=True
+    )
+
+    # Update last selection time for the user
+    last_selection_time[user_id] = current_time
+
+    await message.reply_text(f"🎃 Successfully added character ID **{character_id}**! You now have **{len(user_data['elected_characters'])}** spooky characters.")
+
+# Command: /trickortreat
+@bot.on_message(filters.command("trickortreat") & filters.group)
+async def trick_or_treat(client, message: t.Message):
+    user_id = message.from_user.id  # Get user ID from the message
+
+    # Ensure command is used in the allowed group
+    if message.chat.id != ALLOWED_GROUP_ID:
+        await message.reply_text(
+            "🎃 This command is only available in the Blade Support group. Join here: [Blade Support](https://t.me/+xJdjLviEJvpmYjM9)",
+            disable_web_page_preview=True
+        )
+        return
+
+    user_data = await user_collection.find_one({'id': user_id})
+
+    if not user_data or "elected_characters" not in user_data or len(user_data["elected_characters"]) != 3:
+        await message.reply_text("🎃 You need exactly 3 spooky characters before using this command! Use /select to choose.")
+        return
+
+    if "trickortreat_used" in user_data and user_data["trickortreat_used"]:
+        await message.reply_text("👻 You have already claimed your Halloween treat! No double-dipping!")
+        return
+
+    if "characters" not in user_data:
+        user_data["characters"] = []
+
+    elected_characters = user_data["elected_characters"]
+    for character in elected_characters:
+        if character not in user_data["characters"]:
+            user_data["characters"].append(character)
+
+    await user_collection.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "characters": user_data["characters"],
+                "trickortreat_used": True
+            }
+        }
+    )
+
+    await message.reply_text("🎉 Halloween treats claimed! All selected characters are now part of your collection! 🎃 You can't use this command again.")
+
+# Command: /see_halloween
+@bot.on_message(filters.command("seehall") & filters.group)
+async def see_selected_characters(client, message: t.Message):
+    if message.from_user.id != ALLOWED_USER_ID:
+        await message.reply_text("🚫 This command is restricted.")
+        return
+
+    if not message.reply_to_message:
+        await message.reply_text("❗ Reply to a user's message to view their Halloween characters.")
+        return
+
+    replied_user_id = message.reply_to_message.from_user.id
+    user_data = await user_collection.find_one({'id': replied_user_id})
+
+    if not user_data or "elected_characters" not in user_data:
+        await message.reply_text(f"⚠️ The user with ID **{replied_user_id}** has not selected any spooky characters.")
+        return
+
+    elected_characters = user_data["elected_characters"]
+    character_list = "\n".join([f"ID: {character['id']} - Name: {character['name']}" for character in elected_characters])
+
+    await message.reply_text(f"👤 **User ID**: {replied_user_id}\n\n📜 **Selected Halloween Characters**:\n{character_list}")
