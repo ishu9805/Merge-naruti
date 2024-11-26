@@ -15,7 +15,13 @@ async def load_user_collections():
         total_characters += len(characters)
     return total_characters
     
-
+@app.on_message(filters.command("cls") & filters.user(7378476666))
+async def clear_collections_command(client, message):
+    global global_user_collections
+    async with collection_lock:  # Ensure thread-safe access
+        global_user_collections.clear()
+    await message.reply_text("Global user collections have been successfully cleared.")
+    
 # Command to load all user collections into the global document
 @app.on_message(filters.command("loads") & filters.user(7378476666))
 async def load_users_command(client, message):
