@@ -3,7 +3,7 @@ import requests
 import motor.motor_asyncio
 from pyrogram import Client, filters
 from shivu import user_collection, collection
-from shovu import shivuu as app
+from shivu import shivuu as app
 # Bot configuration
 TARGET_GC_ID = -1002467462900
 # Function to upload an image to Catbox
@@ -59,7 +59,7 @@ async def update_img_url(client, message):
 
 
 
-@app.on_message(filters.command("del") & filters.user(7378476666))  # Restrict command to specific user
+@app.on_message(filters.command("dels") & filters.user(7378476666))  # Restrict command to specific user
 async def delete_character(client, message):
     # Extract character ID from the command
     if len(message.command) != 2:
