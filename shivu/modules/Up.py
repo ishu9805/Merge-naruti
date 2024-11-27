@@ -63,7 +63,7 @@ async def update_img_url(client, message):
 async def delete_character(client, message):
     # Extract character ID from the command
     if len(message.command) != 2:
-        await message.reply("Usage: `/del <character_id>`\nExample: `/del abc123`", parse_mode="markdown")
+        await message.reply(f"Usage: `/del <character_id>`\nExample: `/del abc123`")
         return
 
     char_id = message.command[1]  # Get the character ID as a string
