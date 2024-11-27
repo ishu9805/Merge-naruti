@@ -22,7 +22,7 @@ async def update_img_url(client, message):
         await message.reply("Invalid caption! Please provide a numeric ID.")
         return
 
-    char_id = int(caption)  # Extract the ID from the caption
+    char_id = caption  # Extract the ID from the caption
 
     # Download the image
     file_path = await message.download()
