@@ -82,51 +82,48 @@ def escape_markdown(text):
 
 
 async def message_counter(update: Update, context: CallbackContext) -> None:
+    # Check if the message is from a bot
+    if update.effective_user.is_bot:
+        return  # Do not count messages from bots
+
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
     is_banned = await ban_collection.find_one({"user_id": user_id})
+    
     if is_banned:
         # If the user is banned, do nothing
         return
-    else:
-        pass
 
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
-        
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         if chat_frequency:
             message_frequency = chat_frequency.get('message_frequency', 100)
         else:
             message_frequency = 100
 
-        
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
-            if last_user[chat_id]['count'] >= 10:
-            
+            if last_user[chat_id]['count'] >= 4:
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
-                    
-                    
+                    # Implement your warning logic here
+                    warned_users[user_id] = time.time()  # Example of setting a warning time
                     return
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
-    
         if chat_id in message_counts:
             message_counts[chat_id] += 1
         else:
             message_counts[chat_id] = 1
 
-    
         if message_counts[chat_id] % message_frequency == 0:
             await send_image(update, context)
-            
             message_counts[chat_id] = 0
 
 async def send_image(update: Update, context: CallbackContext) -> None:
