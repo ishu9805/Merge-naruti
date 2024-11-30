@@ -168,15 +168,15 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     spawn_counts = {
         '⚪️ Common': 10,  
-        '🟣 Rare': 5,     
-        '🟡 Legendary': 10, 
-        '🟢 Medium': 5,  
-        '💮 Special Edition': 4,  
+        '🟣 Rare': 5,      
+        '🟢 Medium': 5,
+        '🟡 Legendary': 5,  
+        '💮 Special Edition': 3,  
         '🔮 Limited Edition': 1,  
         '💸 Premium Edition': 0,  
         '🌤 Summer': 0 if today_message_count <= 4 else 0,  
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,  
-        '❄️ Winter': 1,  
+        '❄️ Winter': 2,  
         '💝 Valentine': 0,  
         '🎃 Halloween': 0,  
         '🎄 Christmas Special': 0  
