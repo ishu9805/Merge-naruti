@@ -5,7 +5,7 @@ from cachetools import TTLCache
 from pymongo import ASCENDING
 from telegram import Update, InlineQueryResultPhoto
 from telegram.ext import InlineQueryHandler
-from shivu import user_collection, collection, application
+from shivu import user_collection, collection, application, db
 
 
 # MongoDB Indexing (using ASCENDING for faster queries)
