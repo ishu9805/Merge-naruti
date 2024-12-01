@@ -216,7 +216,7 @@ async def place_bid(client, message):
     if former_highest_bidder_id:
         former_highest_bidder = await client.get_users(former_highest_bidder_id)
         former_highest_bidder_username = former_highest_bidder.username if former_highest_bidder.username else "No Username"
-        await client.send_message(
+        await message.send_message(
             -1002338924488,
             f"{former_highest_bidder_username} ⚠️ You have been outbid in the auction for {active_auction['waifu_name']} ({active_auction['waifu_anime']}).\n"
             f"The new highest bid is {bid_amount} by @{message.from_user.username}."
