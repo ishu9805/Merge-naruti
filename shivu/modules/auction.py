@@ -213,7 +213,7 @@ async def place_bid(client, message):
 
     # Notify the former highest bidder that they have been outbid
     winner_username = active_auction.get("highest_bidder_username", "Unknown")
-    await message.send_message(
+    await client.send_message(
         -1002338924488,
         f"{winner_username} ⚠️ You have been outbid in the auction for {active_auction['waifu_name']} ({active_auction['waifu_anime']}).\n"
         f"The new highest bid is {bid_amount} by @{message.from_user.username}."
