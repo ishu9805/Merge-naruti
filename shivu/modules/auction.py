@@ -211,6 +211,17 @@ async def place_bid(client, message):
         await message.reply_text("Your bid must be higher than the current highest bid.")
         return
 
+    # Notify the former highest bidder that they have been outbid
+    former_highest_bidder_id = active_auction["highest_bidder"]
+    if former_highest_bidder_id:
+        former_highest_bidder = await client.get_users(former_highest_bidder_id)
+        former_highest_bidder_username = former_highest_bidder.username if former_highest_bidder.username else "No Username"
+        await client.send_message(
+            former_highest_bidder_id,
+            f"⚠️ You have been outbid in the auction for {active_auction['waifu_name']} ({active_auction['waifu_anime']}).\n"
+            f"The new highest bid is {bid_amount} by @{message.from_user.username}."
+        )
+
     # Update the auction with the new bid
     highest_bidder_username = (
         f"@{message.from_user.username}" if message.from_user.username else "No Username"
@@ -230,7 +241,7 @@ async def place_bid(client, message):
     await message.reply_text(
         f"Your bid of {bid_amount} has been placed for {active_auction['waifu_name']}!\n"
         f"Current Highest Bid: {bid_amount}\n"
-        f"Highest Bidder: {highest_bidder_username}"
+        f"Highest Bidder: @{highest_bidder_username}"
     )
 
     await message.send_message(
@@ -238,6 +249,8 @@ async def place_bid(client, message):
         f"New Bid: {bid_amount} by @{message.from_user.username}\n"
         f"Current Highest Bidder: @{message.from_user.username}",
     )
+    
+        
 
 
 
