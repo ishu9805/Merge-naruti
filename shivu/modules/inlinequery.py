@@ -86,14 +86,14 @@ async def inlinequery(update: Update, context) -> None:
     results = []
     for character in characters:
         global_count = await user_collection.count_documents({'characters.id': character['id']})
-        caption = (
-            f"<b>Character Info</b>\n\n"
-            f"🌸: <b>{escape(character.get('name', 'Unknown'))}</b>\n"
-            f"🏖️: <b>{escape(character.get('anime', 'Unknown'))}</b>\n"
-            f"<b>{escape(character.get('rarity', 'Unknown'))}</b>\n"
-            f"🆔️: <b>{character['id']}</b>\n\n"
-            f"<b>Globally Guessed: {global_count} times</b>"
-        )
+        anime_characters = await collection.count_documents({'anime': character['anime']})
+
+        if query.startswith('collection.'):
+            user_character_count = sum(c['id'] == character['id'] for c in user['characters'])
+            user_anime_characters = sum(c['anime'] == character['anime'] for c in user['characters'])
+            caption = f"<b> Look At <a href='tg://user?id={user['id']}'>{(escape(user.get('first_name', user['id'])))}</a>'s Character</b>\n\n🌸: <b>{character['name']} (x{user_character_count})</b>\n🏖️: <b>{character['anime']} ({user_anime_characters}/{anime_characters})</b>\n<b>{character['rarity']}</b>\n\n<b>🆔️:</b> {character['id']}</b>\n\n<b>Globally Guessed {global_count} Times...</b>"
+        else:
+            caption = f"<b>Look At This Character!!</b>\n\n🌸:<b> {character['name']}</b>\n🏖️: <b>{character['anime']}</b>\n<b>{character['rarity']}</b>\n🆔️: <b>{character['id']}</b>\n\n<b>Globally Guessed {global_count} Times...</b>"
 
         results.append(
             InlineQueryResultPhoto(
