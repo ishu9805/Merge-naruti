@@ -12,14 +12,16 @@ from shivu import user_collection, collection, application, db
 
 
 # collection
-db.characters.create_index([('id', DESCENDING)])
-db.characters.create_index([('anime', DESCENDING)])
-db.characters.create_index([('img_url', DESCENDING)])
+db.characters.create_index([('id', ASCENDING)])
+db.characters.create_index([('anime', ASCENDING)])
+db.characters.create_index([('img_url', ASCENDING)])
+db.characters.create_index([('rarity', ASCENDING)])
 
 # user_collection
-db.user_collection.create_index([('characters.id', DESCENDING)])
-db.user_collection.create_index([('characters.name', DESCENDING)])
-db.user_collection.create_index([('characters.img_url', DESCENDING)])
+db.user_collection.create_index([('characters.id', ASCENDING)])
+db.user_collection.create_index([('characters.name', ASCENDING)])
+db.user_collection.create_index([('characters.img_url', ASCENDING)])
+db.user_collection.create_index([('characters.rarity', ASCENDING)])
 
 all_characters_cache = TTLCache(maxsize=10000, ttl=36000)
 user_collection_cache = TTLCache(maxsize=10000, ttl=60)
@@ -60,7 +62,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
     characters = all_characters[offset:offset+50]
     if len(characters) > 20:
         characters = characters[:20]
-        next_offset = str(offset + 20)
+        next_offset = str(offset + 50)
     else:
         next_offset = str(offset + len(characters))
 
@@ -90,7 +92,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
             )
         )
 
-    await update.inline_query.answer(results, next_offset=next_offset, cache_time=2)
+    await update.inline_query.answer(results, next_offset=next_offset, cache_time=4)
 
 
 
