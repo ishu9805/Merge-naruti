@@ -39,7 +39,8 @@ async def callback_query_handler(event):
                 [Button.inline("🟢 Medium", data="rarity:🟢 Medium"), 
                  Button.inline("💮 Special Edition", data="rarity:💮 Special Edition"), 
                  Button.inline("🔮 Limited Edition", data="rarity:🔮 Limited Edition")],
-                [Button.inline("💸 Premium Edition", data="rarity:💸 Premium Edition")],
+                [Button.inline("💸 Premium Edition", data="rarity:💸 Premium Edition"),
+                 Button.inline("🎖 Apex Lot", data="rarity:🎖 Apex Lot ( AUCTION )")],
                 [Button.inline("🌤 Summer", data="rarity:🌤 Summer"), 
                  Button.inline("🎐 Celestial", data="rarity:🎐 Celestial"), 
                  Button.inline("❄️ Winter", data="rarity:❄️ Winter")],
@@ -47,7 +48,7 @@ async def callback_query_handler(event):
                  Button.inline("🎃 Halloween", data="rarity:🎃 Halloween"), 
                  Button.inline("🎄 Christmas Special", data="rarity:🎄 Christmas Special")],
                 [Button.inline("🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
-                 Button.inline("🎭 Cosplay Master 🎭", data="rarity:🎭 Cosplay Master 🎭")]
+                 Button.inline("🎭 Cosplay 🎭", data="rarity:🎭 Cosplay Master 🎭")]
             ]
             await event.edit("Select a rarity:", buttons=rarities_buttons)
 
