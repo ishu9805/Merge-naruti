@@ -35,12 +35,12 @@ rarity_map = {1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 
 # Define the channel ID and rarity map
 CHARA_CHANNEL_ID = -1002117539029
 rarity_map = {
-    1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium", 
-    5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition", 
-    8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine", 
-    12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐", 15: "🎭 Cosplay Master 🎭"
+    1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
+    5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
+    8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
+    12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    15: "🎭 Cosplay Master 🎭", 16: "🎖 Apex Lot ( AUCTION )"
 }
-
 # Function to find the next available ID for a character
 
 
@@ -196,7 +196,13 @@ async def update(update: Update, context: CallbackContext) -> None:
         if args[1] in ['name', 'anime']:
             new_value = args[2].replace('-', ' ').title()
         elif args[1] == 'rarity':
-            rarity_map = {1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium", 5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition", 8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine", 12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐", 15: "🎭 Cosplay Master 🎭"}
+            rarity_map = {
+                1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
+                5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
+                8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
+                12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+                15: "🎭 Cosplay Master 🎭", 16: "🎖 Apex Lot ( AUCTION )"
+            }
             try:
                 new_value = rarity_map[int(args[2])]
             except KeyError:
@@ -279,7 +285,7 @@ async def updates(update: Update, context: CallbackContext) -> None:
                 5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
                 8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
                 12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
-                15: "🎭 Cosplay Master 🎭"
+                15: "🎭 Cosplay Master 🎭", 16: "🎖 Apex Lot ( AUCTION )"
             }
             try:
                 new_value = rarity_map[int(new_value)]
