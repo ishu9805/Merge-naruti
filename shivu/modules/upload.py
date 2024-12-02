@@ -168,60 +168,7 @@ async def delete(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         await update.message.reply_text(f'{str(e)}')
 
-
-async def update(update: Update, context: CallbackContext) -> None:
-    if str(update.effective_user.id) not in sudo_users:
-        await update.message.reply_text('You do not have permission to use this command.')
-        return
-
-    try:
-        args = context.args
-        if len(args) != 3:
-            await update.message.reply_text('Incorrect format. Please use: /update id field new_value')
-            return
-
-        # Get character by ID
-        character = await collection.find_one({'id': args[0]})
-        if not character:
-            await update.message.reply_text('Character not found.')
-            return
-
-        # Check if field is valid
-        valid_fields = ['img_url', 'name', 'anime', 'rarity']
-        if args[1] not in valid_fields:
-            await update.message.reply_text(f'Invalid field. Please use one of the following: {", ".join(valid_fields)}')
-            return
-
-        # Update field
-        if args[1] in ['name', 'anime']:
-            new_value = args[2].replace('-', ' ').title()
-        elif args[1] == 'rarity':
-            rarity_map = {
-                1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
-                5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
-                8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
-                12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
-                15: "🎭 Cosplay Master 🎭", 16: "🎖 Apex Lot ( AUCTION )"
-            }
-            try:
-                new_value = rarity_map[int(args[2])]
-            except KeyError:
-                await update.message.reply_text('Invalid rarity. Please use 1, 2, 3, 4, 5, 6, 7, or 8.')
-                return
-        else:
-            new_value = args[2]
-
-        await collection.find_one_and_update({'id': args[0]}, {'$set': {args[1]: new_value}})
-
-        # Update character in user_collection
-        user_collection.update_one({'_id': update.effective_user.id, 'characters.' + args[0]: {'$exists': True}}, {'$set': {'characters.' + args[0]: {args[1]: new_value}}})
-
-        await update.message.reply_text('Updated Successfully')
-    except Exception as e:
-        await update.message.reply_text(f'{str(e)}')
-        
-
-        
+       
 
 async def check_total_characters(update: Update, context: CallbackContext) -> None:
     try:
@@ -246,13 +193,7 @@ async def add_sudo_user(update: Update, context: CallbackContext) -> None:
     else:
         await update.message.reply_text("You are not authorized to use this command.")
 
-ADD_SUDO_USER_HANDLER = CommandHandler('add_sudo_user', add_sudo_user, block=False)
-application.add_handler(ADD_SUDO_USER_HANDLER)
-       
-        
 
-ADD_SUDO_USER_HANDLER = CommandHandler('addsudo', add_sudo_user, block=False)
-application.add_handler(ADD_SUDO_USER_HANDLER)
 
 async def updates(update: Update, context: CallbackContext) -> None:
     if str(update.effective_user.id) not in sudo_users:
@@ -293,29 +234,47 @@ async def updates(update: Update, context: CallbackContext) -> None:
                 await update.message.reply_text('Invalid rarity. Please provide a valid rarity number.')
                 return
 
-        # Update all occurrences of the character in `user_collection`
-        result = await user_collection.update_many(
+        # Update the character in `collection`
+        collection_result = await collection.update_many(
             {"characters.id": character_id},
             {"$set": {f"characters.$[elem].{field}": new_value}},
-            array_filters=[{"elem.id": character_id}]  # Filter to update the specific character in the array
+            array_filters=[{"elem.id": character_id}]
         )
 
-        if result.modified_count == 0:
-            await update.message.reply_text("Character not found in any user's collection.")
+        # Update the character in `user_collection`
+        user_result = await user_collection.update_many(
+            {"characters.id": character_id},
+            {"$set": {f"characters.$[elem].{field}": new_value}},
+            array_filters=[{"elem.id": character_id}]
+        )
+
+        total_modified = collection_result.modified_count + user_result.modified_count
+
+        if total_modified == 0:
+            await update.message.reply_text("Character not found in any collection.")
         else:
-            await update.message.reply_text(f"Character updated successfully in {result.modified_count} documents.")
+            await update.message.reply_text(f"Character updated successfully in {total_modified} documents across all collections.")
 
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {str(e)}")
 
 
-UPDATES_HANDLER = CommandHandler('u', updates, block=False)
-application.add_handler(UPDATES_HANDLER)
+
+
+
+ADD_SUDO_USER_HANDLER = CommandHandler('add_sudo_user', add_sudo_user, block=False)
+application.add_handler(ADD_SUDO_USER_HANDLER)
+       
         
+
+ADD_SUDO_USER_HANDLER = CommandHandler('addsudo', add_sudo_user, block=False)
+application.add_handler(ADD_SUDO_USER_HANDLER)
+
+
 application.add_handler(CommandHandler("total", check_total_characters))
 
 
 DELETE_HANDLER = CommandHandler('delete', delete, block=False)
 application.add_handler(DELETE_HANDLER)
-UPDATE_HANDLER = CommandHandler('update', update, block=False)
+UPDATE_HANDLER = CommandHandler('update', updates, block=False)
 application.add_handler(UPDATE_HANDLER)
