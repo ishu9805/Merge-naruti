@@ -234,13 +234,10 @@ async def updates(update: Update, context: CallbackContext) -> None:
                 await update.message.reply_text('Invalid rarity. Please provide a valid rarity number.')
                 return
 
-        # Update the character in `collection`
-        collection_result = await collection.update_many(
-            {"characters.id": character_id},
-            {"$set": {f"characters.$[elem].{field}": new_value}},
-            array_filters=[{"elem.id": character_id}]
+        collection_result = await collection.update_one(
+            {"id": character_id},
+            {"$set": {field: new_value}}
         )
-
         # Update the character in `user_collection`
         user_result = await user_collection.update_many(
             {"characters.id": character_id},
