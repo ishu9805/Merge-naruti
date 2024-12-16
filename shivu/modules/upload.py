@@ -258,7 +258,39 @@ async def updates(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {str(e)}")
 
+async def check(update: Update, context: CallbackContext) -> None:    
+    try:
+        args = context.args
+        if len(context.args) != 1:
+            await update.message.reply_text('Incorrect format. Please use: /check id')
+            return
+            
+        character_id = context.args[0]
+        
+        character = await collection.find_one({'id': args[0]}) 
+            
+        if character:
+            # If character found, send the information along with the image URL
+            message = f"<b>Character Name:</b> {character['name']}\n" \
+                      f"<b>Anime Name:</b> {character['anime']}\n" \
+                      f"<b>Rarity:</b> {character['rarity']}\n" \
+                      f"<b>ID:</b> {character['id']}\n"
 
+            if 'img_url' in character:
+                await context.bot.send_photo(chat_id=update.effective_chat.id,
+                                             photo=character['img_url'],
+                                             caption=message,
+                                             parse_mode='HTML')
+            elif 'vid_url' in character:
+                await context.bot.send_video(chat_id=update.effective_chat.id,
+                                             video=character['vid_url'],
+                                             caption=message,
+                                             parse_mode='HTML')
+        else:
+             await update.message.reply_text("Character not found.")
+    except Exception as e:
+        await update.message.reply_text(f"Error occurred: {e}")
+            
 
 
 
@@ -278,3 +310,7 @@ DELETE_HANDLER = CommandHandler('delete', delete, block=False)
 application.add_handler(DELETE_HANDLER)
 UPDATE_HANDLER = CommandHandler('update', updates, block=False)
 application.add_handler(UPDATE_HANDLER)
+
+
+CHECK_HANDLER = CommandHandler('f', check, block=False)
+application.add_handler(CHECK_HANDLER)
