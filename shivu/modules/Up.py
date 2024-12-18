@@ -69,9 +69,8 @@ async def delete_character(client, message):
     char_id = message.command[1]  # Get the character ID as a string
 
     # Step 1: Delete the character from `anime_characters_lol`
-    char_delete_result = await collection.delete_one({"id": char_id})
-
-    # Step 2: Remove the character from users' collections in `user_collection`
+    
+    # Step 2: Remove the character from users' ollections in `user_collection`
     user_documents = await user_collection.find({"characters.id": char_id}).to_list(None)  # Find users with this character
 
     if user_documents:
@@ -82,7 +81,7 @@ async def delete_character(client, message):
             )
 
     # Step 3: Provide feedback
-    if char_delete_result.deleted_count > 0 or user_documents:
+    if user_documents:
         await message.reply(f"Successfully deleted character with ID `{char_id}` from the database and all user collections.")
     else:
         await message.reply(f"No character found with ID `{char_id}`.")
