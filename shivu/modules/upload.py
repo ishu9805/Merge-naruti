@@ -155,18 +155,42 @@ async def ul(client, message):
         
 async def delete(update: Update, context: CallbackContext) -> None:
     if str(update.effective_user.id) not in sudo_users:
-        await update.message.reply_text('Ask my Owner to use this Command...')
+        await update.message.reply_text('You do not have permission to use this command.')
         return
 
     try:
         args = context.args
         if len(args) != 1:
-            await update.message.reply_text('Incorrect format... Please use: /delete ID')
+            await update.message.reply_text('Incorrect format. Please use: /delete_character <id>')
             return
 
-        character = await collection.find_one_and_delete({'id': args[0]})
+        # Extract character ID
+        character_id = args[0]
+
+        # Delete the character from the main collection
+        main_result = await collection.delete_one({"id": character_id})
+        if main_result.deleted_count == 0:
+            await update.message.reply_text("Character not found in the main collection.")
+            return
+
+        # Delete the character from user collections
+        user_result = await user_collection.update_many(
+            {"characters.id": character_id},
+            {"$pull": {"characters": {"id": character_id}}}
+        )
+
+        if user_result.modified_count > 0:
+            await update.message.reply_text(
+                f"Character with ID {character_id} deleted successfully.\n"
+                f"Removed from {user_result.modified_count} user collections."
+            )
+        else:
+            await update.message.reply_text(
+                f"Character with ID {character_id} deleted from the main collection but not found in user collections."
+            )
+
     except Exception as e:
-        await update.message.reply_text(f'{str(e)}')
+        await update.message.reply_text(f"An error occurred: {str(e)}")
 
        
 
