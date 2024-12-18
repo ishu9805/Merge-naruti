@@ -27,7 +27,7 @@ async def format_time_delta(delta):
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
-async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣 Rare', '🟡 Legendary', '🟢 Medium', '💮 Special Edition']):
+async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣 Rare', '🟡 Legendary', '🟢 Medium', '💮 Special Edition', '🔮 Limited Edition']):
     try:
         user_data = await user_collection.find_one({'id': user_id}, {'characters': 1})
         user_character_ids = {char['id'] for char in user_data['characters']} if user_data else set()
