@@ -193,8 +193,8 @@ async def handle_purchase(query, shop_data, user_id):
     current_index = shop_data["index"]
     character = shop_data["characters"][current_index]
     character_name = character["name"]
-    character_rarity = character["rarity"]
-    character_price = price_rarities.get(character["rarity"], "Unknown")
+    character_rarity = character["price"]
+    character_price = price_rarities.get(character["price"], "Unknown")
     character_id = character["id"]
     
     # Retrieve the user's current coins from the database (assuming you have a 'user_collection' in MongoDB)
