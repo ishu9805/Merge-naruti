@@ -5,6 +5,184 @@ from telegram.ext import CommandHandler
 from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER
 
+from datetime import datetime
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
+from shivu import application, user_collection, db, collection
+import random
+
+# MongoDB Collection for user shops
+user_shops_collection = db["user_shops"]
+
+# Global dictionary to store shop user IDs
+active_shops = {}
+
+# Define rarities and their prices
+rarity_prices = {
+    3000: '⚪️ Common', 
+    5000: '🟣 Rare',
+    8000: '🟡 Legendary',
+    7000: '🟢 Medium',
+    10000: '💮 Special edition',
+    50000: '🔮 Limited Edition',
+    100000: '🌤 Summer',
+    500000: '🎐 Celestial',
+    200000: '❄️ Winter',
+    500000: '💝 Valentine',
+    500000: '🎃 Halloween',
+    500000: '🎄 Christmas Special'
+}
+
+# Function to start the store
+async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    current_date = datetime.today().strftime("%Y-%m-%d")  # Use formatted date
+
+    # Store the active shop for the user
+    active_shops[chat_id] = user_id
+
+    # Retrieve shop data for the user from the database
+    shop_data = await user_shops_collection.find_one({"user_id": user_id, "date": current_date})
+
+    if not shop_data:
+        # Generate a new shop with 3 random characters
+        characters = await collection.aggregate([{"$sample": {"size": 3}}]).to_list(length=3)
+
+        # Prepare character data with all fields
+        prepared_characters = [
+            {
+                "name": char["name"],
+                "anime": char["anime"],
+                "rarity": char["rarity"],
+                "price": rarity_prices.get(char["rarity"], "Unknown"),
+                "img_url": char["img_url"],
+                "id": char["id"]
+            }
+            for char in characters
+        ]
+
+        # Store the shop data in the database
+        shop_data = {
+            "user_id": user_id,
+            "date": current_date,
+            "characters": prepared_characters,
+            "index": 0
+        }
+        await user_shops_collection.insert_one(shop_data)
+
+    # Display the current character in the shop
+    await send_shop_item(update, context, shop_data, edit=False)
+
+# Function to send the shop item
+async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, shop_data, edit=True):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    current_index = shop_data['index']
+    character = shop_data['characters'][current_index]
+
+    # Extract character details
+    name = character['name']
+    rarity = character['rarity']
+    price = rarity_prices.get(character['rarity'])
+    img_url = character['img_url']
+    id = character['id']
+    
+    # Prepare buttons
+    keyboard = [
+        [InlineKeyboardButton("𝗕𝗨𝗬", callback_data=f"buy_{current_index}")],
+        [
+            InlineKeyboardButton("𝗕𝗔𝗖𝗞", callback_data="backup"),
+            InlineKeyboardButton("𝗡𝗘𝗫𝗧", callback_data="next")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Send the message directly to the user in the same chat (not editing)
+    if edit and update.callback_query:
+        await update.callback_query.edit_message_media(
+            media=InputMediaPhoto(
+                media=img_url,
+                caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
+                        f"Name: {name}\n"
+                        f"Rarity: {rarity}\n"
+                        f"Price: {price} Crystals"
+            ),
+            reply_markup=reply_markup
+        )
+    else:
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=img_url,
+            caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
+                    f"Name: {name}\n"
+                    f"Rarity: {rarity}\n"
+                    f"Price: {price} Crystals",
+            reply_markup=reply_markup
+        )
+
+# Function to handle shop button callbacks
+async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = query.from_user.id
+    chat_id = query.message.chat_id
+    current_date = datetime.today().strftime("%Y-%m-%d")
+
+    # Verify if the user is the owner of the shop
+    if chat_id not in active_shops or active_shops[chat_id] != user_id:
+        await query.answer("❌ You cannot interact with this shop as you didn't start it.")
+        return
+
+    # Retrieve shop data for the user
+    shop_data = await user_shops_collection.find_one({"user_id": user_id, "date": current_date})
+    if not shop_data:
+        await query.answer("❌ Shop data not found. Use /ystore again.")
+        return
+
+    current_index = shop_data["index"]
+
+    # Handle actions for buttons
+    if query.data.startswith("buy_"):
+        current_character_id = shop_data["characters"][current_index]["id"]
+
+        # Check if the user has already bought the character
+        purchased_ids = shop_data.get("purchased_ids", [])
+        if current_character_id in purchased_ids:
+            await query.answer("❌ You have already bought this character!")
+            return
+
+        # Handle purchase
+        await handle_purchase(query, shop_data, user_id)
+
+        # Update shop data with the purchased character ID
+        purchased_ids.append(current_character_id)
+        await user_shops_collection.update_one(
+            {"user_id": user_id, "date": current_date},
+            {"$set": {"purchased_ids": purchased_ids}}
+        )
+    elif query.data == "next":
+        new_index = (current_index + 1) % len(shop_data["characters"])
+        await user_shops_collection.update_one(
+            {"user_id": user_id, "date": current_date},
+            {"$set": {"index": new_index}}
+        )
+        shop_data["index"] = new_index
+        await send_shop_item(update, context, shop_data, edit=True)
+    elif query.data == "backup":
+        new_index = (current_index - 1) % len(shop_data["characters"])
+        await user_shops_collection.update_one(
+            {"user_id": user_id, "date": current_date},
+            {"$set": {"index": new_index}}
+        )
+        shop_data["index"] = new_index
+        await send_shop_item(update, context, shop_data, edit=True)
+
+# Add handlers
+application.add_handler(CommandHandler("dailyshop", y_store))
+application.add_handler(CallbackQueryHandler(handle_shop_callback))
+    
+
+
 last_usage_time = {}
 generated_codes = {}
 
