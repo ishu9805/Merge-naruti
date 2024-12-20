@@ -144,7 +144,7 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     # Retrieve shop data for the user
-    shop_data = await user_shops_collection.find_one({"user_id": user_id, "date": current_date})
+    shop_data = await user_shops_collection.find_one({"id": user_id, "date": current_date})
     if not shop_data:
         await query.answer("❌ Shop data not found. Use /ystore again.")
         return
@@ -167,13 +167,13 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         # Update shop data with the purchased character ID
         purchased_ids.append(current_character_id)
         await user_shops_collection.update_one(
-            {"user_id": user_id, "date": current_date},
+            {"id": user_id, "date": current_date},
             {"$set": {"purchased_ids": purchased_ids}}
         )
     elif query.data == "nextup":
         new_index = (current_index + 1) % len(shop_data["characters"])
         await user_shops_collection.update_one(
-            {"user_id": user_id, "date": current_date},
+            {"id": user_id, "date": current_date},
             {"$set": {"index": new_index}}
         )
         shop_data["index"] = new_index
@@ -181,7 +181,7 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     elif query.data == "backup":
         new_index = (current_index - 1) % len(shop_data["characters"])
         await user_shops_collection.update_one(
-            {"user_id": user_id, "date": current_date},
+            {"id": user_id, "date": current_date},
             {"$set": {"index": new_index}}
         )
         shop_data["index"] = new_index
@@ -198,7 +198,7 @@ async def handle_purchase(query, shop_data, user_id):
     character_id = character["id"]
     
     # Retrieve the user's current coins from the database (assuming you have a 'user_collection' in MongoDB)
-    user_data = await user_collection.find_one({"user_id": user_id})
+    user_data = await user_collection.find_one({"id": user_id})
     if not user_data:
         await query.answer("❌ User data not found. Please try again later.")
         return
@@ -212,7 +212,7 @@ async def handle_purchase(query, shop_data, user_id):
     # Deduct the coins
     new_coin_balance = user_coins - character_price
     await user_collection.update_one(
-        {"user_id": user_id},
+        {"id": user_id},
         {"$set": {"coins": new_coin_balance}}
     )
 
@@ -221,7 +221,7 @@ async def handle_purchase(query, shop_data, user_id):
     updated_collection.append(character_id)
     
     await user_collection.update_one(
-        {"user_id": user_id},
+        {"id": user_id},
         {"$set": {"collection": updated_collection}}
     )
 
