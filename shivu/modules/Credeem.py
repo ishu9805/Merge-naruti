@@ -26,7 +26,7 @@ async def daily_code(update, context):
             return
 
     code = generate_random_code()
-    amount = random.randint(10, 4000)
+    amount = random.randint(10, 2500)
     quantity = 1
 
     last_usage_time[user_id] = datetime.datetime.now()
