@@ -4,6 +4,12 @@ import datetime
 from telegram.ext import CommandHandler
 from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER
+import random
+import string
+import datetime
+from telegram.ext import CommandHandler
+from shivu import application, user_collection, PARTNER, ban_collection
+from shivu import LOGGER
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
@@ -17,8 +23,8 @@ user_shops_collection = db["user_shops"]
 # Global dictionary to store shop user IDs
 active_shops = {}
 
-# Define rarities and their prices
-rarity_prices = {
+# Define prices and their rarities
+price_rarities = {
     3000: '⚪️ Common', 
     5000: '🟣 Rare',
     8000: '🟡 Legendary',
@@ -49,17 +55,17 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Generate a new shop with 3 random characters
         characters = await collection.aggregate([{"$sample": {"size": 3}}]).to_list(length=3)
 
-        # Assign unique rarities to the 3 characters
-        rarities = list(rarity_prices.keys())  # Extract rarity price keys
-        random.shuffle(rarities)  # Shuffle to assign different rarities
+        # Assign unique prices to the 3 characters
+        prices = list(price_rarities.keys())  # Extract price keys
+        random.shuffle(prices)  # Shuffle to assign different prices
 
         # Prepare character data with all fields
         prepared_characters = [
             {
                 "name": char["name"],
                 "anime": char["anime"],
-                "rarity": rarities.pop(),
-                "price": rarity_prices.get(char["rarity"], "Unknown"),
+                "rarity": prices.pop(),
+                "price": price_rarities.get(char["rarity"], "Unknown"),
                 "img_url": char["img_url"],
                 "id": char["id"]
             }
@@ -88,7 +94,7 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
     # Extract character details
     name = character['name']
     rarity = character['rarity']
-    price = rarity_prices.get(character['rarity'])
+    price = price_rarities.get(character['rarity'])
     img_url = character['img_url']
     id = character['id']
     
@@ -109,8 +115,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
                 media=img_url,
                 caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
                         f"Name: {name}\n"
-                        f"Rarity: {rarity}\n"
-                        f"Price: {price} Crystals"
+                        f"Price: {price} Coins\n"
+                        f"Rarity: {rarity}"
             ),
             reply_markup=reply_markup
         )
@@ -120,8 +126,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
             photo=img_url,
             caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
                     f"Name: {name}\n"
-                    f"Rarity: {rarity}\n"
-                    f"Price: {price} Crystals",
+                    f"Price: {price} Coins\n"
+                    f"Rarity: {rarity}",
             reply_markup=reply_markup
         )
 
@@ -188,30 +194,29 @@ async def handle_purchase(query, shop_data, user_id):
     character = shop_data["characters"][current_index]
     character_name = character["name"]
     character_rarity = character["rarity"]
-    character_price = rarity_prices.get(character["rarity"], "Unknown")
+    character_price = price_rarities.get(character["rarity"], "Unknown")
     character_id = character["id"]
     
-    # Retrieve the user's current crystals from the database (assuming you have a 'user_collection' in MongoDB)
+    # Retrieve the user's current coins from the database (assuming you have a 'user_collection' in MongoDB)
     user_data = await user_collection.find_one({"user_id": user_id})
     if not user_data:
         await query.answer("❌ User data not found. Please try again later.")
         return
 
-    # Check if the user has enough crystals
-    user_crystals = user_data.get("coins", 0)
-    if user_crystals < character_price:
+    # Check if the user has enough coins
+    user_coins = user_data.get("coins", 0)
+    if user_coins < character_price:
         await query.answer(f"❌ You don't have enough coins to buy {character_name}.")
         return
 
-    # Deduct the crystals
-    new_crystal_balance = user_crystals - character_price
+    # Deduct the coins
+    new_coin_balance = user_coins - character_price
     await user_collection.update_one(
         {"user_id": user_id},
-        {"$set": {"coins": new_crystal_balance}}
+        {"$set": {"coins": new_coin_balance}}
     )
 
     # Add the character to the user's collection (assuming a 'user_collection' with a 'collection' field)
-    # You can adjust this logic depending on your database structure
     updated_collection = user_data.get("collection", [])
     updated_collection.append(character_id)
     
@@ -221,23 +226,26 @@ async def handle_purchase(query, shop_data, user_id):
     )
 
     # Confirm the purchase
-    await query.answer(f"✅ You successfully bought {character_name} for {character_price} crystals!")
+    await query.answer(f"✅ You successfully bought {character_name} for {character_price} coins!")
     
     # Optionally, you can update the shop data and send a message about the next item
     await query.message.edit_caption(
         caption=f"🎉 Purchase Successful! You bought {character_name}!\n"
-                f"Remaining coins: {new_crystal_balance}",
+                f"Remaining coins: {new_coin_balance}",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("⬅️ 𝗕𝗔𝗖𝗞", callback_data="backup"),
              InlineKeyboardButton("𝗡𝗘𝗫𝗧 ➡️", callback_data="nextup")]
         ])
     )
-    
+
 # Add handlers
 
 application.add_handler(CommandHandler("dailyshop", y_store))
 application.add_handler(CallbackQueryHandler(handle_shop_callback))
-    
+
+# Add handlers
+
+
 
 
 last_usage_time = {}
