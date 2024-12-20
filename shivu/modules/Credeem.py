@@ -181,6 +181,58 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         shop_data["index"] = new_index
         await send_shop_item(update, context, shop_data, edit=True)
 
+
+async def handle_purchase(query, shop_data, user_id):
+    # Get the current character being purchased
+    current_index = shop_data["index"]
+    character = shop_data["characters"][current_index]
+    character_name = character["name"]
+    character_rarity = character["rarity"]
+    character_price = rarity_prices.get(character["rarity"], "Unknown")
+    character_id = character["id"]
+    
+    # Retrieve the user's current crystals from the database (assuming you have a 'user_collection' in MongoDB)
+    user_data = await user_collection.find_one({"user_id": user_id})
+    if not user_data:
+        await query.answer("❌ User data not found. Please try again later.")
+        return
+
+    # Check if the user has enough crystals
+    user_crystals = user_data.get("coins", 0)
+    if user_crystals < character_price:
+        await query.answer(f"❌ You don't have enough coins to buy {character_name}.")
+        return
+
+    # Deduct the crystals
+    new_crystal_balance = user_crystals - character_price
+    await user_collection.update_one(
+        {"user_id": user_id},
+        {"$set": {"coins": new_crystal_balance}}
+    )
+
+    # Add the character to the user's collection (assuming a 'user_collection' with a 'collection' field)
+    # You can adjust this logic depending on your database structure
+    updated_collection = user_data.get("collection", [])
+    updated_collection.append(character_id)
+    
+    await user_collection.update_one(
+        {"user_id": user_id},
+        {"$set": {"collection": updated_collection}}
+    )
+
+    # Confirm the purchase
+    await query.answer(f"✅ You successfully bought {character_name} for {character_price} crystals!")
+    
+    # Optionally, you can update the shop data and send a message about the next item
+    await query.message.edit_caption(
+        caption=f"🎉 Purchase Successful! You bought {character_name}!\n"
+                f"Remaining coins: {new_crystal_balance}",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("⬅️ 𝗕𝗔𝗖𝗞", callback_data="backup"),
+             InlineKeyboardButton("𝗡𝗘𝗫𝗧 ➡️", callback_data="nextup")]
+        ])
+    )
+    
 # Add handlers
 
 application.add_handler(CommandHandler("dailyshop", y_store))
