@@ -23,21 +23,23 @@ user_shops_collection = db["user_shops"]
 active_shops = {}
 
 # Define prices and their rarities
+# Updated prices and their rarities
 price_rarities = {
-    3000: '⚪️ Common',
-    5000: '🟣 Rare',
-    7000: '🟢 Medium',
-    8000: '🟡 Legendary',
-    15000: '💮 Special Edition',
-    50000: '🔮 Limited Edition',
-    100000: '🌤 Summer',
-    200000: '❄️ Winter',
-    500000: '🎐 Celestial',
-    500000: '💝 Valentine',
-    500000: '🎃 Halloween',
-    500000: '🎄 Christmas Special'
+    '⚪️ Common': 3000,
+    '🟣 Rare': 5000,
+    '🟢 Medium': 7000,
+    '🟡 Legendary': 8000,
+    '💮 Special Edition': 15000,
+    '🔮 Limited Edition': 50000,
+    '🌤 Summer': 100000,
+    '❄️ Winter': 200000,
+    '🎐 Celestial': 500000,
+    '💝 Valentine': 500000,
+    '🎃 Halloween': 500000,
+    '🎄 Christmas Special': 500000
 }
 
+# Function to start the shop
 # Function to start the shop
 async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -51,19 +53,20 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
     shop_data = await user_shops_collection.find_one({"id": user_id, "date": current_date})
     if not shop_data:
         characters = await collection.aggregate([{"$sample": {"size": 3}}]).to_list(length=3)
-        prices = list(price_rarities.keys())
-        random.shuffle(prices)
+        rarities = list(price_rarities.keys())  # Use the rarity names
+        random.shuffle(rarities)
 
         prepared_characters = [
             {
                 "name": char["name"],
                 "anime": char["anime"],
-                "rarity": price_rarities[prices.pop()],
-                "price": prices.pop(),
+                "rarity": rarity,
+                "price": price_rarities[rarity],  # Use price corresponding to rarity
                 "img_url": char["img_url"],
-                "id": char["id"]
+                "id": char["id"],
+                "purchased": False  # Add purchased status
             }
-            for char in characters
+            for char, rarity in zip(characters, rarities)
         ]
         shop_data = {
             "id": user_id,
@@ -84,9 +87,14 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
     rarity = character['rarity']
     price = character['price']
     img_url = character['img_url']
+    purchased = character['purchased']
+
+    # Disable buy button if character is already purchased
+    buy_button_text = "ᑭᑌᖇᑕᕼᗩՏᗴ 🛍️" if not purchased else "𝗦𝗢𝗟𝗗 🛑"
+    buy_button_callback = f"buyup_{current_index}" if not purchased else ""
 
     keyboard = [
-        [InlineKeyboardButton("ᑭᑌᖇᑕᕼᗩՏᗴ 🛍️", callback_data=f"buyup_{current_index}")],
+        [InlineKeyboardButton(buy_button_text, callback_data=buy_button_callback)],
         [
             InlineKeyboardButton("⬅️ Bᴀᴄᴋ", callback_data="backup"),
             InlineKeyboardButton("Nᴇxᴛ ➡️", callback_data="nextup")
@@ -99,7 +107,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
             media=InputMediaPhoto(
                 media=img_url,
                 caption=f"𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
-                        f"Name: {name}\nPrice: {price} Coins\nRarity: {rarity}"
+                        f"Name: {name}\nPrice: {price} Coins\nRarity: {rarity}\n"
+                        f"{'SOLD OUT' if purchased else ''}"
             ),
             reply_markup=reply_markup
         )
@@ -108,9 +117,13 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
             chat_id=update.effective_chat.id,
             photo=img_url,
             caption=f"𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
-                    f"Name: {name}\nPrice: {price} Coins\nRarity: {rarity}",
+                    f"Name: {name}\nPrice: {price} Coins\nRarity: {rarity}\n"
+                    f"{'SOLD OUT' if purchased else ''}",
             reply_markup=reply_markup
         )
+
+
+
 
 # Function to handle shop callbacks
 async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -139,27 +152,45 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await user_shops_collection.update_one({"id": user_id, "date": current_date}, {"$set": {"index": shop_data["index"]}})
         await send_shop_item(update, context, shop_data, edit=True)
 
-# Function to handle purchases
-async def handle_purchase(query, shop_data, user_id):
-    current_character = shop_data['characters'][shop_data['index']]
-    user_data = await user_collection.find_one({"id": user_id})
 
-    if not user_data or user_data.get("coins", 0) < current_character["price"]:
-        await query.answer(f"❌ Not enough coins to buy {current_character['name']}.")
+async def handle_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    current_index = int(update.callback_query.data.split('_')[1])
+    shop_data = await user_shops_collection.find_one({"id": user_id, "date": datetime.today().strftime("%Y-%m-%d")})
+
+    if not shop_data:
         return
 
-    await user_collection.update_one({"id": user_id}, {
-        "$inc": {"coins": -current_character["price"]},
-        "$addToSet": {"collection": current_character["id"]}
-    })
-    await query.answer(f"✅ Purchased {current_character['name']}!")
-    await query.message.edit_caption(
-        caption=f"🎉 Purchase Successful! You bought {current_character['name']}!",
-        reply_markup=None
-    )
+    character = shop_data['characters'][current_index]
+
+    # Check if character is already purchased
+    if character['purchased']:
+        await update.callback_query.answer("This character has already been bought.", show_alert=True)
+        return
+
+    # Deduct coins (example logic, implement your own deduction logic)
+    user_coins = await get_user_coins(user_id)  # You need to implement this function
+    if user_coins >= character['price']:
+        # Deduct coins
+        new_balance = user_coins - character['price']
+        await update_user_coins(user_id, new_balance)  # You need to implement this function
+
+        # Mark as purchased
+        character['purchased'] = True
+        await user_shops_collection.update_one(
+            {"id": user_id, "date": datetime.today().strftime("%Y-%m-%d")},
+            {"$set": {"characters": shop_data['characters']}}
+        )
+
+        await update.callback_query.answer(f"You've bought {character['name']} for {character['price']} Coins!", show_alert=True)
+        await send_shop_item(update, context, shop_data, edit=True)
+    else:
+        await update.callback_query.answer("You don't have enough coins.", show_alert=True)
+
 
 # Handlers
-application.add_handler(CommandHandler("ystore", y_store))
+application.add_handler(CommandHandler("dailyshop", y_store))
 application.add_handler(CallbackQueryHandler(handle_shop_callback))
 
 
