@@ -29,7 +29,7 @@ price_rarities = {
     5000: '🟣 Rare',
     8000: '🟡 Legendary',
     7000: '🟢 Medium',
-    10000: '💮 Special edition',
+    15000: '💮 Special edition',
     50000: '🔮 Limited Edition',
     100000: '🌤 Summer',
     500000: '🎐 Celestial',
