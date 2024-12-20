@@ -17,7 +17,7 @@ from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER, collection 
 
 # MongoDB Collection for user shops
-user_shops_collection = db["user_shops"]
+user_daily_shop = db["user_shops"]
 
 # Global dictionary to store active shop user IDs
 active_shops = {}
@@ -71,10 +71,8 @@ async def update_user_coins(user_id, new_balance, character):
 
     # Return success or failure based on the update
     return result.modified_count > 0
-# Returns True if the update was successful
-    
-# Function to start the shop
-# Function to start the shop
+
+
 async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
@@ -90,18 +88,42 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
         rarities = list(price_rarities.keys())  # Use the rarity names
         random.shuffle(rarities)
 
-        prepared_characters = [
-            {
-                "name": char["name"],
-                "anime": char["anime"],
-                "rarity": rarity,
-                "price": price_rarities[rarity],  # Use price corresponding to rarity
-                "img_url": char["img_url"],
-                "id": char["id"],
-                "purchased": False  # Add purchased status
-            }
-            for char, rarity in zip(characters, rarities)
-        ]
+        prepared_characters = []
+        for char in characters:
+            rarity = char["rarity"]
+            # Check if rarity exists in the price_rarities dictionary
+            if rarity in price_rarities:
+                price = price_rarities[rarity]  # Assign price according to rarity
+                prepared_characters.append({
+                    "name": char["name"],
+                    "anime": char["anime"],
+                    "rarity": rarity,
+                    "price": price,  # Use the price corresponding to rarity
+                    "img_url": char["img_url"],
+                    "id": char["id"],
+                    "purchased": False  # Add purchased status
+                })
+            else:
+                # Skip the character if rarity is not present in price_rarities
+                continue
+
+        if not prepared_characters:
+            # If no valid characters were found, pick more characters
+            characters = await collection.aggregate([{"$sample": {"size": 3}}]).to_list(length=3)
+            for char in characters:
+                rarity = char["rarity"]
+                if rarity in price_rarities:
+                    price = price_rarities[rarity]
+                    prepared_characters.append({
+                        "name": char["name"],
+                        "anime": char["anime"],
+                        "rarity": rarity,
+                        "price": price,
+                        "img_url": char["img_url"],
+                        "id": char["id"],
+                        "purchased": False
+                    })
+        
         shop_data = {
             "id": user_id,
             "date": current_date,
@@ -112,7 +134,8 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_shop_item(update, context, shop_data, edit=False)
 
-# Function to send a shop item
+
+
 async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, shop_data, edit=True):
     current_index = shop_data['index']
     character = shop_data['characters'][current_index]
