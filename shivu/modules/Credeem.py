@@ -44,6 +44,15 @@ async def get_user_coins(user_id):
     if user_doc:
         return user_doc.get("coins", 0)  # Assuming 'coins' is the field in the user document
     return 0
+
+
+async def update_user_coins(user_id, new_balance):
+    result = await user_collection.update_one(
+        {"id": user_id}, 
+        {"$set": {"coins": new_balance}}, 
+        upsert=True  # This ensures a new user is created if they don't exist
+    )
+    return result.modified_count > 0  # Returns True if the update was successful
     
 # Function to start the shop
 # Function to start the shop
