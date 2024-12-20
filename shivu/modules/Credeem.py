@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler
 from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER
 
-from datetime import datetime
+ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 from shivu import application, user_collection, db, collection
@@ -49,12 +49,16 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Generate a new shop with 3 random characters
         characters = await collection.aggregate([{"$sample": {"size": 3}}]).to_list(length=3)
 
+        # Assign unique rarities to the 3 characters
+        rarities = list(rarity_prices.keys())  # Extract rarity price keys
+        random.shuffle(rarities)  # Shuffle to assign different rarities
+
         # Prepare character data with all fields
         prepared_characters = [
             {
                 "name": char["name"],
                 "anime": char["anime"],
-                "rarity": char["rarity"],
+                "rarity": rarities.pop(),
                 "price": rarity_prices.get(char["rarity"], "Unknown"),
                 "img_url": char["img_url"],
                 "id": char["id"]
@@ -90,10 +94,10 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
     
     # Prepare buttons
     keyboard = [
-        [InlineKeyboardButton("𝗕𝗨𝗬", callback_data=f"buy_{current_index}")],
+        [InlineKeyboardButton("ᑭᑌᖇᑕᕼᗩՏᗴ  🛍️", callback_data=f"buyup_{current_index}")],
         [
-            InlineKeyboardButton("𝗕𝗔𝗖𝗞", callback_data="backup"),
-            InlineKeyboardButton("𝗡𝗘𝗫𝗧", callback_data="next")
+            InlineKeyboardButton("⬅️ Bᴀᴄᴋ", callback_data="backup"),
+            InlineKeyboardButton("Nᴇxᴛ ➡️", callback_data="nextup")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -142,7 +146,7 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     current_index = shop_data["index"]
 
     # Handle actions for buttons
-    if query.data.startswith("buy_"):
+    if query.data.startswith("buyup_"):
         current_character_id = shop_data["characters"][current_index]["id"]
 
         # Check if the user has already bought the character
@@ -160,7 +164,7 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
             {"user_id": user_id, "date": current_date},
             {"$set": {"purchased_ids": purchased_ids}}
         )
-    elif query.data == "next":
+    elif query.data == "nextup":
         new_index = (current_index + 1) % len(shop_data["characters"])
         await user_shops_collection.update_one(
             {"user_id": user_id, "date": current_date},
@@ -178,6 +182,7 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await send_shop_item(update, context, shop_data, edit=True)
 
 # Add handlers
+
 application.add_handler(CommandHandler("dailyshop", y_store))
 application.add_handler(CallbackQueryHandler(handle_shop_callback))
     
