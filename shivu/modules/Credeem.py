@@ -49,7 +49,7 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active_shops[chat_id] = user_id
 
     # Retrieve shop data for the user from the database
-    shop_data = await user_shops_collection.find_one({"user_id": user_id, "date": current_date})
+    shop_data = await user_shops_collection.find_one({"id": user_id, "date": current_date})
 
     if not shop_data:
         # Generate a new shop with 3 random characters
@@ -74,7 +74,7 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Store the shop data in the database
         shop_data = {
-            "user_id": user_id,
+            "id": user_id,
             "date": current_date,
             "characters": prepared_characters,
             "index": 0
