@@ -154,10 +154,10 @@ async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await send_shop_item(update, context, shop_data, edit=True)
 
 
-async def handle_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
-    current_index = int(update.callback_query.data.split('_')[1])
+async def handle_purchase(query, shop_data, user_id):
+    user_id = query.from_user.id
+    chat_id = query.message.chat_id
+    current_index = int(query.data.split('_')[1])
     shop_data = await user_shops_collection.find_one({"id": user_id, "date": datetime.today().strftime("%Y-%m-%d")})
 
     if not shop_data:
@@ -167,7 +167,7 @@ async def handle_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check if character is already purchased
     if character['purchased']:
-        await update.callback_query.answer("This character has already been bought.", show_alert=True)
+        await query.answer("This character has already been bought.", show_alert=True)
         return
 
     # Deduct coins (example logic, implement your own deduction logic)
@@ -184,10 +184,10 @@ async def handle_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
             {"$set": {"characters": shop_data['characters']}}
         )
 
-        await update.callback_query.answer(f"You've bought {character['name']} for {character['price']} Coins!", show_alert=True)
+        await query.answer(f"You've bought {character['name']} for {character['price']} Coins!", show_alert=True)
         await send_shop_item(update, context, shop_data, edit=True)
     else:
-        await update.callback_query.answer("You don't have enough coins.", show_alert=True)
+        await query.answer("You don't have enough coins.", show_alert=True)
 
 
 # Handlers
