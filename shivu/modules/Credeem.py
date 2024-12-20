@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler
 from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER
 
- from datetime import datetime
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 from shivu import application, user_collection, db, collection
