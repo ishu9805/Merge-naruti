@@ -14,7 +14,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 from shivu import application, user_collection, db, PARTNER, ban_collection
 from telegram.ext import CommandHandler
 from shivu import application, user_collection, PARTNER, ban_collection
-from shivu import LOGGER
+from shivu import LOGGER, collection 
 
 # MongoDB Collection for user shops
 user_shops_collection = db["user_shops"]
