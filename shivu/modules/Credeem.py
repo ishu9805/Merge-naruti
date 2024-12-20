@@ -46,13 +46,32 @@ async def get_user_coins(user_id):
     return 0
 
 
-async def update_user_coins(user_id, new_balance):
+async def update_user_coins(user_id, new_balance, character):
+    # First, update the user's coin balance
     result = await user_collection.update_one(
         {"id": user_id}, 
         {"$set": {"coins": new_balance}}, 
-        upsert=True  # This ensures a new user is created if they don't exist
+        upsert=True  # Creates the user if they don't exist
     )
-    return result.modified_count > 0  # Returns True if the update was successful
+    
+    # Now, add the character to the user's collection
+    character_data = {
+        "name": character["name"],
+        "anime": character["anime"],
+        "rarity": character["rarity"],
+        "img_url": character["img_url"],
+        "price": character["price"],  # Assuming price is part of the character data
+        "id": character["id"]
+    }
+    
+    await user_collection.update_one(
+        {"id": user_id},
+        {"$push": {"characters": character_data}}
+    )
+
+    # Return success or failure based on the update
+    return result.modified_count > 0
+# Returns True if the update was successful
     
 # Function to start the shop
 # Function to start the shop
