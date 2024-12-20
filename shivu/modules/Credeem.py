@@ -87,7 +87,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
     rarity = character['rarity']
     price = character['price']
     img_url = character['img_url']
-    purchased = character['purchased']
+    purchased = character.get('purchased', False)  # Defaults to False if 'purchased' is not found
+
 
     # Disable buy button if character is already purchased
     buy_button_text = "ᑭᑌᖇᑕᕼᗩՏᗴ 🛍️" if not purchased else "𝗦𝗢𝗟𝗗 🛑"
