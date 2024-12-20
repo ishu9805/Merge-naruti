@@ -41,7 +41,7 @@ price_rarities = {
 
 # Function to start the store
 async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
+    user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     current_date = datetime.today().strftime("%Y-%m-%d")  # Use formatted date
 
@@ -134,7 +134,7 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
 # Function to handle shop button callbacks
 async def handle_shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user_id = str(query.from_user.id)
+    user_id = query.from_user.id
     chat_id = query.message.chat_id
     current_date = datetime.today().strftime("%Y-%m-%d")
 
