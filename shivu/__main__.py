@@ -164,10 +164,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     }
 
     spawn_counts = {
-        '⚪️ Common': 7,  
-        '🟣 Rare': 5,      
-        '🟢 Medium': 5,
-        '🟡 Legendary': 8,  
+        '⚪️ Common': 5,  
+        '🟣 Rare': 3,      
+        '🟢 Medium': 2,
+        '🟡 Legendary': 5,  
         '💮 Special Edition': 3,  
         '🔮 Limited Edition': 1,  
         '💸 Premium Edition': 0,  
@@ -176,7 +176,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '❄️ Winter': 1,  
         '💝 Valentine': 0,  
         '🎃 Halloween': 0,  
-        '🎄 Christmas Special': 0  
+        '🎄 Christmas Special': 1 
     }
 
     # Adjust spawn counts for Special Edition
@@ -197,8 +197,11 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     # Log if a Halloween character spawns
     if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=7378476666, text=f"A Halloween character has spawned! Character id: {character['id']}")
+        await context.bot.send_message(chat_id=7378476666, text=f"A winter character has spawned! Character id: {character['id']}")
 
+    if character.get('rarity') == '🎄 Christmas Special':
+        await context.bot.send_message(chat_id=7378476666, text=f"A christmas character has spawned! Character id: {character['id']}")
+        
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')  
 
     sent_characters[chat_id].append(character.get('id'))
