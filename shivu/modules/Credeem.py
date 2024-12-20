@@ -6,7 +6,7 @@ from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER
 import random
 import string
-import dimport random
+import random
 import string
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
