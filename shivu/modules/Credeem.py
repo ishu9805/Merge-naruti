@@ -115,8 +115,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
                 media=img_url,
                 caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
                         f"Name: {name}\n"
-                        f"Price: {price} Coins\n"
-                        f"Rarity: {rarity}"
+                        f"Price: {rarity} Coins\n"
+                        f"Rarity: {price}"
             ),
             reply_markup=reply_markup
         )
@@ -126,8 +126,8 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
             photo=img_url,
             caption=f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ\n𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥 𝗦𝗛𝗢𝗣 🏷️\n\n"
                     f"Name: {name}\n"
-                    f"Price: {price} Coins\n"
-                    f"Rarity: {rarity}",
+                    f"Price: {rarity} Coins\n"
+                    f"Rarity: {price}",
             reply_markup=reply_markup
         )
 
