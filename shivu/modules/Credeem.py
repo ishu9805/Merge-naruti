@@ -39,6 +39,12 @@ price_rarities = {
     '🎄 Christmas Special': 500000
 }
 
+async def get_user_coins(user_id):
+    user_doc = await user_collection.find_one({"id": user_id})
+    if user_doc:
+        return user_doc.get("coins", 0)  # Assuming 'coins' is the field in the user document
+    return 0
+    
 # Function to start the shop
 # Function to start the shop
 async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
