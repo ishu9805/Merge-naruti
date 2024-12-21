@@ -122,7 +122,7 @@ async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, sho
         purchased = character.get('purchased', False)
 
         buy_button_text = "ᑭᑌᖇᑕᕼᗩՏᗴ 🛍️" if not purchased else "𝗦𝗢𝗟𝗗 🛑"
-        buy_button_callback = f"buyup_{current_index}" if not purchased else ""
+        buy_button_callback = f"buyup_{current_index}" if not purchased else "sold_out"
 
         keyboard = [
             [InlineKeyboardButton(buy_button_text, callback_data=buy_button_callback)],
