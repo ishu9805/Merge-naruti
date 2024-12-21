@@ -111,8 +111,10 @@ async def y_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("An error occurred while accessing the shop.")
 
 async def send_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE, shop_data, edit=True):
-    current_index = shop_data['index']
-    character = shop_data['characters'][current_index try:
+    try:
+        current_index = shop_data['index']
+        character = shop_data['characters'][current_index]
+    
         name = character['name']
         rarity = character['rarity']
         price = character['price']
