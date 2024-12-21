@@ -232,7 +232,7 @@ async def handle_purchase(query, shop_data, user_id):
     if user_coins >= character['price']:
         # Deduct coins
         new_balance = user_coins - character['price']
-        await update_user_coins(user_id, new_balance)  # You need to implement this function
+        await update_user_coins(user_id, new_balance, character)  # You need to implement this function
 
         # Mark as purchased
         character['purchased'] = True
