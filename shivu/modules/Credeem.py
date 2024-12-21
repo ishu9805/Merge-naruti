@@ -17,7 +17,7 @@ from shivu import application, user_collection, PARTNER, ban_collection
 from shivu import LOGGER, collection 
 
 # MongoDB Collection for user shops
-user_daily_shop = db["user_shops"]
+user_shops_collection = db["user_shop"]
 
 # Global dictionary to store active shop user IDs
 active_shops = {}
