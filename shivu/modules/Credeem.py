@@ -7,7 +7,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMe
 from telegram.ext import ContextTypes
 
 # MongoDB Collection for user shops
-user_shops_collection = db["user_shop"]
+user_shops_collection = db["dailyshop"]
 
 # Global dictionary to store active shop user IDs
 active_shops = {}
