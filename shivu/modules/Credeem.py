@@ -215,8 +215,8 @@ async def handle_purchase(query, shop_data, user_id):
         await query.answer("An error occurred while processing your purchase.", show_alert=True)
 
 # Handlers
-application.add_handler(CommandHandler("dailyshop", y_store))
-application.add_handler(CallbackQueryHandler(handle_shop_callback))
+#application.add_handler(CommandHandler("dailyshop", y_store))
+#application.add_handler(CallbackQueryHandler(handle_shop_callback))
 
 last_usage_time = {}
 generated_codes = {}
