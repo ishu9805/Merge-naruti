@@ -1,7 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
-from shivu import user_collection
+from shivu import user_collection, ban_collection
 from shivu import shivuu
 
 # Global variables to track pending gifts, trades, locks, and cooldowns
@@ -15,6 +15,10 @@ cooldowns = {}              # Track users and their last confirmed gift or trade
 @shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
     sender_id = message.from_user.id
+
+    is_banned = await ban_collection.find_one({"user_id": sender_id})
+    if is_banned:
+        return
 
     # Check if the user has recently confirmed a gift (15 sec cooldown)
     if sender_id in cooldowns:
@@ -147,6 +151,9 @@ async def on_callback_query(client, callback_query):
 async def trade(client, message):
     sender_id = message.from_user.id
 
+    is_banned = await ban_collection.find_one({"user_id": sender_id})
+    if is_banned:
+        return
     # Check if the user has recently confirmed a trade (15 sec cooldown)
     if sender_id in cooldowns:
         time_since_last_trade = time.time() - cooldowns[sender_id]
