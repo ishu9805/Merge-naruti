@@ -1,6 +1,56 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ChatMemberHandler
 from shivu import application, LOGGER_ID  # Assuming LOGGER_ID is the ID for logging
+from telegram import Update
+from telegram.ext import CallbackContext, CommandHandler
+from shivu import application, LOGGER_ID  # Assuming LOGGER_ID is the ID for logging
+
+async def leave_all(update: Update, context: CallbackContext) -> None:
+    # Ensure the command is used by an authorized user (optional)
+    authorized_user_id = 7378476666  # Replace with your user ID
+    if update.effective_user.id != authorized_user_id:
+        await update.effective_message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    bot = context.bot
+    left_groups = []
+    total_groups = 0
+
+    # Fetch all chats the bot is a member of
+    async for dialog in bot.get_dialogs():
+        chat = dialog.chat
+        if chat.type in ["group", "supergroup"]:
+            total_groups += 1
+            try:
+                # Get the member count
+                member_count = await bot.get_chat_members_count(chat.id)
+
+                # Leave the group if members are fewer than 50
+                if member_count < 50:
+                    await bot.leave_chat(chat.id)
+                    left_groups.append((chat.title, chat.id, member_count))
+            except Exception as e:
+                # Log any errors (optional)
+                await bot.send_message(LOGGER_ID, f"Error while processing chat {chat.title} ({chat.id}): {e}")
+
+    # Send a summary to the user
+    if left_groups:
+        summary = (
+            f"🚪 **Left Groups with Less than 50 Members**\n\n"
+            f"💬 *Total Groups Processed:* {total_groups}\n"
+            f"📤 *Groups Left:* {len(left_groups)}\n\n"
+        )
+        for idx, (title, group_id, count) in enumerate(left_groups, start=1):
+            summary += f"{idx}. *{title}* (ID: `{group_id}`) - {count} members\n"
+    else:
+        summary = "✅ The bot is not part of any groups with fewer than 50 members."
+
+    await update.effective_message.reply_text(summary, parse_mode="Markdown")
+
+# Add the handler to the bot
+leave_all_handler = CommandHandler("leaveall", leave_all, block=False)
+application.add_handler(leave_all_handler)
+
 
 async def log_chat_member(update: Update, context: CallbackContext) -> None:
     chat = update.effective_chat
