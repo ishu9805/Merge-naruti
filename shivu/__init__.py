@@ -23,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 
 from shivu.config import Development as Config
 
-
+required_group_id = Config.required_group_id
 api_id = Config.api_id
 api_hash = Config.api_hash
 TOKEN = Config.TOKEN
