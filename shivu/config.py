@@ -16,7 +16,7 @@ class Config(object):
     CHARA_CHANNEL_ID = "-1002117539029"
     api_id = 22792918
     api_hash = "ff10095d2bb96d43d6eb7a7d9fc85f81"
-    
+    required_group_id = -1001999201034
     STRICT_GBAN = True
     ALLOW_CHATS = True
     ALLOW_EXCL = True
