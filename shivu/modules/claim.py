@@ -59,33 +59,39 @@ async def hclaim(_, message: t.Message):
     claim_lock[user_id] = True  # Set the lock
 
     try:
+        # Check if the user is banned
         is_banned = await ban_collection.find_one({"user_id": user_id})
         if is_banned:
             return
 
+    except Exception as e:
+        logging.error(f"Error checking ban status for user {user_id}: {e}")
+        await message.reply_text("An error occurred while checking your ban status. Please try again later.")
+        return
+
     try:
+        # Check if the user is a member of the required group
         member = await app.get_chat_member(required_group_id, user_id)
         if member.status in ['left', 'kicked']:
-          raise Exception("Not a member")
-   except Exception:
+            raise Exception("Not a member")
+    
+    except Exception as e:
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
-        message = (
-          "You need to be a member of our exclusive group to use this command.\n"
-          "Join now and explore the amazing features awaiting you!\n\n"
+        message_text = (
+            "You need to be a member of our exclusive group to use this command.\n"
+            "Join now and explore the amazing features awaiting you!\n\n"
         )
 
         # Add a button for joining the group
         reply_markup = InlineKeyboardMarkup(
-           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
 
-        if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
-        else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
-           return
-    
+        await message.reply_text(message_text, reply_markup=reply_markup, parse_mode="Markdown")
+        logging.error(f"User  {user_id} is not a member of the group: {e}")
+        return
 
+    try:
         user_data = await user_collection.find_one({'id': user_id}) or {
             'id': user_id,
             'username': message.from_user.username,
@@ -120,10 +126,11 @@ async def hclaim(_, message: t.Message):
             await message.reply_photo(photo=character['img_url'], caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*")
 
     except Exception as e:
-        logging.error(f"Error in hclaim: {e}")
+        logging.error(f"Error in hclaim for user {user_id}: {e}")
         await message.reply_text("An error occurred while processing your claim. Please try again later.")
     finally:
         claim_lock.pop(user_id, None)
+
 
 @bot.on_message(filters.command(["check"]))
 async def hfind(_, message: t.Message):
