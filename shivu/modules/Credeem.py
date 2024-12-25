@@ -246,9 +246,9 @@ async def daily_code(update, context):
         )
 
         if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           await update.message.reply_text(message, reply_markup=reply_markup)
         else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
            return
     
     if user_id in last_usage_time:
@@ -333,9 +333,9 @@ async def redeem(update, context):
         )
 
         if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           await update.message.reply_text(message, reply_markup=reply_markup)
         else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
            return111111
 
     if code in generated_codes:
