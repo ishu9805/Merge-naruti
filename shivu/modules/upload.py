@@ -87,7 +87,7 @@ async def find_available_id():
         return str(max(map(int, ids)) + 1).zfill(2)  # Return the next available ID
 
 # Command to upload character information
-@shivuu.on_message(filters.command(["upload"]) & filters.user([7045965842, 5578365728, 7378476666, 1962399469, 6759666329, 1269025261, 760680138, 6965783469, 5316848198, 7228816990, 1118244185]))
+@shivuu.on_message(filters.command(["upload"]) & filters.user([5578365728, 7378476666, 6759666329, 6965783469, 5316848198, 7228816990, 1118244185, 7469481988]))
 async def ul(client, message):
     reply = message.reply_to_message
     if reply and (reply.photo or reply.document):
