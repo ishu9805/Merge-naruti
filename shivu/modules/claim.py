@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import shivuu as bot, user_collection, collection, ban_collection, PARTNER
+from shivu import shivuu as bot, user_collection, collection, ban_collection, PARTNER, required_group_id 
 from shivu import LOGGER
 # Constants
 DEVS = (7378476666)
@@ -63,9 +63,28 @@ async def hclaim(_, message: t.Message):
         if is_banned:
             return
 
-        if str(message.chat.id) != CHAT_ID:
-            join_button = InlineKeyboardMarkup([[InlineKeyboardButton("Join Here", url=JOIN_URL)]])
-            return await message.reply_text("Join to claim your daily free waifu...", reply_markup=join_button)
+    try:
+        member = await app.get_chat_member(required_group_id, user_id)
+        if member.status in ['left', 'kicked']:
+          raise Exception("Not a member")
+   except Exception:
+        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        message = (
+          "You need to be a member of our exclusive group to use this command.\n"
+          "Join now and explore the amazing features awaiting you!\n\n"
+        )
+
+        # Add a button for joining the group
+        reply_markup = InlineKeyboardMarkup(
+           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+        )
+
+        if update.message:
+           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           return
+    
 
         user_data = await user_collection.find_one({'id': user_id}) or {
             'id': user_id,
