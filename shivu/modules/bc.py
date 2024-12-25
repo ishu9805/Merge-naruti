@@ -28,7 +28,7 @@ async def broadcast(update: Update, context: CallbackContext) -> None:
                                               from_chat_id=message_to_broadcast.chat_id,
                                               message_id=message_to_broadcast.message_id)
         except Exception as e:
-            print(f"Failed to send message to {chat_id}: {e}")
+   
             failed_sends += 1
 
     await update.message.reply_text(f"Broadcast complete. Failed to send to {failed_sends} chats/users.")
