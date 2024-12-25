@@ -229,6 +229,28 @@ async def daily_code(update, context):
     if is_banned:
         return
 
+    try:
+        member = await app.get_chat_member(required_group_id, user_id)
+        if member.status in ['left', 'kicked']:
+          raise Exception("Not a member")
+   except Exception:
+        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        message = (
+          "You need to be a member of our exclusive group to use this command.\n"
+          "Join now and explore the amazing features awaiting you!\n\n"
+        )
+
+        # Add a button for joining the group
+        reply_markup = InlineKeyboardMarkup(
+           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+        )
+
+        if update.message:
+           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           return
+    
     if user_id in last_usage_time:
         last_time = last_usage_time[user_id]
         current_time = datetime.datetime.now()
@@ -293,6 +315,28 @@ async def redeem(update, context):
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return
+
+    try:
+        member = await app.get_chat_member(required_group_id, user_id)
+        if member.status in ['left', 'kicked']:
+          raise Exception("Not a member")
+   except Exception:
+        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        message = (
+          "You need to be a member of our exclusive group to use this command.\n"
+          "Join now and explore the amazing features awaiting you!\n\n"
+        )
+
+        # Add a button for joining the group
+        reply_markup = InlineKeyboardMarkup(
+           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+        )
+
+        if update.message:
+           await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
+           return111111
 
     if code in generated_codes:
         details = generated_codes[code]
