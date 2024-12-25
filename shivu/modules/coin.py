@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from shivu import ban_collection
 
 # Assuming these are defined elsewhere in your code
-from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection
+from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection, required_group_id
 from shivu import (application, PHOTO_URL, OWNER_ID,
                     user_collection, top_global_groups_collection, top_global_groups_collection, 
                     group_user_totals_collection)
@@ -527,9 +527,29 @@ async def bonus_coins(update: Update, context: CallbackContext) -> None:
         pass
 
     try:
-        if str(update.effective_chat.id) != SUPPORT_CHAT:
-            await update.message.reply_text("Tʜɪs Cᴏᴍᴍᴀɴᴅ Is Oɴʟʏ Aᴠᴀɪʟᴀʙʟᴇ Iɴ Oᴜʀ Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ. Jᴏɪɴ @Blade_x_support Tᴏ Cʟᴀɪᴍ Yᴏᴜʀ Dᴀɪʟʏ Bᴏɴᴜs!")
-            return
+        member = await app.get_chat_member(required_group_id, user_id)
+        if member.status in ['left', 'kicked']:
+          raise Exception("Not a member")
+    except Exception:
+        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        message = (
+          "You need to be a member of our exclusive group to use this command.\n"
+          "Join now and explore the amazing features awaiting you!\n\n"
+        )
+
+        # Add a button for joining the group
+        reply_markup = InlineKeyboardMarkup(
+           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+        )
+
+        if update.message:
+           await update.message.reply_text(message, reply_markup=reply_markup)
+        else:
+           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
+           return
+          
+    try:
+
         # Retrieve user ID
         user_id = update.effective_user.id
         
