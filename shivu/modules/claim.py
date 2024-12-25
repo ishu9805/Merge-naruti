@@ -8,7 +8,7 @@ from shivu import LOGGER
 # Constants
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
-JOIN_URL = "https://t.me/+xJdjLviEJvpmYjM9"
+JOIN_URL = "https://t.me/naruto_support_chat"
 CHARACTERS_PER_PAGE = 10
 
 # Lock dictionary to track command processing
@@ -87,8 +87,8 @@ async def hclaim(_, message: t.Message):
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
 
-        await message.reply_text(message_text, reply_markup=reply_markup, parse_mode="Markdown")
-        logging.error(f"User  {user_id} is not a member of the group: {e}")
+        await message.reply_text(message_text, reply_markup=reply_markup)
+ 
         return
 
     try:
