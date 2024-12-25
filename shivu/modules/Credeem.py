@@ -320,7 +320,7 @@ async def redeem(update, context):
         member = await app.get_chat_member(required_group_id, user_id)
         if member.status in ['left', 'kicked']:
           raise Exception("Not a member")
-   except Exception:
+    except Exception:
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
         message = (
           "You need to be a member of our exclusive group to use this command.\n"
