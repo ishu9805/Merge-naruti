@@ -27,6 +27,15 @@ price_rarities = {
     '🎄 Christmas Special': 500000
 }
 
+async def is_member(user_id):
+    """Check if a user is part of the required group."""
+    try:
+        member = await application.bot.get_chat_member(required_group_id, user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except Exception:
+        return False
+
+
 async def get_user_coins(user_id):
     try:
         user_doc = await user_collection.find_one({"id": user_id})
@@ -223,46 +232,39 @@ generated_codes = {}
 def generate_random_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
-async def daily_code(update, context):
+async def daily_code(update: Update, _):
     user_id = update.effective_user.id
+
+    # Check for banned user
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return
 
-    try:
-        member = await app.get_chat_member(required_group_id, user_id)
-        if member.status in ['left', 'kicked']:
-          raise Exception("Not a member")
-    except Exception:
+    # Check group membership
+    if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
         message = (
-          "You need to be a member of our exclusive group to use this command.\n"
-          "Join now and explore the amazing features awaiting you!\n\n"
+            "You need to be a member of our exclusive group to use this command.\n"
+            "Join now and explore the amazing features awaiting you!\n\n"
         )
-
-        # Add a button for joining the group
         reply_markup = InlineKeyboardMarkup(
-           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
+        await update.message.reply_text(message, reply_markup=reply_markup)
+        return
 
-        if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup)
-        else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
-           return
-    
+    # Rate limit (24 hours)
     if user_id in last_usage_time:
         last_time = last_usage_time[user_id]
         current_time = datetime.datetime.now()
-        time_diff = current_time - last_time
-        if time_diff.total_seconds() < 86400:  # 24 hours
+        if (current_time - last_time).total_seconds() < 86400:
             await update.message.reply_text("⏳ You can only use this command once every 24 hours.")
             return
 
+    # Generate and save the daily code
     code = generate_random_code()
     amount = random.randint(10, 2500)
     quantity = 1
-
     last_usage_time[user_id] = datetime.datetime.now()
     generated_codes[code] = {'amount': amount, 'quantity': quantity}
 
@@ -274,6 +276,7 @@ async def daily_code(update, context):
         f"<b>To redeem:</b> /credeem {code}"
     )
     await update.message.reply_html(response_text)
+
 
 async def gen(update, context):
     user_id = str(update.effective_user.id)
@@ -307,44 +310,35 @@ async def gen(update, context):
         f"<b>Quantity:</b> {quantity}"
     )
     await context.bot.send_message(chat_id=PARTNER, text=log_text, parse_mode='HTML')
-
-async def redeem(update, context):
-    code = " ".join(context.args)
+async def redeem(update: Update, context):
     user_id = update.effective_user.id
+    code = " ".join(context.args)
 
+    # Check for banned user
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return
 
-    try:
-        member = await app.get_chat_member(required_group_id, user_id)
-        if member.status in ['left', 'kicked']:
-          raise Exception("Not a member")
-    except Exception:
+    # Check group membership
+    if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
         message = (
-          "You need to be a member of our exclusive group to use this command.\n"
-          "Join now and explore the amazing features awaiting you!\n\n"
+            "You need to be a member of our exclusive group to use this command.\n"
+            "Join now and explore the amazing features awaiting you!\n\n"
         )
-
-        # Add a button for joining the group
         reply_markup = InlineKeyboardMarkup(
-           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
+        await update.message.reply_text(message, reply_markup=reply_markup)
+        return
 
-        if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup)
-        else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
-           return111111
-
+    # Validate and redeem code
     if code in generated_codes:
         details = generated_codes[code]
-
         if details['quantity'] > 0:
             user_doc = await user_collection.find_one({'id': user_id})
-
             redeemed_codes = user_doc.get('redeemed_codes', []) if user_doc else []
+
             if code in redeemed_codes:
                 await update.message.reply_text("❌ You have already redeemed this code.")
                 return
@@ -358,22 +352,13 @@ async def redeem(update, context):
                 },
                 upsert=True
             )
-
             details['quantity'] -= 1
-            if details['quantity'] == 0:
-                del generated_codes[code]
-                await user_collection.update_many(
-                    {'redeemed_codes': code},
-                    {'$pull': {'redeemed_codes': code}}
-                )
-
-            await update.message.reply_text(
-                f"✅ Code redeemed successfully! {amount} coins added to your account."
-            )
+            await update.message.reply_text(f"✅ Successfully redeemed {amount} coins!")
         else:
-            await update.message.reply_text("❌ This code has reached its redemption limit.")
+            await update.message.reply_text("❌ Code is no longer available.")
     else:
-        await update.message.reply_text("❌ Invalid code.")
+        await update.message.reply_text("❌ Invalid or expired code.")
+
 
 application.add_handler(CommandHandler("dailycode", daily_code))
 application.add_handler(CommandHandler("gen", gen))
