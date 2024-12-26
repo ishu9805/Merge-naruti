@@ -33,7 +33,13 @@ shops_collection = db["shops"]
 OWNER_ID = "5856750053"
 
 
-
+async def is_member(user_id):
+    """Check if a user is part of the required group."""
+    try:
+        member = await application.bot.get_chat_member(required_group_id, user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except Exception:
+        return False
 
 async def check_balance(update: Update, context: CallbackContext) -> None:
 
@@ -526,27 +532,17 @@ async def bonus_coins(update: Update, context: CallbackContext) -> None:
     else:
         pass
 
-    try:
-        member = await app.get_chat_member(required_group_id, user_id)
-        if member.status in ['left', 'kicked']:
-          raise Exception("Not a member")
-    except Exception:
+    if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
         message = (
-          "You need to be a member of our exclusive group to use this command.\n"
-          "Join now and explore the amazing features awaiting you!\n\n"
+            "You need to be a member of our exclusive group to use this command.\n"
+            "Join now and explore the amazing features awaiting you!\n\n"
         )
-
-        # Add a button for joining the group
         reply_markup = InlineKeyboardMarkup(
-           [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
-
-        if update.message:
-           await update.message.reply_text(message, reply_markup=reply_markup)
-        else:
-           await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
-           return
+        await update.message.reply_text(message, reply_markup=reply_markup)
+        return
           
     try:
 
