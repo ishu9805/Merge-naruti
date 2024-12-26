@@ -15,12 +15,14 @@ CHARACTERS_PER_PAGE = 10
 claim_lock = {}
 
 # New emoji list for fun responses
-EMOJIOS = [
-    "🌟", "🎉", "✨", "🌈", "💖", "🎀", "🍀", "🎊", 
-    "🌸", "💫", "🔥", "🌌", "🐾", "🍭", "🎇", "🔔", 
-    "🦋", "🌼", "🥳", "🦄"
-]
-
+async def is_member(user_id):
+    """Check if a user is part of the required group."""
+    try:
+        member = await application.bot.get_chat_member(required_group_id, user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except Exception:
+        return False
+        
 async def format_time_delta(delta):
     seconds = delta.total_seconds()
     hours, remainder = divmod(seconds, 3600)
@@ -65,30 +67,18 @@ async def hclaim(_, message: t.Message):
             return
 
     except Exception as e:
-        logging.error(f"Error checking ban status for user {user_id}: {e}")
-        await message.reply_text("An error occurred while checking your ban status. Please try again later.")
-        return
-
-    try:
-        # Check if the user is a member of the required group
-        member = await app.get_chat_member(required_group_id, user_id)
-        if member.status in ['left', 'kicked']:
-            raise Exception("Not a member")
-    
-    except Exception as e:
+         return
+        
+    if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
-        message_text = (
+        message = (
             "You need to be a member of our exclusive group to use this command.\n"
             "Join now and explore the amazing features awaiting you!\n\n"
         )
-
-        # Add a button for joining the group
         reply_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
-
-        await message.reply_text(message_text, reply_markup=reply_markup)
- 
+        await update.message.reply_text(message, reply_markup=reply_markup)
         return
         
     claim_lock[user_id] = True
