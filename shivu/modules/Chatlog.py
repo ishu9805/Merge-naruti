@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ChatMemberHandler
-from shivu import application, LOGGER_ID  # Assuming LOGGER_ID is the ID for logging
+from shivu import application  # Assuming LOGGER_ID is the ID for logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
 from shivu import application
