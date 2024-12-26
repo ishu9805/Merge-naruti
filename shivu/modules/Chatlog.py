@@ -3,7 +3,8 @@ from telegram.ext import CallbackContext, ChatMemberHandler
 from shivu import application, LOGGER_ID  # Assuming LOGGER_ID is the ID for logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
-from shivu import application, LOGGER_ID  # Assuming LOGGER_ID is the ID for logging
+from shivu import application
+LOGGER_ID = -1002198664660 # Assuming LOGGER_ID is the ID for logging
 
 async def leave_all(update: Update, context: CallbackContext) -> None:
     # Ensure the command is used by an authorized user (optional)
