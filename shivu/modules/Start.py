@@ -51,7 +51,7 @@ async def start(update: Update, context: CallbackContext) -> None:
                 InlineKeyboardButton("📩 Support", url=f"https://t.me/naruto_support_chat"),
                 InlineKeyboardButton("📢 Updates", url=f"https://t.me/BLADE_X_COMMUNITY")
             ],
-            /[InlineKeyboardButton("🛠 Help", url=f"https://t.me/BLADE_X_COMMUNITY/489")]
+            [InlineKeyboardButton("🛠 Help", url=f"https://t.me/BLADE_X_COMMUNITY/489")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
