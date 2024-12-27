@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuu as bot, user_collection, collection, ban_collection, PARTNER, required_group_id 
-from shivu import LOGGER
+from shivu import LOGGER, application
 # Constants
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
