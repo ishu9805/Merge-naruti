@@ -71,14 +71,14 @@ async def hclaim(_, message: t.Message):
         
     if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
-        message = (
+        messages = (
             "You need to be a member of our exclusive group to use this command.\n"
             "Join now and explore the amazing features awaiting you!\n\n"
         )
         reply_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
-        await update.message.reply_text(message, reply_markup=reply_markup)
+        await message.reply_text(messages, reply_markup=reply_markup)
         return
         
     claim_lock[user_id] = True
