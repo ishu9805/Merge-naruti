@@ -78,7 +78,7 @@ async def hclaim(_, message: t.Message):
         reply_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
-        await update.message.reply_text(message, reply_markup=reply_markup)
+        await message.reply_text(message, reply_markup=reply_markup)
         return
         
     claim_lock[user_id] = True
