@@ -56,7 +56,7 @@ async def new_year_claim(_, message):
             return
 
         # Membership check
-     '''   if not await is_member(user_id):
+        """ if not await is_member(user_id):
             group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
             message_text = (
                 "🎊 To join the New Year's festivities and claim rewards, you must be part of our exclusive group!\n"
@@ -66,7 +66,7 @@ async def new_year_claim(_, message):
                 [[InlineKeyboardButton("💫 Join the Party 💫", url=group_link)]]
             )
             await bot.send_message(chat_id=message.chat.id, text=message_text, reply_markup=reply_markup)
-            return'''
+            return"""
 
         # Fetch user data
         user_data = await user_collection.find_one({'id': user_id}) or {
