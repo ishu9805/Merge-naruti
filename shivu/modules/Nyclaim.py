@@ -14,6 +14,15 @@ CHARACTERS_PER_PAGE = 10
 # Lock dictionary to track command processing
 claim_locks = {}
 
+async def is_member(user_id):
+    """Check if a user is part of the required group."""
+    try:
+        member = await application.bot.get_chat_member(required_group_id, user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except Exception:
+        return False
+
+
 @bot.on_message(filters.command(["nyclaim"]))
 async def new_year_claim(_, message: t.Message):
     user_id = message.from_user.id
