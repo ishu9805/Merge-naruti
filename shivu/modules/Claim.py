@@ -8,7 +8,7 @@ from shivu import LOGGER
 # Constants
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
-JOIN_URL = "https://t.me/+xJdjLviEJvpmYjM9"
+JOIN_URL = "https://t.me/naruto_support_chat"
 CHARACTERS_PER_PAGE = 10
 
 # Lock dictionary to track command processing
