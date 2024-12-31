@@ -11,6 +11,12 @@ CHAT_ID = "-1002338924488"
 JOIN_URL = "https://t.me/naruto_support_chat"
 CHARACTERS_PER_PAGE = 10
 
+import random
+from datetime import datetime
+
+# List of character IDs for the New Year claim
+new_year_ids = [6413, 6414, 6415, 6416]
+
 # Lock dictionary to track command processing
 claim_locks = {}
 
@@ -91,25 +97,22 @@ async def new_year_claim(_, message: t.Message):
             return
 
         # Fetch unique characters only from the specified IDs
-        target_ids = [6413, 6414, 6415, 6416]
-        unique_characters = await collection.find(
-            {'id': {'$in': target_ids}}
-        ).to_list(length=1)  # Fetch one random character
-
-        if not unique_characters:
-            return await bot.send_message(
-                chat_id=message.chat.id,
-                text="🚫 No characters available for the New Year claim. But the fireworks are still amazing! 🎆"
-            )
+        random_id = random.choice(new_year_ids)
+        character = await collection.find_one({"id": random_id})
+        if not character:
+            await message.reply_text("⚠️ Unable to fetch the character details. Please try again later.")
+            return
+            
 
         # Add characters to the user's collection and set `has_claimed_new_year` to True
         await user_collection.update_one(
-            {'id': user_id},
+            {"id": user_id},
             {
-                '$push': {'characters': {'$each': unique_characters}},
-                '$set': {'has_claimed_new_year': True}
+                "$push": {"characters": character},
+                "$set": {"has_claimed_new_year": True}
             }
         )
+
 
         # Celebrate the claim
         for character in unique_characters:
