@@ -12,7 +12,7 @@ JOIN_URL = "https://t.me/naruto_support_chat"
 CHARACTERS_PER_PAGE = 10
 
 # Lock dictionary to track command processing
-claim_lock = {}
+claim_locks = {}
 
 @bot.on_message(filters.command(["nyclaim"]))
 async def new_year_claim(_, message: t.Message):
@@ -20,20 +20,20 @@ async def new_year_claim(_, message: t.Message):
     mention = message.from_user.mention
     current_time = datetime.utcnow()
 
-    if user_id in claim_lock:
+    if user_id in claim_locks:
         await bot.send_message(
             chat_id=message.chat.id,
             text="🎆 Your New Year claim request is being processed. Please wait! 🎉",
         )
         return
 
-    claim_lock[user_id] = True  # Set the lock
+    claim_locks[user_id] = True  # Set the lock
 
     try:
         # Check if the user is banned
         is_banned = await ban_collection.find_one({"user_id": user_id})
         if is_banned:
-            claim_lock.pop(user_id, None)
+            claim_locks.pop(user_id, None)
             return
 
         # Membership check
