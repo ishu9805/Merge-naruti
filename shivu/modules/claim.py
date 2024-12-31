@@ -69,7 +69,7 @@ async def hclaim(_, message: t.Message):
     except Exception as e:
          return
         
-    '''if not await is_member(user_id):
+    if not await is_member(user_id):
         group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
         messages = (
             "You need to be a member of our exclusive group to use this command.\n"
@@ -79,9 +79,9 @@ async def hclaim(_, message: t.Message):
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
         await message.reply_text(messages, reply_markup=reply_markup)
-        return'''
+        return
         
-    claim_lock[user_id] = True
+    
     try:
         user_data = await user_collection.find_one({'id': user_id}) or {
             'id': user_id,
