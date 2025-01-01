@@ -160,15 +160,17 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         10: '❄️ Winter',
         11: '💝 Valentine',
         12: '🎃 Halloween',
-        13: '🎄 Christmas Special'
+        13: '🎄 Christmas Special',
+        14: '🎭 Cosplay Master 🎭',
+        15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐0'
     }
 
     spawn_counts = {
         '⚪️ Common': 5,  
         '🟣 Rare': 5,      
-        '🟢 Medium': 5,
-        '🟡 Legendary': 10,  
-        '💮 Special Edition': 4,  
+        '🟢 Medium': 10,
+        '🟡 Legendary': 15,  
+        '💮 Special Edition': 5,  
         '🔮 Limited Edition': 1,  
         '💸 Premium Edition': 0,  
         '🌤 Summer': 0 if today_message_count <= 4 else 0,  
@@ -176,7 +178,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '❄️ Winter': 1,  
         '💝 Valentine': 0,  
         '🎃 Halloween': 0,  
-        '🎄 Christmas Special': 0 
+        '🎄 Christmas Special': 0,
+        '🎭 Cosplay Master 🎭': 1,
+        ,🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 1
     }
 
     # Adjust spawn counts for Special Edition
