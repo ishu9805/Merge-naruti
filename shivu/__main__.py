@@ -203,8 +203,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if character.get('rarity') == '❄️ Winter':
         await context.bot.send_message(chat_id=7378476666, text=f"A winter character has spawned! Character id: {character['id']}")
 
-    if character.get('rarity') == '🎄 Christmas Special':
-        await context.bot.send_message(chat_id=7378476666, text=f"A christmas character has spawned! Character id: {character['id']}")
+    if character.get('rarity') == '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐':
+        await context.bot.send_message(chat_id=7378476666, text=f"A omni character has spawned! Character id: {character['id']}")
         
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')  
 
