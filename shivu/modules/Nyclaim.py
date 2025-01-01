@@ -15,7 +15,7 @@ import random
 from datetime import datetime
 
 # List of character IDs for the New Year claim
-new_year_ids = [6413, 6414, 6415, 6416]
+new_year_ids = [6413, 6414, 6415, 6416, 6417, 6418, 6419, 6420, 6421, 6422, 6423, 6424, 6426]
 
 # Lock dictionary to track command processing
 claim_locks = {}
