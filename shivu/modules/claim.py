@@ -135,38 +135,44 @@ async def hfind(_, message: t.Message):
     if not waifu:
         return await message.reply_text("🔍 No character found with that ID ❌", quote=True)
     
-    top_users = await user_collection.aggregate([
+    # Get top collectors and the global count
+    user_ownership_data = await user_collection.aggregate([
         {'$match': {'characters.id': waifu_id}},
         {'$unwind': '$characters'},
         {'$match': {'characters.id': waifu_id}},
         {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
-        {'$sort': {'count': -1}},
-        {'$limit': 5}
-    ]).to_list(length=5)
+        {'$sort': {'count': -1}}
+    ]).to_list(length=None)
     
+    global_count = sum(user['count'] for user in user_ownership_data)
+    
+    top_users = user_ownership_data[:5]  # Limit to the top 5 users for display
     usernames = []
     for user_info in top_users:
         user_id = user_info['_id']
         try:
             user = await bot.get_users(user_id)
-            usernames.append(user.username if user.username else f"➥ {user_id}")
+            link = f"[{user.first_name}](tg://user?id={user.id})"
+            usernames.append(link)
         except Exception:
-            usernames.append(f"➥ {user_id}")
+            usernames.append(f"➥ [Unknown User](tg://user?id={user_id})")
     
     caption = (
-        f"📜 *Character Info*\n"
-        f"🧩 *Name*: {waifu['name']}\n"
-        f"🧬 *Rarity*: {waifu['rarity']}\n"
-        f"📺 *Anime*: {waifu['anime']}\n"
-        f"🆔 *ID*: {waifu['id']}\n\n"
-        f"🏆 *Top Collectors*:\n\n"
+        f"📜 **Character Info**\n"
+        f"🧩 **Name**: {waifu['name']}\n"
+        f"🧬 **Rarity**: {waifu['rarity']}\n"
+        f"📺 **Anime**: {waifu['anime']}\n"
+        f"🆔 **ID**: {waifu['id']}\n\n"
+        f"🌍 **Global Count**: {global_count} users own this character.\n\n"
+        f"🏆 **Top Collectors**:\n\n"
     )
     for i, user_info in enumerate(top_users):
         count = user_info['count']
         username = usernames[i]
         caption += f"{i + 1}. {username} x{count}\n"
     
-    await message.reply_photo(photo=waifu['img_url'], caption=caption)
+    await message.reply_photo(photo=waifu['img_url'], caption=caption, parse_mode="Markdown")
+
 
 @bot.on_message(filters.command(["find"]))
 async def cfind(_, message: t.Message):
