@@ -179,7 +179,7 @@ async def hfind(_, message: t.Message):
         username = usernames[i]
         caption += f"{i + 1}. {username} x{count}\n"
     
-    await message.reply_photo(photo=waifu['img_url'], caption=caption, parse_mode="MarkdownV2")
+    await message.reply_photo(photo=waifu['img_url'], caption=caption)
 
 
 
