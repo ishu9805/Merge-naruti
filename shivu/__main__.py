@@ -165,9 +165,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     spawn_counts = {
         '⚪️ Common': 5,  
-        '🟣 Rare': 3,      
+        '🟣 Rare': 5,      
         '🟢 Medium': 5,
-        '🟡 Legendary': 8,  
+        '🟡 Legendary': 10,  
         '💮 Special Edition': 4,  
         '🔮 Limited Edition': 1,  
         '💸 Premium Edition': 0,  
@@ -176,7 +176,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '❄️ Winter': 1,  
         '💝 Valentine': 0,  
         '🎃 Halloween': 0,  
-        '🎄 Christmas Special': 1 
+        '🎄 Christmas Special': 0 
     }
 
     # Adjust spawn counts for Special Edition
