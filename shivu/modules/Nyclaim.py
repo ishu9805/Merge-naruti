@@ -33,7 +33,6 @@ async def is_member(user_id):
 async def new_year_claim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
-    current_time = datetime.utcnow()
 
     if user_id in claim_locks:
         await bot.send_message(
@@ -53,7 +52,7 @@ async def new_year_claim(_, message: t.Message):
 
         # Membership check
         if not await is_member(user_id):
-            group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+            group_link = "https://t.me/blade_x_community"
             message_text = (
                 "🎊 To join the New Year's festivities and claim rewards, you must be part of our exclusive group!\n"
                 "🎆 Click below to join and start celebrating with us. 🎇"
@@ -62,6 +61,7 @@ async def new_year_claim(_, message: t.Message):
                 [[InlineKeyboardButton("💫 Join the Party 💫", url=group_link)]]
             )
             await bot.send_message(chat_id=message.chat.id, text=message_text, reply_markup=reply_markup)
+            claim_locks.pop(user_id, None)  # Release the lock
             return
 
         # Fetch user data
@@ -81,30 +81,27 @@ async def new_year_claim(_, message: t.Message):
                     "🔍 Stay tuned for more surprises ahead!"
                 )
             )
-            claim_lock.pop(user_id, None)
+            claim_locks.pop(user_id, None)  # Release the lock
             return
 
         # Check if the user has 15 or more characters
         if len(user_data.get('characters', [])) < 15:
             await bot.send_message(
                 chat_id=message.chat.id,
-                text=(
-                    "🎭 Sorry, you cant do that, 🎆\n"
-      
-                )
+                text="🎭 Sorry, you can't claim the reward. 🎆"
             )
-            claim_locks.pop(user_id, None)
+            claim_locks.pop(user_id, None)  # Release the lock
             return
 
-        # Fetch unique characters only from the specified IDs
+        # Fetch a random character from the specified IDs
         random_id = str(random.choice(new_year_ids))
         character = await collection.find_one({"id": random_id})
         if not character:
             await message.reply_text("⚠️ Unable to fetch the character details. Please try again later.")
+            claim_locks.pop(user_id, None)  # Release the lock
             return
-            
 
-        # Add characters to the user's collection and set `has_claimed_new_year` to True
+        # Add character to user's collection and update claim status
         await user_collection.update_one(
             {"id": user_id},
             {
@@ -113,27 +110,25 @@ async def new_year_claim(_, message: t.Message):
             }
         )
 
-
-        # Celebrate the claim
-        if character:
-            await bot.send_photo(
-                chat_id=message.chat.id,
-                photo=character['img_url'],
-                caption=(
-                    f"🎉 Happy New Year, {mention}! 🎆\n"
-                    f"✨ *Name*: {character['name']}\n"
-                    f"🌟 *Rarity*: {character['rarity']}\n"
-                    f"🎭 *Anime*: {character['anime']}\n"
-                    "🍀 *Thank you for celebrating with us!*"
-                )
+        # Send celebration message
+        await bot.send_photo(
+            chat_id=message.chat.id,
+            photo=character['img_url'],
+            caption=(
+                f"🎉 Happy New Year, {mention}! 🎆\n"
+                f"✨ *Name*: {character['name']}\n"
+                f"🌟 *Rarity*: {character['rarity']}\n"
+                f"🎭 *Anime*: {character['anime']}\n"
+                "🍀 *Thank you for celebrating with us!*"
             )
-            
-        else:
-            return
+        )
+
     except Exception as e:
         await bot.send_message(
             chat_id=message.chat.id,
             text="❌ An error occurred during your New Year claim. Please try again later."
         )
+        print(e)  # Log the error for debugging
     finally:
         claim_locks.pop(user_id, None)  # Release the lock
+        
