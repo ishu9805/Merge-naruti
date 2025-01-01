@@ -157,8 +157,9 @@ async def hfind(_, message: t.Message):
             link = f"[{first_name}](tg://user?id={user.id})"
             usernames.append(link)
         except Exception:
-            usernames.append(f"➥ [Unknown User](tg://user?id={user_id})")
-    
+            user = await bot.get_users(user_id)
+            link = f"[GHOST](tg://user?id={user.id})"
+            usernames.append(link)
     # Escape special characters in waifu fields
     waifu_name = waifu['name'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
     waifu_rarity = waifu['rarity'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
