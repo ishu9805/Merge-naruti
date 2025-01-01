@@ -152,17 +152,25 @@ async def hfind(_, message: t.Message):
         user_id = user_info['_id']
         try:
             user = await bot.get_users(user_id)
-            link = f"[{user.first_name}](tg://user?id={user.id})"
+            # Escape special characters for MarkdownV2
+            first_name = user.first_name.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+            link = f"[{first_name}](tg://user?id={user.id})"
             usernames.append(link)
         except Exception:
             usernames.append(f"➥ [Unknown User](tg://user?id={user_id})")
     
+    # Escape special characters in waifu fields
+    waifu_name = waifu['name'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+    waifu_rarity = waifu['rarity'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+    waifu_anime = waifu['anime'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+    waifu_id = waifu['id']
+    
     caption = (
         f"📜 **Character Info**\n"
-        f"🧩 **Name**: {waifu['name']}\n"
-        f"🧬 **Rarity**: {waifu['rarity']}\n"
-        f"📺 **Anime**: {waifu['anime']}\n"
-        f"🆔 **ID**: {waifu['id']}\n\n"
+        f"🧩 **Name**: {waifu_name}\n"
+        f"🧬 **Rarity**: {waifu_rarity}\n"
+        f"📺 **Anime**: {waifu_anime}\n"
+        f"🆔 **ID**: {waifu_id}\n\n"
         f"🌍 **Global Count**: {global_count} users own this character.\n\n"
         f"🏆 **Top Collectors**:\n\n"
     )
@@ -171,7 +179,8 @@ async def hfind(_, message: t.Message):
         username = usernames[i]
         caption += f"{i + 1}. {username} x{count}\n"
     
-    await message.reply_photo(photo=waifu['img_url'], caption=caption, parse_mode="Markdown")
+    await message.reply_photo(photo=waifu['img_url'], caption=caption, parse_mode="MarkdownV2")
+
 
 
 @bot.on_message(filters.command(["find"]))
