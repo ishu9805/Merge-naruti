@@ -135,7 +135,7 @@ async def hfind(_, message: t.Message):
     if not waifu:
         return await message.reply_text("🔍 No character found with that ID ❌", quote=True)
     
-    # Get top collectors and the global count
+    # Fetch user ownership data
     user_ownership_data = await user_collection.aggregate([
         {'$match': {'characters.id': waifu_id}},
         {'$unwind': '$characters'},
@@ -145,27 +145,27 @@ async def hfind(_, message: t.Message):
     ]).to_list(length=None)
     
     global_count = sum(user['count'] for user in user_ownership_data)
-    
     top_users = user_ownership_data[:5]  # Limit to the top 5 users for display
+
+    # Build top collectors list
     usernames = []
     for user_info in top_users:
         user_id = user_info['_id']
         try:
             user = await bot.get_users(user_id)
-            # Escape special characters for MarkdownV2
-            first_name = user.first_name.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
-            link = f"[{first_name}](tg://user?id={user.id})"
-            usernames.append(link)
+            link = f"[{user.first_name}](tg://user?id={user.id})"
+            usernames.append(f"{link} x{user_info['count']}")
         except Exception:
-            user = await bot.get_users(user_id)
-            link = f"[GHOST](tg://user?id={user.id})"
-            usernames.append(link)
-    # Escape special characters in waifu fields
-    waifu_name = waifu['name'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
-    waifu_rarity = waifu['rarity'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
-    waifu_anime = waifu['anime'].replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
-    waifu_id = waifu['id']
+            usernames.append(f"[User {user_id}](tg://user?id={user_id}) x{user_info['count']}")
     
+    # Escape Markdown characters in waifu fields
+    escape_md = lambda text: text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+    waifu_name = escape_md(waifu['name'])
+    waifu_rarity = escape_md(waifu['rarity'])
+    waifu_anime = escape_md(waifu['anime'])
+    waifu_id = waifu['id']
+
+    # Prepare caption
     caption = (
         f"📜 **Character Info**\n"
         f"🧩 **Name**: {waifu_name}\n"
@@ -173,16 +173,18 @@ async def hfind(_, message: t.Message):
         f"📺 **Anime**: {waifu_anime}\n"
         f"🆔 **ID**: {waifu_id}\n\n"
         f"🌍 **Global Count**: {global_count} users own this character.\n\n"
-        f"🏆 **Top Collectors**:\n\n"
+        f"🏆 **Top Collectors**:\n"
+        + "\n".join(f"{i + 1}. {user}" for i, user in enumerate(usernames))
     )
-    for i, user_info in enumerate(top_users):
-        count = user_info['count']
-        username = usernames[i]
-        caption += f"{i + 1}. {username} x{count}\n"
-    
-    a = await message.reply_photo(photo=waifu['img_url'], caption=caption)
-    await asyncio.sleep(30)
-    await a.delete()
+
+    try:
+        a = await message.reply_photo(photo=waifu['img_url'], caption=caption)
+        await asyncio.sleep(30)
+        await a.delete()
+    except Exception as e:
+        logging.error(f"Error sending character info for ID {waifu_id}: {e}")
+        await message.reply_text("🚫 Failed to send character information. Please try again later.")
+
 
 
 @bot.on_message(filters.command(["find"]))
