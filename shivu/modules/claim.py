@@ -145,7 +145,7 @@ async def hfind(_, message: t.Message):
     ]).to_list(length=None)
     
     global_count = sum(user['count'] for user in user_ownership_data)
-    top_users = user_ownership_data[:5]  # Limit to the top 5 users for display
+    top_users = user_ownership_data[:20]  # Limit to the top 5 users for display
 
     # Build top collectors list
     usernames = []
