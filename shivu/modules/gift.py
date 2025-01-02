@@ -5,6 +5,7 @@ from shivu import user_collection, ban_collection
 from shivu import shivuu
 
 # Global variables to track pending gifts, trades, locks, and cooldowns
+              # Track users and their last confirmed gift or trade time
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -14,10 +15,10 @@ from shivu import shivuu
 
 # Global variables to track pending gifts, trades, locks, and cooldowns
 pending_gifts = {}          # Store pending gifts
+pending_trades = {}         # Store pending trades
 locked_users = set()        # Track users currently engaged in any process
 locked_characters = set()   # Track characters currently involved in any process
-cooldowns = {}              # Track users and their last confirmed gift or trade time
-pending_trades = {}         
+cooldowns = {}
 # Gift Command
 @shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
@@ -113,13 +114,13 @@ async def on_callback_query(client, callback_query):
     # Prevent further clicks after confirmation or cancellation
     # Disable the buttons after clicking to avoid multiple submissions
     if data == "confirm_gift":
-        # Edit the message to disable the buttons
+        # Edit the message to disable the buttons (by removing them)
         await callback_query.message.edit_text(
             f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled").disabled],
-                    [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled").disabled]
+                    [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled")],
+                    [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled")]
                 ]
             ))
 
@@ -156,15 +157,14 @@ async def on_callback_query(client, callback_query):
         locked_users.remove(sender_id)
         locked_characters.remove(gift['character']['id'])
 
-        # Edit the message to disable the buttons
+        # Edit the message to disable the buttons (by removing them)
         await callback_query.message.edit_text("❌ **Gift process cancelled.**",
                                                reply_markup=InlineKeyboardMarkup(
                                                    [
-                                                       [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled").disabled],
-                                                       [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled").disabled]
+                                                       [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled")],
+                                                       [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled")]
                                                    ]
                                                ))
-
 
 
                 
