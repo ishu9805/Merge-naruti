@@ -5,12 +5,19 @@ from shivu import user_collection, ban_collection
 from shivu import shivuu
 
 # Global variables to track pending gifts, trades, locks, and cooldowns
+
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import time
+from shivu import user_collection, ban_collection
+from shivu import shivuu
+
+# Global variables to track pending gifts, trades, locks, and cooldowns
 pending_gifts = {}          # Store pending gifts
-pending_trades = {}         # Store pending trades
 locked_users = set()        # Track users currently engaged in any process
 locked_characters = set()   # Track characters currently involved in any process
 cooldowns = {}              # Track users and their last confirmed gift or trade time
-
+pending_trades = {}         
 # Gift Command
 @shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
@@ -103,13 +110,20 @@ async def on_callback_query(client, callback_query):
         await callback_query.answer("❗ This action is no longer valid!", show_alert=True)
         return
 
-    # Process confirmation or cancellation of gift
+    # Prevent further clicks after confirmation or cancellation
+    # Disable the buttons after clicking to avoid multiple submissions
     if data == "confirm_gift":
-        await callback_query.answer("✅ Gift successfully given!", show_alert=True)
-        
+        # Edit the message to disable the buttons
         await callback_query.message.edit_text(
-            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳")
+            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled").disabled],
+                    [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled").disabled]
+                ]
+            ))
 
+        # Process the gift
         sender = await user_collection.find_one({'id': sender_id})
         receiver = await user_collection.find_one({'id': r_id})
 
@@ -142,7 +156,16 @@ async def on_callback_query(client, callback_query):
         locked_users.remove(sender_id)
         locked_characters.remove(gift['character']['id'])
 
-        await callback_query.message.edit_text("❌ **Gift process cancelled.**")
+        # Edit the message to disable the buttons
+        await callback_query.message.edit_text("❌ **Gift process cancelled.**",
+                                               reply_markup=InlineKeyboardMarkup(
+                                                   [
+                                                       [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled").disabled],
+                                                       [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled").disabled]
+                                                   ]
+                                               ))
+
+
 
                 
 
