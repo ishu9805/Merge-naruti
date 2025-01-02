@@ -29,7 +29,7 @@ user_collection_cache = TTLCache(maxsize=10000, ttl=60)
 async def inlinequery(update: Update, context: CallbackContext) -> None:
     query = update.inline_query.query.strip()
     offset = int(update.inline_query.offset) if update.inline_query.offset else 0
-    limit = 20  # Number of results per page
+    limit = 30  # Number of results per page
     characters = []
 
     if query.startswith('collection.'):
