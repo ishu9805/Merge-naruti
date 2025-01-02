@@ -116,13 +116,8 @@ async def on_callback_query(client, callback_query):
     if data == "confirm_gift":
         # Edit the message to disable the buttons (by removing them)
         await callback_query.message.edit_text(
-            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled")],
-                    [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled")]
-                ]
-            ))
+            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳**x"
+        )
 
         # Process the gift
         sender = await user_collection.find_one({'id': sender_id})
@@ -158,13 +153,8 @@ async def on_callback_query(client, callback_query):
         locked_characters.remove(gift['character']['id'])
 
         # Edit the message to disable the buttons (by removing them)
-        await callback_query.message.edit_text("❌ **Gift process cancelled.**",
-                                               reply_markup=InlineKeyboardMarkup(
-                                                   [
-                                                       [InlineKeyboardButton("✅ Confirm Gift", callback_data="disabled")],
-                                                       [InlineKeyboardButton("❌ Cancel Gift", callback_data="disabled")]
-                                                   ]
-                                               ))
+        await callback_query.message.edit_text("❌ **Gift process cancelled.**")
+                                              
 
 
                 
