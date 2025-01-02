@@ -27,63 +27,63 @@ all_characters_cache = TTLCache(maxsize=10000, ttl=36000)
 user_collection_cache = TTLCache(maxsize=10000, ttl=60)
 
 async def inlinequery(update: Update, context: CallbackContext) -> None:
-    query = update.inline_query.query
+    query = update.inline_query.query.strip()
     offset = int(update.inline_query.offset) if update.inline_query.offset else 0
+    limit = 20  # Number of results per page
+    characters = []
 
     if query.startswith('collection.'):
+        # User collection search
         user_id, *search_terms = query.split(' ')[0].split('.')[1], ' '.join(query.split(' ')[1:])
         if user_id.isdigit():
-            if user_id in user_collection_cache:
-                user = user_collection_cache[user_id]
-            else:
+            user = user_collection_cache.get(user_id)
+            if not user:
                 user = await user_collection.find_one({'id': int(user_id)})
-                user_collection_cache[user_id] = user
-
+                if user:
+                    user_collection_cache[user_id] = user
+            
             if user:
-                all_characters = list({v['id']:v for v in user['characters']}.values())
+                # Use dictionary for unique characters
+                unique_characters = {char['id']: char for char in user.get('characters', [])}
+                characters = list(unique_characters.values())
+
                 if search_terms:
                     regex = re.compile(' '.join(search_terms), re.IGNORECASE)
-                    all_characters = [character for character in all_characters if regex.search(character['name']) or regex.search(character['anime']) or regex.search(character['rarity'])]
-            else:
-                all_characters = []
+                    characters = [
+                        char for char in characters
+                        if regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])
+                    ]
         else:
-            all_characters = []
+            characters = []
     else:
+        # Global search
         if query:
             regex = re.compile(query, re.IGNORECASE)
-            all_characters = list(await collection.find({"$or": [{"name": regex}, {"anime": regex}, {"rarity": regex}]}).to_list(length=None))
+            characters = await collection.find({"$or": [{"name": regex}, {"anime": regex}, {"rarity": regex}]}).to_list(length=None)
         else:
-            if 'all_characters' in all_characters_cache:
-                all_characters = all_characters_cache['all_characters']
-            else:
-                all_characters = list(await collection.find({}).to_list(length=None))
-                all_characters_cache['all_characters'] = all_characters
+            characters = all_characters_cache.get('all_characters') or await collection.find({}).to_list(length=None)
+            all_characters_cache['all_characters'] = characters
 
-    characters = all_characters[offset:offset+50]
-    if len(characters) > 20:
-        characters = characters[:20]
-        next_offset = str(offset + 50)
-    else:
-        next_offset = str(offset + len(characters))
+    # Pagination
+    paginated_characters = characters[offset:offset + limit]
+    next_offset = str(offset + limit) if len(paginated_characters) == limit else ""
 
     results = []
-    for character in characters:
+    for character in paginated_characters:
         global_count = await user_collection.count_documents({'characters.id': character['id']})
-        anime_characters = await collection.count_documents({'anime': character['anime']})
+        anime_count = await collection.count_documents({'anime': character['anime']})
 
-        if query.startswith('collection.'):
-            user_character_count = sum(c['id'] == character['id'] for c in user['characters'])
-            user_anime_characters = sum(c['anime'] == character['anime'] for c in user['characters'])
-            caption = f"<b> Look At <a href='tg://user?id={user['id']}'>{(escape(user.get('first_name', user['id'])))}</a>'s Character</b>\n\n🌸: <b>{character['name']} (x{user_character_count})</b>\n🏖️: <b>{character['anime']} ({user_anime_characters}/{anime_characters})</b>\n<b>{character['rarity']}</b>\n\n<b>🆔️:</b> {character['id']}"
-        else:
-            caption = f"<b>Look At This Character!!</b>\n\n🌸:<b> {character['name']}</b>\n🏖️: <b>{character['anime']}</b>\n<b>{character['rarity']}</b>\n🆔️: <b>{character['id']}</b>\n\n<b>Globally Guessed {global_count} Times...</b>"
+        caption = (
+            f"<b>Look At This Character!!</b>\n\n"
+            f"🌸: <b>{character['name']}</b>\n"
+            f"🏖️: <b>{character['anime']}</b>\n"
+            f"<b>{character['rarity']}</b>\n"
+            f"🆔️: <b>{character['id']}</b>\n\n"
+            f"<b>Globally Guessed {global_count} Times...</b>"
+        )
 
-        button_text = "Who else has this character?"
-        button_callback_data = f"character:{character['id']}"
-
-        
         results.append(
-                InlineQueryResultPhoto(
+            InlineQueryResultPhoto(
                 thumbnail_url=character['img_url'],
                 id=f"{character['id']}_{time.time()}",
                 photo_url=character['img_url'],
@@ -92,7 +92,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
             )
         )
 
-    await update.inline_query.answer(results, next_offset=next_offset, cache_time=4)
+    await update.inline_query.answer(results, next_offset=next_offset, cache_time=5)
 
 
 
