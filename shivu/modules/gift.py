@@ -20,7 +20,7 @@ locked_users = set()        # Track users currently engaged in any process
 locked_characters = set()   # Track characters currently involved in any process
 cooldowns = {}
 # Gift Command
-@shivuu.on_message(filters.command("gift"))
+#@shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
     sender_id = message.from_user.id
 
