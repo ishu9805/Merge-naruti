@@ -73,6 +73,8 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
         if query.startswith('collection.'):
         # Calculate user-specific character and anime counts
             user_character_count = sum(c['id'] == character['id'] for c in user['characters'])
+            anime_characters = await collection.count_documents({'anime': character['anime']})
+         
             user_anime_characters = sum(c['anime'] == character['anime'] for c in user['characters'])
             global_count = await user_collection.count_documents({'characters.id': character['id']})
         # Generate caption for user-specific collection
