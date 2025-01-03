@@ -53,22 +53,18 @@ import requests
 
 def upload_to_catbox(file_path):
     url = "https://catbox.moe/user/api.php"
-    # Set the payload to specify that the upload type is a file and choose the `fileupload` option
-    payload = {
-        'reqtype': 'fileupload',
-    }
-    # Open the file in binary mode and send it to Catbox
-    files = {
-        'fileToUpload': open(file_path, 'rb'),
-    }
-    # Send the POST request to Catbox with the file and payload
-    response = requests.post(url, files=files, data=payload)
+    data = {"reqtype": "fileupload", "json": "true"}
+    files = {"fileToUpload": open(file_path, "rb")}
+    response = requests.post(url, data=data, files=files)
 
-    # Check if the upload was successful
     if response.status_code == 200:
-        return response.text.strip()  # Return the URL of the uploaded image
+        return True, response.text.strip()
     else:
-        raise Exception(f"Failed to upload to Catbox. Status Code: {response.status_code}")
+        return False, f"ᴇʀʀᴏʀ: {response.status_code} - {response.text}"
+
+
+
+
 
 # Example usage:
 # image_url = upload_to_catbox('path_to_your_image.jpg')
@@ -96,7 +92,7 @@ async def ul(client, message):
             await client.send_message(chat_id=message.chat.id, text=WRONG_FORMAT_TEXT)
             return
         
-        # Extract character details from the command arguments
+        # Extract cer details from the command arguments
         character_name = args[1].replace('-', ' ').title()
         anime = args[2].replace('-', ' ').title()
         rarity = int(args[3])
