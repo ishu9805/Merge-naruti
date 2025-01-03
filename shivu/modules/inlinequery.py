@@ -70,17 +70,34 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
 
     results = []
     for character in paginated_characters:
-        global_count = await user_collection.count_documents({'characters.id': character['id']})
-        anime_count = await collection.count_documents({'anime': character['anime']})
-
-        caption = (
-            f"<b>Look At This Character!!</b>\n\n"
-            f"🌸: <b>{character['name']}</b>\n"
-            f"🏖️: <b>{character['anime']}</b>\n"
-            f"<b>{character['rarity']}</b>\n"
-            f"🆔️: <b>{character['id']}</b>\n\n"
-            f"<b>Globally Guessed {global_count} Times...</b>"
-        )
+        if query.startswith('collection.'):
+        # Calculate user-specific character and anime counts
+            user_character_count = sum(c['id'] == character['id'] for c in user['characters'])
+            user_anime_characters = sum(c['anime'] == character['anime'] for c in user['characters'])
+            global_count = await user_collection.count_documents({'characters.id': character['id']})
+        # Generate caption for user-specific collection
+            caption = (
+                f"<b>Look At <a href='tg://user?id={user['id']}'>{escape(user.get('first_name', str(user['id'])))}</a>'s Character!</b>\n\n"
+                f"🌸: <b>{character['name']} (x{user_character_count})</b>\n"
+                f"🏖️: <b>{character['anime']} ({user_anime_characters}/{anime_characters})</b>\n"
+                f"<b>{character['rarity']}</b>\n\n"
+                f"🆔️: <b>{character['id']}</b>"
+                f"<b>Globally Guessed {global_count} Times...</b>"
+            )
+        else:
+        # Calculate global and anime-specific counts for general search
+            global_count = await user_collection.count_documents({'characters.id': character['id']})
+            anime_characters = await collection.count_documents({'anime': character['anime']})
+  
+        # Generate caption for global results
+            caption = (
+                f"<b>Look At This Character!!</b>\n\n"
+                f"🌸: <b>{character['name']}</b>\n"
+                f"🏖️: <b>{character['anime']} ({anime_characters})</b>\n"
+                f"<b>{character['rarity']}</b>\n"
+                f"🆔️: <b>{character['id']}</b>\n\n"
+                f"<b>Globally Guessed {global_count} Times...</b>"
+            )
 
         results.append(
             InlineQueryResultPhoto(
@@ -91,6 +108,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
                 parse_mode='HTML',
             )
         )
+
 
     await update.inline_query.answer(results, next_offset=next_offset, cache_time=5)
 
