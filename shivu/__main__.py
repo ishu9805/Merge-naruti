@@ -179,8 +179,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '💝 Valentine': 0,  
         '🎃 Halloween': 0,  
         '🎄 Christmas Special': 0,
-        '🎭 Cosplay Master 🎭': 1,
-        '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 1
+        '🎭 Cosplay Master 🎭': 0,
+        '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0
     }
 
     # Adjust spawn counts for Special Edition
