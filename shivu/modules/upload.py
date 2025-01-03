@@ -53,15 +53,23 @@ import requests
 
 def upload_to_catbox(file_path):
     url = "https://catbox.moe/user/api.php"
-    data = {"reqtype": "fileupload", "json": "true"}
-    files = {"fileToUpload": open(file_path, "rb")}
-    response = requests.post(url, data=data, files=files)
+    # Set the payload to specify that the upload type is a file and choose the `fileupload` option
+    payload = {
+        'reqtype': 'fileupload',
+    }
+    # Open the file in binary mode and send it to Catbox
+    files = {
+        'fileToUpload': open(file_path, 'rb'),
+    }
+    # Send the POST request to Catbox with the file and payload
+    response = requests.post(url, files=files, data=payload)
 
+    # Check if the upload was successful
     if response.status_code == 200:
-        return True, response.text.strip()
+        return response.text.strip()  # Return the URL of the uploaded image
     else:
-        return False, f"ᴇʀʀᴏʀ: {response.status_code} - {response.text}"
-
+        raise Exception(f"Failed to upload to Catbox. Status Code: {response.status_code}")
+        
 
 
 
