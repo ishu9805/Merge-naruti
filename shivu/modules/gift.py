@@ -20,7 +20,14 @@ locked_users = set()        # Track users currently engaged in any process
 locked_characters = set()   # Track characters currently involved in any process
 cooldowns = {}
 # Gift Command
-#@shivuu.on_message(filters.command("gift"))
+
+import time
+import asyncio
+import random
+              # Track users and their last confirmed gift or trade time
+
+# Gift Command
+@shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
     sender_id = message.from_user.id
 
@@ -114,13 +121,34 @@ async def on_callback_query(client, callback_query):
     # Prevent further clicks after confirmation or cancellation
     # Disable the buttons after clicking to avoid multiple submissions
     if data == "confirm_gift":
-        # Edit the message to disable the buttons (by removing them)
+        # Delete the message instantly
+        await callback_query.message.delete()
+
+        # Add a random delay between 0.2 and 3 seconds
+        random_delay = random.uniform(0.2, 3.0)
+        await asyncio.sleep(random_delay)
+
+        # Check if the sender still has the character after the delay
+        sender = await user_collection.find_one({'id': sender_id})
+
+        # Verify if the character is still in the sender's collection
+        character = next((character for character in sender['characters'] if character['id'] == gift['character']['id']), None)
+
+        if not character:
+            # If the character is no longer available, cancel the gift
+            await callback_query.message.edit_text("❌ **The character you tried to gift is no longer available!**", reply_markup=None)
+            # Clean up the pending gift and unlock the user
+            del pending_gifts[(sender_id, r_id)]
+            locked_users.remove(sender_id)
+            locked_characters.remove(gift['character']['id'])
+            return
+
+        # Proceed with the gift process
         await callback_query.message.edit_text(
-            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳**x"
+            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
         )
 
         # Process the gift
-        sender = await user_collection.find_one({'id': sender_id})
         receiver = await user_collection.find_one({'id': r_id})
 
         # Remove the character from the sender's collection
@@ -154,8 +182,12 @@ async def on_callback_query(client, callback_query):
 
         # Edit the message to disable the buttons (by removing them)
         await callback_query.message.edit_text("❌ **Gift process cancelled.**")
-                                              
 
+
+
+
+    
+        
 
                 
 
