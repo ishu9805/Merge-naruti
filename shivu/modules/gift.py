@@ -136,7 +136,7 @@ async def on_callback_query(client, callback_query):
 
         if not character:
             # If the character is no longer available, cancel the gift
-            await callback_query.message.edit_text("❌ **The character you tried to gift is no longer available!**", reply_markup=None)
+            await callback_query.message.reply_text("❌ **The character you tried to gift is no longer available!**", reply_markup=None)
             # Clean up the pending gift and unlock the user
             del pending_gifts[(sender_id, r_id)]
             locked_users.remove(sender_id)
@@ -144,7 +144,7 @@ async def on_callback_query(client, callback_query):
             return
 
         # Proceed with the gift process
-        await callback_query.message.edit_text(
+        await callback_query.message.reply_text(
             f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
         )
 
@@ -181,7 +181,7 @@ async def on_callback_query(client, callback_query):
         locked_characters.remove(gift['character']['id'])
 
         # Edit the message to disable the buttons (by removing them)
-        await callback_query.message.edit_text("❌ **Gift process cancelled.**")
+        await callback_query.message.reply_text("❌ **Gift process cancelled.**")
 
 
 
