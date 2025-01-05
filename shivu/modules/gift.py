@@ -4,8 +4,6 @@ import time
 from shivu import user_collection, ban_collection
 from shivu import shivuu
 
-# Global variables to track pending gifts, trades, locks, and cooldowns
-              # Track users and their last confirmed gift or trade time
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -18,16 +16,12 @@ pending_gifts = {}          # Store pending gifts
 pending_trades = {}         # Store pending trades
 locked_users = set()        # Track users currently engaged in any process
 locked_characters = set()   # Track characters currently involved in any process
-cooldowns = {}
-# Gift Command
-
-import time
-import asyncio
-import random
-              # Track users and their last confirmed gift or trade time
+cooldowns = {}              # Track users and their last confirmed gift or trade time
+active_buttons = {}         # Track active buttons
+lock = set()                # Set to track active callback processes
 
 # Gift Command
-#@shivuu.on_message(filters.command("gift"))
+@shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
     sender_id = message.from_user.id
 
@@ -105,50 +99,45 @@ async def gift(client, message):
         'process_id': process_id  # Track the unique process ID
     }
 
+    # Mark the buttons as active
+    active_buttons[(sender_id, process_id)] = True
+
 # Callback for Confirming or Cancelling Gift
 @shivuu.on_callback_query(filters.create(lambda _, __, query: query.data.startswith(("confirm_gift:", "cancel_gift:"))))
 async def on_callback_query(client, callback_query):
     sender_id = callback_query.from_user.id
     data, process_id = callback_query.data.split(":")
 
+    # Check if the callback is already being processed
+    if process_id in lock:
+        await callback_query.answer("❗ This action is already being processed!", show_alert =True)
+        return
+
+    # Add the process_id to the lock
+    lock.add(process_id)
+
+    # Check if the button is still active
+    if not active_buttons.get((sender_id, process_id), False):
+        await callback_query.answer("❗ This action is no longer valid!", show_alert=True)
+        lock.remove(process_id)  # Remove from lock if action is invalid
+        return
+
     for (s_id, r_id), gift in list(pending_gifts.items()):
         if s_id == sender_id and gift['process_id'] == process_id:
             break
     else:
         await callback_query.answer("❗ This action is no longer valid!", show_alert=True)
+        lock.remove(process_id)  # Remove from lock if action is invalid
         return
 
-    # Prevent further clicks after confirmation or cancellation
-    # Disable the buttons after clicking to avoid multiple submissions
+    # Process confirmation or cancellation of gift
     if data == "confirm_gift":
-        # Delete the message instantly
-        await callback_query.message.delete()
+        await callback_query.answer("✅ Gift successfully given!", show_alert=True)
+        
+        await callback_query.message.edit_text(
+            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳")
 
-        # Add a random delay between 0.2 and 3 seconds
-        random_delay = random.uniform(0.2, 3.0)
-        await asyncio.sleep(random_delay)
-
-        # Check if the sender still has the character after the delay
         sender = await user_collection.find_one({'id': sender_id})
-
-        # Verify if the character is still in the sender's collection
-        character = next((character for character in sender['characters'] if character['id'] == gift['character']['id']), None)
-
-        if not character:
-            # If the character is no longer available, cancel the gift
-            await callback_query.message.reply_text("❌ **The character you tried to gift is no longer available!**", reply_markup=None)
-            # Clean up the pending gift and unlock the user
-            del pending_gifts[(sender_id, r_id)]
-            locked_users.remove(sender_id)
-            locked_characters.remove(gift['character']['id'])
-            return
-
-        # Proceed with the gift process
-        await callback_query.message.reply_text(
-            f"🎉 **You have successfully gifted your character to** [{gift['receiver_first_name']}](tg://user?id={r_id})! 🥳",
-        )
-
-        # Process the gift
         receiver = await user_collection.find_one({'id': r_id})
 
         # Remove the character from the sender's collection
@@ -180,15 +169,13 @@ async def on_callback_query(client, callback_query):
         locked_users.remove(sender_id)
         locked_characters.remove(gift['character']['id'])
 
-        # Edit the message to disable the buttons (by removing them)
-        await callback_query.message.reply_text("❌ **Gift process cancelled.**")
+        await callback_query.message.edit_text("❌ **Gift process cancelled.**")
 
+    # Mark the buttons as inactive after processing
+    active_buttons[(sender_id, process_id)] = False
 
-
-
-    
-        
-
+    # Remove the process_id from the lock
+    lock.remove(process_id)               
                 
 
  # Trade Command
