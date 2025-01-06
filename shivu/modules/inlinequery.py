@@ -30,7 +30,7 @@ user_collection_cache = TTLCache(maxsize=10000, ttl=60)
 async def inlinequery(client, update):
     query = update.query.strip()
     offset = int(update.offset) if update.offset else 0
-    limit = 30  # Number of results per page
+    limit = 50  # Number of results per page
     results = []
 
     if query.startswith('collection.img.'):
@@ -139,5 +139,5 @@ async def inlinequery(client, update):
 
     # Pagination
     next_offset = str(offset + limit) if len(results) == limit else ""
-    await update.answer(results, next_offset=next_offset, cache_time=5, is_gallery=True)
+    await update.answer(results, next_offset=next_offset, cache_time=6, is_gallery=True)
     
