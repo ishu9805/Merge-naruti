@@ -33,41 +33,16 @@ RARITY_MAPPING = {
     '🎖 Apex Lot ( AUCTION )': '🎖'
 }
 
+
+
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
-    required_group_id = -1002338924488
     user = await user_collection.find_one({'id': user_id})
-
-
     is_banned = await ban_collection.find_one({"user_id": user_id})
+    
     if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
+        return  # Do nothing if the user is banned
 
-    #try:
-        #member = await app.get_chat_member(required_group_id, user_id)
-        #if member.status in ['left', 'kicked']:
-           # raise Exception("Not a member")
-   # except Exception:
-       # group_link = "https://t.me/+xJdjLviEJvpmYjM9"  # Replace with the actual group invite link
-      #  message = (
-          #  "You need to be a member of our exclusive group to use this command.\n"
-          #  "Join now and explore the amazing features awaiting you!\n\n"
-       # )
-
-        # Add a button for joining the group
-      #  reply_markup = InlineKeyboardMarkup(
-        #    [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
-       # )
-
-     #   if update.message:
-         #   await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
-     #   else:
-         #   await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode="Markdown")
-     #   return
-    # Check if user is banned
     if not user:
         message = 'You Have Not Guessed any Characters Yet..'
         if update.message:
@@ -77,7 +52,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         return
 
     characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
-    character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x['id'])}
     rarity_mode = await get_user_rarity_mode(user_id)
 
     if rarity_mode != 'All':
@@ -92,12 +66,11 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
 
     for anime, characters in current_grouped_characters.items():
-        harem_message += f"⌬ {anime} 〔{len(characters)}/{character_counts[characters[0]['id']]}〕\n"
+        harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
         for character in characters:
-            count = character_counts[character['id']]
             rarity = character['rarity']
             rarity_emoji = RARITY_MAPPING.get(rarity, 'Unknown')
-            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']} ×{count}\n"
+            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']}\n"
         harem_message += "\n"
 
     if len(harem_message) > MAX_CAPTION_LENGTH:
@@ -116,7 +89,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             nav_buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"harem:{page+1}"))
         keyboard.append(nav_buttons)
     
-    # Add a close button
     keyboard.append([InlineKeyboardButton("Close", callback_data="close")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -125,14 +97,37 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         if 'favorites' in user and user['favorites']:
             fav_character_id = user['favorites'][0]
             fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
-            if fav_character and 'img_url' in fav_character:
-                if update.message:
-                    await update.message.reply_photo(photo=fav_character['img_url'], caption=harem_message, reply_markup=reply_markup)
-                else:
-                    try:
-                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
-                    except BadRequest:
-                        await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+            if fav_character:
+                if 'img_url' in fav_character:
+                    if update.message:
+                        await update.message.reply_photo(
+                            photo=fav_character['img_url'], 
+                            caption=harem_message, 
+                            reply_markup=reply_markup
+                        )
+                    else:
+                        try:
+                            await update.callback_query.edit_message_caption(
+                                caption=harem_message, 
+                                reply_markup=reply_markup
+                            )
+                        except BadRequest:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+                elif 'vid_url' in fav_character:
+                    if update.message:
+                        await update.message.reply_video(
+                            video=fav_character['vid_url'], 
+                            caption=harem_message, 
+                            reply_markup=reply_markup
+                        )
+                    else:
+                        try:
+                            await update.callback_query.edit_message_caption(
+                                caption=harem_message, 
+                                reply_markup=reply_markup
+                            )
+                        except BadRequest:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
             else:
                 await _send_harem_message(update, harem_message, reply_markup)
         else:
@@ -151,6 +146,14 @@ async def _send_harem_message(update, harem_message, reply_markup, characters=No
                     await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
                 except BadRequest:
                     await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+        elif 'vid_url' in random_character:
+            if update.message:
+                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup)
+            else:
+                try:
+                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                except BadRequest:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
         else:
             await _send_text_message(update, harem_message, reply_markup)
     else:
@@ -164,6 +167,8 @@ async def _send_text_message(update, text, reply_markup):
             await update.callback_query.edit_message_caption(caption=text, reply_markup=reply_markup)
         except BadRequest:
             await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+            
+
 
 
 
