@@ -142,10 +142,10 @@ async def hfind(_, message: t.Message):
         {'$match': {'characters.id': waifu_id}},
         {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
         {'$sort': {'count': -1}}
-    ]).to_list(length=None)
+    ]).to_list(length=10)
     
     global_count = sum(user['count'] for user in user_ownership_data)
-    top_users = user_ownership_data[:5]  # Limit to the top 5 users for display
+    top_users = user_ownership_data[:10]  # Limit to the top 5 users for display
 
     # Build top collectors list
     usernames = []
@@ -178,13 +178,24 @@ async def hfind(_, message: t.Message):
     )
 
     try:
-        a = await message.reply_photo(photo=waifu['img_url'], caption=caption)
+        # Check if vid_url or img_url is present, and choose the appropriate media
+        media_url = waifu.get('img_url') or waifu.get('vid_url')
+        if media_url:
+            # If it's a video URL, send it as a video, otherwise send as a photo
+            if 'vid_url' in waifu:
+                await message.reply_video(video=media_url, caption=caption)
+            else:
+                await message.reply_photo(photo=media_url, caption=caption)
+        else:
+            await message.reply_text("🚫 No media available for this character.")
+        
+        # Optional: delete the message after 30 seconds
         await asyncio.sleep(30)
-        await a.delete()
+        await message.delete()
     except Exception as e:
         logging.error(f"Error sending character info for ID {waifu_id}: {e}")
         await message.reply_text("🚫 Failed to send character information. Please try again later.")
-
+        
 
 
 @bot.on_message(filters.command(["find"]))
