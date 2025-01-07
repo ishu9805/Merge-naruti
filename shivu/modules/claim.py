@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuu as bot, user_collection, collection, ban_collection, PARTNER, required_group_id 
-from shivu import LOGGER, application
+from shivu import LOGGER, application, user_count
 # Constants
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
@@ -112,6 +112,11 @@ async def hclaim(_, message: t.Message):
                 '$push': {'characters': {'$each': unique_characters}},
                 '$set': {'last_daily_reward': datetime.utcnow()}
             }
+        )
+        await user_count.update_one(
+            {'user_id': r_id},
+            {'$inc': {'ccount': 1}},
+            upsert=True
         )
 
         for character in unique_characters:
