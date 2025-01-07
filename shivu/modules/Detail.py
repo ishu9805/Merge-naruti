@@ -4,10 +4,10 @@ from shivu import user_collection, user_count, application
 
 async def ucount_all(update: Update, context: CallbackContext):
     # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
-    ADMIN_IDS = [YOUR_ADMIN_ID]
+    ADMIN_IDS = [7378476666]
 
     # Restrict the command to admins
-    if update.effective_user.id not in ADMIN_IDS:
+    if update.effective_user.id ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
