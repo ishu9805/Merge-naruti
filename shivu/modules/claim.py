@@ -183,7 +183,7 @@ async def hfind(_, message: t.Message):
         if media_url:
             # If it's a video URL, send it as a video, otherwise send as a photo
             if 'vid_url' in waifu:
-                await message.reply_video(video=media_url, caption=caption)
+                await message.reply_video(video=media_url, caption=caption, supports_streaming=True)
             else:
                 await message.reply_photo(photo=media_url, caption=caption)
         else:
