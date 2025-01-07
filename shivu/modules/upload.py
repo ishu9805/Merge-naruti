@@ -339,3 +339,55 @@ application.add_handler(UPDATE_HANDLER)
 
 CHECK_HANDLER = CommandHandler('f', check, block=False)
 application.add_handler(CHECK_HANDLER)
+
+@shivuu.on_message(filters.command("vadd") & filters.user([7378476666]))
+async def upload_video_character(client, message):
+    args = message.text.split(maxsplit=4)
+    if len(args) != 5:
+        
+        return
+
+    character_name = args[1].replace('-', ' ').title()
+    anime = args[2].replace('-', ' ').title()
+    
+    vid_url = args[3]
+
+    if rarity not in RARITY_MAP:
+        await message.reply_text("❌ Invalid rarity value. Please use a value between 1 and 11.")
+        return
+
+    
+
+    # Generate the next available ID
+    available_id = await find_available_id()
+
+    character = {
+        'name': character_name,
+        'anime': anime,
+        'rarity': "🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙",
+        'id': available_id,
+        'vid_url': vid_url,
+    }
+
+    try:
+        # Send the video to the character channel
+        await client.send_video(
+            chat_id=CHARA_CHANNEL_ID,
+            video=vid_url,
+            caption=(
+                f"🎥 **New Character Added** 🎥\n\n"
+                f"Character Name: {character_name}\n"
+                f"Anime Name: {anime}\n"
+                f"Rarity: {rarity_text}\n"
+                f"ID: {available_id}\n"
+                f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+            ),
+        )
+
+        # Insert the character data into MongoDB
+        await collection.insert_one(character)
+
+        await message.reply_text("✅ Video character added successfully.")
+    except Exception as e:
+        await message.reply_text(f"❌ Failed to upload character. Error: {e}")
+        
