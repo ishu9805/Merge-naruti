@@ -342,9 +342,9 @@ application.add_handler(CHECK_HANDLER)
 
 @shivuu.on_message(filters.command("vadd") & filters.user([7378476666]))
 async def upload_video_character(client, message):
-    args = message.text.split(maxsplit=4)
-    if len(args) != 5:
-        
+    args = message.text.split(maxsplit=3)
+    if len(args) != 4:
+        print("lol")
         return
 
     character_name = args[1].replace('-', ' ').title()
@@ -352,9 +352,7 @@ async def upload_video_character(client, message):
     
     vid_url = args[3]
 
-    if rarity not in RARITY_MAP:
-        await message.reply_text("❌ Invalid rarity value. Please use a value between 1 and 11.")
-        return
+    
 
     
 
