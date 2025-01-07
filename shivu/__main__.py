@@ -262,7 +262,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             f'🎐 Rarity: <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
             f'This character is now in your harem! Use /mycollection to see your harem.',
             parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup(keyboard)
+            reply_markup=keyboard
         )
         await add_coins(int(user_id), 40)
         
