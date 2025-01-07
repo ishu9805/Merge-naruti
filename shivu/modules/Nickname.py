@@ -33,22 +33,23 @@ async def callback_query_handler(event):
 
         if data == "rarity_mode:see_by_rarities":
             rarities_buttons = [
-                [Button.inline("⚪️ Common", data="rarity:⚪️ Common"), 
-                 Button.inline("🟣 Rare", data="rarity:🟣 Rare"), 
-                 Button.inline("🟡 Legendary", data="rarity:🟡 Legendary")],
-                [Button.inline("🟢 Medium", data="rarity:🟢 Medium"), 
-                 Button.inline("💮 Special Edition", data="rarity:💮 Special Edition"), 
-                 Button.inline("🔮 Limited Edition", data="rarity:🔮 Limited Edition")],
-                [Button.inline("💸 Premium Edition", data="rarity:💸 Premium Edition"),
-                 Button.inline("🎖 Apex Lot", data="rarity:🎖 Apex Lot ( AUCTION )")],
-                [Button.inline("🌤 Summer", data="rarity:🌤 Summer"), 
-                 Button.inline("🎐 Celestial", data="rarity:🎐 Celestial"), 
-                 Button.inline("❄️ Winter", data="rarity:❄️ Winter")],
-                [Button.inline("💝 Valentine", data="rarity:💝 Valentine"), 
-                 Button.inline("🎃 Halloween", data="rarity:🎃 Halloween"), 
-                 Button.inline("🎄 Christmas Special", data="rarity:🎄 Christmas Special")],
-                [Button.inline("🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
-                 Button.inline("🎭 Cosplay 🎭", data="rarity:🎭 Cosplay Master 🎭")]
+                [Button.inline("⚪️", data="rarity:⚪️ Common"), 
+                 Button.inline("🟣", data="rarity:🟣 Rare"), 
+                 Button.inline("🟡", data="rarity:🟡 Legendary")],
+                [Button.inline("🟢", data="rarity:🟢 Medium"), 
+                 Button.inline("💮", data="rarity:💮 Special Edition"), 
+                 Button.inline("🔮", data="rarity:🔮 Limited Edition")],
+                [Button.inline("💸", data="rarity:💸 Premium Edition"),
+                 Button.inline("🎖", data="rarity:🎖 Apex Lot ( AUCTION )")],
+                [Button.inline("🌤", data="rarity:🌤 Summer"), 
+                 Button.inline("🎐", data="rarity:🎐 Celestial"), 
+                 Button.inline("☃️", data="rarity:❄️ Winter")],
+                [Button.inline("💝", data="rarity:💝 Valentine"), 
+                 Button.inline("🎃", data="rarity:🎃 Halloween"), 
+                 Button.inline("🎄", data="rarity:🎄 Christmas Special")],
+                [Button.inline("🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
+                 Button.inline("🎭", data="rarity:🎭 Cosplay Master 🎭"),
+                 Button.inline("🎗️", data="rarity:🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙")]
             ]
             await event.edit("Select a rarity:", buttons=rarities_buttons)
 
