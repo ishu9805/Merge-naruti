@@ -159,9 +159,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': 0  # New rarity spawn count
     }
 
-    if message_counts[chat_id] % 3000 == 0:  # Spawn every 3000 messages
+    if chat_id == -1002338924488 and message_counts[chat_id] % 3000 == 0:
         spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 1
-
+        
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
         characters_to_spawn.extend([c for c in all_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
@@ -194,7 +194,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             chat_id=chat_id,
             video=character['vid_url'],
             caption=f"🌟 Get ready! A *{rarity_name}* character has emerged! 🏃‍♂️ Guess their name with /guess [Name] to add them to your harem! 🌟",
-            parse_mode='Markdown'
+            parse_mode='Markdown',
+            supports_streaming=True
         )
 
     spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 0  # Reset after spawning
@@ -227,10 +228,10 @@ async def guess(update: Update, context: CallbackContext) -> None:
 
     name_parts = last_characters[chat_id]['name'].lower().split()
 
-
+    character = last_characters[chat_id]
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
         first_correct_guesses[chat_id] = user_id
-        keyboard = [[InlineKeyboardButton("See Harem", switch_inline_query_current_chat=f"collection.{user_id}")]]
+        rarity = character.get("rarity", "")
         random_reaction = random.choice(reaction_list)
         try:
             await update.message.set_reaction(random_reaction)
@@ -239,6 +240,20 @@ async def guess(update: Update, context: CallbackContext) -> None:
             print(f"Failed to set reaction: {e}")
             await update.message.reply_text("🎉 Reaction not set due to a group limitation.")
         
+        # Set the appropriate inline query
+        if rarity == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙":
+            inline_query = f"collection.vid.{user_id}"
+        else:
+            inline_query = f"collection.img.{user_id}"
+        
+        keyboard = InlineKeyboardMarkup(
+            [[
+                InlineKeyboardButton(
+                    "View Collection",
+                    switch_inline_query_current_chat=inline_query
+                )
+            ]]
+        )
         await update.message.reply_text("🎉 Congrats! You've earned 40 dazzling coins for guessing correctly! 💰")
         await update.message.reply_text(
             f'<b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> 🎊 You guessed the character!\n\n'
