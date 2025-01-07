@@ -129,7 +129,8 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                         await update.message.reply_video(
                             video=fav_character['vid_url'], 
                             caption=harem_message, 
-                            reply_markup=reply_markup
+                            reply_markup=reply_markup,
+                            supports_streaming=True
                         )
                     else:
                         try:
@@ -161,7 +162,7 @@ async def _send_harem_message(update, harem_message, reply_markup, characters=No
                     await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
         elif 'vid_url' in random_character:
             if update.message:
-                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup)
+                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup, supports_streaming=True)
             else:
                 try:
                     await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
