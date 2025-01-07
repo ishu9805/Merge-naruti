@@ -6,7 +6,7 @@ import random
 from html import escape
 from shivu import collection, user_collection, application, ban_collection
 from telegram.error import BadRequest
-from shivu import PARTNER
+from shivu import PARTNER, user_count
 from shivu import shivuu as app
 from pyrogram import filters
 from datetime import datetime, timedelta
@@ -37,6 +37,7 @@ RARITY_MAPPING = {
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
+    user_info = await user_count.find_one({'user_id': user_id})
     is_banned = await ban_collection.find_one({"user_id": user_id})
     
     if is_banned:
@@ -53,7 +54,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
     
-    total_count = len(user['characters'])
+    total_count = user_info.get('ccount', 0)
     
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
@@ -61,6 +62,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     total_pages = math.ceil(len(characters) / 15)
     if page < 0 or page >= total_pages:
         page = 0
+   
 
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem {total_count}- Page {page+1}/{total_pages}\n\n"
     current_characters = characters[page*15:(page+1)*15]
