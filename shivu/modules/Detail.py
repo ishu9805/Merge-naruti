@@ -16,11 +16,14 @@ async def ucount_all(update: Update, context: CallbackContext):
     processed_users = 0
     progress_threshold = 500  # Update progress every 500 users
     batch_size = 100  # Batch size for fetching users
+    skip = 0  # Initialize skip variable
 
     # Fetch the last processed user (if any)
     last_processed = await user_count.find_one({}, sort=[("user_id", -1)])  # Find the last user processed
     last_processed_user_id = last_processed.get("user_id") if last_processed else None
-    skip = 0 if not last_processed_user_id else skip
+
+    if last_processed_user_id:
+        skip = 1  # Skip the already processed user if exists
 
     # Fetch users in batches
     while True:
