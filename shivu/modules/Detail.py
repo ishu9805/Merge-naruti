@@ -1,77 +1,79 @@
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext
-from shivu import user_collection, user_count, application
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pymongo import MongoClient
 import asyncio
-
-async def ucount_all(update: Update, context: CallbackContext):
-    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+from shivu import user_collection, user_count
+# Replace with your MongoDB connection and collection details
+from shivu import shivuu as app
+# Define a command to start counting characters
+async def ucount_all(client: Client, message: Message):
+    # Replace with your admin user ID
     ADMIN_IDS = [7378476666]
 
-    # Restrict the command to admins
-    if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("You are not authorized to use this command.")
+    # Check if the user is an admin
+    if message.from_user.id not in ADMIN_IDS:
+        await message.reply("You are not authorized to use this command.")
         return
 
-    # Initialize counters
     processed_users = 0
-    progress_threshold = 500  # Update progress every 500 users
-    batch_size = 100  # Batch size for fetching users
-    skip = 0  # Initialize skip variable
+    progress_threshold = 50  # Send a progress update every 50 users
 
-    # Fetch users in batches
-    while True:
-        cursor = user_collection.find({}).skip(skip).limit(batch_size)
+    # Fetch all users from the user collection
+    cursor = user_collection.find({})
 
-        batch_processed = 0
+    # Track the last processed user ID to continue from where it left off
+    last_processed_user_id = None
+    try:
         async for user in cursor:
             user_id = user.get('id')
             if not user_id:
-                continue  # Skip entries without a valid user ID
-
-            # Check if the user is already processed (exists in user_count collection)
-            existing_user = await user_count.find_one({'user_id': user_id})
-            if existing_user:
-                continue  # Skip if user has already been processed
+                continue  # Skip invalid user entries
 
             # Count the number of characters the user has
             total_characters = len(user.get('characters', []))
 
-            # Prepare the new document for insertion
+            # Prepare the document for updating the user_count collection
             document = {
                 'user_id': user_id,
                 'ccount': total_characters
             }
 
-            # Update or insert the user's character count in user_count
+            # Update or insert the user's character count
             await user_count.update_one(
-                {'user_id': user_id},  # Match user by ID
-                {'$set': document},    # Insert or update with this document
-                upsert=True            # Create new document if not present
+                {'user_id': user_id},
+                {'$set': document},
+                upsert=True
             )
 
+            # Increment processed user count
             processed_users += 1
-            batch_processed += 1
 
-            # Provide progress update for every 500 users processed
+            # Send progress updates every 'progress_threshold' users
             if processed_users % progress_threshold == 0:
-                await update.message.reply_text(f"Processed {processed_users} users so far...")
+                await message.reply(f"Processed {processed_users} users so far...")
 
-        # If no more users are left to process, exit the loop
-        if batch_processed < batch_size:
-            break
+            # Keep track of the last processed user ID
+            last_processed_user_id = user_id
 
-        skip += batch_size  # Move to the next batch
+            # Simulate a small delay to avoid spamming updates
+            await asyncio.sleep(1)
 
-        # Throttle progress updates to avoid flooding the chat with messages
-        await asyncio.sleep(1)
+        # Final summary after all users are processed
+        await message.reply(f"Finished processing {processed_users} users.")
 
-    # Final summary message
-    await update.message.reply_text(f"Finished processing {processed_users} users.")
+    except Exception as e:
+        # Handle errors and resume processing from the last user
+        await message.reply(f"An error occurred: {e}")
+        print(f"Error: {e}")
+
+        # Resume from the last processed user in future executions
+        if last_processed_user_id:
+            await message.reply(f"Resuming from user ID {last_processed_user_id}.")
 
 # Add the command handler
-application.add_handler(CommandHandler("ull", ucount_all))
-
-
+@app.on_message(filters.command("ull"))
+async def handle_ucount_all(client, message):
+    await ucount_all(client, message)
 
 
 
