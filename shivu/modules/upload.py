@@ -376,7 +376,7 @@ async def upload_video_character(client, message):
                 f"🎥 **New Character Added** 🎥\n\n"
                 f"Character Name: {character_name}\n"
                 f"Anime Name: {anime}\n"
-                f"Rarity: {rarity_text}\n"
+                f"Rarity: '🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'\n"
                 f"ID: {available_id}\n"
                 f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
             ),
