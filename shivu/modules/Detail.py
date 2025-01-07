@@ -41,7 +41,7 @@ async def ucount_all(update: Update, context: CallbackContext):
         processed_users += 1
 
         # Provide progress update for every 10 users processed
-        if processed_users % 10 == 0:
+        if processed_users % 50 == 0:
             await update.message.reply_text(f"Processed {processed_users} users so far...")
 
     # Final summary message
