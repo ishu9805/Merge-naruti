@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
-from shivu import user_collection, user_count, application 
+from shivu import user_collection, user_count, application
+import asyncio
 
 async def ucount_all(update: Update, context: CallbackContext):
     # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
@@ -13,39 +14,49 @@ async def ucount_all(update: Update, context: CallbackContext):
 
     # Initialize counters
     processed_users = 0
+    progress_threshold = 50  # Set threshold for progress updates
 
     # Fetch all users from user_collection
     cursor = user_collection.find({})
 
-    async for user in cursor:
-        user_id = user.get('id')
-        if not user_id:
-            continue  # Skip entries without a valid user ID
+    try:
+        async for user in cursor:
+            user_id = user.get('id')
+            if not user_id:
+                continue  # Skip entries without a valid user ID
 
-        # Count the number of characters the user has
-        total_characters = len(user.get('characters', []))
+            # Count the number of characters the user has
+            total_characters = len(user.get('characters', []))
 
-        # Prepare the new document for insertion if it doesn't exist
-        document = {
-            'user_id': user_id,
-            'ccount': total_characters
-        }
+            # Prepare the new document for insertion if it doesn't exist
+            document = {
+                'user_id': user_id,
+                'ccount': total_characters
+            }
 
-        # Update or insert the user's character count in user_count
-        await user_count.update_one(
-            {'user_id': user_id},  # Match user by ID
-            {'$set': document},    # Insert or update with this document
-            upsert=True            # Create new document if not present
-        )
+            # Update or insert the user's character count in user_count
+            await user_count.update_one(
+                {'user_id': user_id},  # Match user by ID
+                {'$set': document},    # Insert or update with this document
+                upsert=True            # Create new document if not present
+            )
 
-        processed_users += 1
+            processed_users += 1
 
-        # Provide progress update for every 10 users processed
-        if processed_users % 50 == 0:
-            await update.message.reply_text(f"Processed {processed_users} users so far...")
+            # Provide progress update for every 50 users processed
+            if processed_users % progress_threshold == 0:
+                await update.message.reply_text(f"Processed {processed_users} users so far...")
 
-    # Final summary message
-    await update.message.reply_text(f"Finished processing {processed_users} users.")
+            # Throttle progress updates to avoid flooding the chat with messages
+            await asyncio.sleep(1)  # Add delay to prevent spamming updates
+
+        # Final summary message
+        await update.message.reply_text(f"Finished processing {processed_users} users.")
+
+    except Exception as e:
+        # Handle any errors during the process
+        await update.message.reply_text(f"An error occurred: {e}")
+        print(f"Error: {e}")
 
 # Add the command handler
 application.add_handler(CommandHandler("ull", ucount_all))
