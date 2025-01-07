@@ -114,7 +114,7 @@ async def hclaim(_, message: t.Message):
             }
         )
         await user_count.update_one(
-            {'user_id': r_id},
+            {'user_id': user_id},
             {'$inc': {'ccount': 1}},
             upsert=True
         )
