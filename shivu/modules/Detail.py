@@ -14,16 +14,27 @@ async def ucount_all(update: Update, context: CallbackContext):
 
     # Initialize counters
     processed_users = 0
-    progress_threshold = 50  # Set threshold for progress updates
+    progress_threshold = 500  # Update progress every 500 users
+    batch_size = 100  # Batch size for fetching users
 
-    # Fetch all users from user_collection
-    cursor = user_collection.find({})
+    # Fetch the last processed user (if any)
+    last_processed = await user_count.find_one({}, sort=[("user_id", -1)])  # Find the last user processed
+    last_processed_user_id = last_processed.get("user_id") if last_processed else None
+    skip = 0 if not last_processed_user_id else skip
 
-    try:
+    # Fetch users in batches
+    while True:
+        cursor = user_collection.find({}).skip(skip).limit(batch_size)
+
+        batch_processed = 0
         async for user in cursor:
             user_id = user.get('id')
             if not user_id:
                 continue  # Skip entries without a valid user ID
+
+            # Skip already processed users
+            if user_id == last_processed_user_id:
+                continue
 
             # Count the number of characters the user has
             total_characters = len(user.get('characters', []))
@@ -42,21 +53,30 @@ async def ucount_all(update: Update, context: CallbackContext):
             )
 
             processed_users += 1
+            batch_processed += 1
 
-            # Provide progress update for every 50 users processed
+            # Provide progress update for every 500 users processed
             if processed_users % progress_threshold == 0:
                 await update.message.reply_text(f"Processed {processed_users} users so far...")
 
-            # Throttle progress updates to avoid flooding the chat with messages
-            await asyncio.sleep(1)  # Add delay to prevent spamming updates
+            # Update the last processed user
+            await user_count.update_one(
+                {'user_id': user_id},  # Find user by ID
+                {'$set': {'user_id': user_id}},  # Update the document with the current user ID
+                upsert=True
+            )
 
-        # Final summary message
-        await update.message.reply_text(f"Finished processing {processed_users} users.")
+        # If no more users are left to process, exit the loop
+        if batch_processed < batch_size:
+            break
 
-    except Exception as e:
-        # Handle any errors during the process
-        await update.message.reply_text(f"An error occurred: {e}")
-        print(f"Error: {e}")
+        skip += batch_size  # Move to the next batch
+
+        # Throttle progress updates to avoid flooding the chat with messages
+        await asyncio.sleep(1)
+
+    # Final summary message
+    await update.message.reply_text(f"Finished processing {processed_users} users.")
 
 # Add the command handler
 application.add_handler(CommandHandler("ull", ucount_all))
