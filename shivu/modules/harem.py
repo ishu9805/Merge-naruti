@@ -30,7 +30,8 @@ RARITY_MAPPING = {
     '🎄 Christmas Special': '🎄',
     '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': '🪐',
     '🎭 Cosplay Master 🎭': '🎭',
-    '🎖 Apex Lot ( AUCTION )': '🎖'
+    '🎖 Apex Lot ( AUCTION )': '🎖',
+    '🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🧿'
 }
 
 
