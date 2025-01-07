@@ -18,14 +18,6 @@ from pyrogram.types import Message
 from pymongo import MongoClient
 import asyncio
 
-# MongoDB connection and collections
-client = MongoClient("mongodb://localhost:27017/")
-db = client['my_database']
-user_collection = db['user_collection']
-user_count = db['user_count']
-
-# Pyrogram app setup
-app = Client("my_bot")
 
 # Define a function to process users in batches
 async def ucount_all(client: Client, message: Message):
@@ -93,7 +85,7 @@ async def ucount_all(client: Client, message: Message):
     await message.reply(f"Finished processing {processed_users} users.")
 
 # Add the command handler
-@app.on_message(filters.command("ull"))
+@app.on_message(filters.command("userk"))
 async def handle_ucount_all(client, message):
     await ucount_all(client, message)
 
