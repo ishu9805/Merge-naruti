@@ -76,7 +76,7 @@ async def inlinequery(client, update):
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', user['id']))}</a>'s Character\n\n"
-                        f"⌬ {char['anime']} 〔{user_anime_count}}〕\n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}〕\n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{len([c for c in user.get('characters', []) if c['name'] == char['name']])}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n\n"
                         f"🌍 **Global Count**: {global_count} users\n"
