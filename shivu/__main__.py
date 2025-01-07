@@ -28,37 +28,41 @@ from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins, update_leaderboards
 from shivu.modules.leaderboard import create_indexes
 from shivu import LOGGER
+import datetime
+import importlib
+import time
+import random
+import re
+import asyncio
+from html import escape
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Bot
+from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
+from shivu import app
+from shivu import collection, top_global_groups_collection, group_user_totals_collection, user_collection, user_totals_collection, shivuu
+from shivu import application, SUPPORT_CHAT, UPDATE_CHAT, db, ban_collection
+from shivu.modules import ALL_MODULES
+from shivu.modules.coin import add_coins, update_leaderboards
+from shivu.modules.leaderboard import create_indexes
+from shivu import LOGGER
+
 all_characters = []
 
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
-
 
 async def preload_characters(context: CallbackContext) -> None:
     global all_characters
     try:
         all_characters = await collection.find({}).to_list(length=None)
         
-        
         if all_characters:
-            LOGGER.info(f"Preloaded {len(all_characters)} characters from the main  characters from the collection.")
+            LOGGER.info(f"Preloaded {len(all_characters)} characters from the main characters from the collection.")
         else:
             LOGGER.warning("No characters found in the databases.")
     except Exception as e:
         LOGGER.error(f"Error preloading characters: {e}")
 
-
-
-
-
 async def react_to_message(chat_id, message_id, emoji):
     await shivuu.send_reaction(chat_id, message_id, emoji)
-
-
-
-# The chat ID where you want to send messages
-
-
- 
 
 locks = {}
 message_counters = {}
@@ -68,30 +72,25 @@ sent_characters = {}
 first_correct_guesses = {}
 message_counts = {}
 
-
 for module_name in ALL_MODULES:
     imported_module = importlib.import_module("shivu.modules." + module_name)
 
-
 last_user = {}
 warned_users = {}
+
 def escape_markdown(text):
     escape_chars = r'\*_`\\~>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
-
-
 async def message_counter(update: Update, context: CallbackContext) -> None:
-    # Check if the message is from a bot
     if update.effective_user.is_bot:
-        return  # Do not count messages from bots
+        return
 
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
     is_banned = await ban_collection.find_one({"user_id": user_id})
     
     if is_banned:
-        # If the user is banned, do nothing
         return
 
     if chat_id not in locks:
@@ -111,8 +110,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
-                    # Implement your warning logic here
-                    warned_users[user_id] = time.time()  # Example of setting a warning time
+                    warned_users[user_id] = time.time()
                     return
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
@@ -128,24 +126,18 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d")  # Get current date
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
 
-    
-    
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
     if len(sent_characters[chat_id]) == len(all_characters):
         sent_characters[chat_id] = []
 
-    # Calculate today's message count
     if chat_id in message_counters:
         today_message_count = message_counters[chat_id].get(current_time, 0)
     else:
         today_message_count = 0
-
-    # Check the total messages sent
-
 
     rarities = {
         1: '⚪️ Common',
@@ -162,34 +154,32 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         12: '🎃 Halloween',
         13: '🎄 Christmas Special',
         14: '🎭 Cosplay Master 🎭',
-        15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐0'
+        15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
+        16: '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'  # New rarity added
     }
 
     spawn_counts = {
-        '⚪️ Common': 5,  
-        '🟣 Rare': 5,      
+        '⚪️ Common': 5,
+        '🟣 Rare': 5,
         '🟢 Medium': 5,
-        '🟡 Legendary': 8,  
-        '💮 Special Edition': 4,  
-        '🔮 Limited Edition': 1,  
-        '💸 Premium Edition': 0,  
-        '🌤 Summer': 0 if today_message_count <= 4 else 0,  
-        '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,  
-        '❄️ Winter': 1,  
-        '💝 Valentine': 0,  
-        '🎃 Halloween': 0,  
+        '🟡 Legendary': 8,
+        '💮 Special Edition': 4,
+        '🔮 Limited Edition': 1,
+        '💸 Premium Edition': 0,
+        '🌤 Summer': 0 if today_message_count <= 4 else 0,
+        '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
+        '❄️ Winter': 1,
+        '💝 Valentine': 0,
+        '🎃 Halloween': 0,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 0,
-        '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0
+        '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
+        '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': 0  # New rarity spawn count
     }
 
-    # Adjust spawn counts for Special Edition
-    if today_message_count <= 6:  
-        spawn_counts['💮 Special edition'] = 1
-    else:
-        spawn_counts['💮 Special edition'] = 0
+    if message_counts[chat_id] % 3000 == 0:  # Spawn every 3000 messages
+        spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 1
 
-    # Create a list of characters based on spawn counts
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
         characters_to_spawn.extend([c for c in all_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
@@ -199,14 +189,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     character = random.choice(characters_to_spawn)
 
-    # Log if a Halloween character spawns
-    if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=7378476666, text=f"A winter character has spawned! Character id: {character['id']}")
+    if character.get('rarity') == '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙':
+        await context.bot.send_message(chat_id=7378476666, text=f"An animated character has spawned! Character id: {character['id']}")
 
-    if character.get('rarity') == '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐':
-        await context.bot.send_message(chat_id=7378476666, text=f"A omni character has spawned! Character id: {character['id']}")
-        
-    rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')  
+    rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
     last_characters[chat_id] = character
@@ -228,6 +214,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             caption=f"🌟 Get ready! A *{rarity_name}* character has emerged! 🏃‍♂️ Guess their name with /guess [Name] to add them to your harem! 🌟",
             parse_mode='Markdown'
         )
+
+    spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 0  # Reset after spawning
+
 
 
 
