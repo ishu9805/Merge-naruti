@@ -23,6 +23,7 @@ from shivu import (
     ban_collection,
     LOGGER
 )
+from shivu import user_count
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins, update_leaderboards
 from shivu.modules.leaderboard import create_indexes
@@ -265,6 +266,11 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=keyboard
         )
         await add_coins(int(user_id), 40)
+        await user_count.update_one(
+            {'user_id': user_id},
+            {'$inc': {'ccount': 1}},
+            upsert=True
+        )
         
         user = await user_collection.find_one({'id': user_id})
         if user:
