@@ -6,6 +6,17 @@ from shivu import user_collection, user_count
 # Replace with your MongoDB connection and collection details
 from shivu import shivuu as app
 # Define a command to start counting characters
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pymongo import MongoClient
+import asyncio
+
+# MongoDB connection and collections
+
+# Pyrogram app setup
+
+
+# Define a function to process users in batches
 async def ucount_all(client: Client, message: Message):
     # Replace with your admin user ID
     ADMIN_IDS = [7378476666]
@@ -15,16 +26,21 @@ async def ucount_all(client: Client, message: Message):
         await message.reply("You are not authorized to use this command.")
         return
 
+    # Initialize counters
     processed_users = 0
     progress_threshold = 50  # Send a progress update every 50 users
+    batch_size = 100  # Number of users to process per batch
 
-    # Fetch all users from the user collection
-    cursor = user_collection.find({})
+    # Fetch the total number of users
+    total_users = await user_collection.count_documents({})
 
-    # Track the last processed user ID to continue from where it left off
-    last_processed_user_id = None
-    try:
-        async for user in cursor:
+    # Process users in batches
+    for skip in range(0, total_users, batch_size):
+        # Fetch the next batch of users
+        users_batch = user_collection.find().skip(skip).limit(batch_size)
+
+        # Iterate through each user in the current batch
+        for user in users_batch:
             user_id = user.get('id')
             if not user_id:
                 continue  # Skip invalid user entries
@@ -52,28 +68,17 @@ async def ucount_all(client: Client, message: Message):
             if processed_users % progress_threshold == 0:
                 await message.reply(f"Processed {processed_users} users so far...")
 
-            # Keep track of the last processed user ID
-            last_processed_user_id = user_id
-
             # Simulate a small delay to avoid spamming updates
             await asyncio.sleep(1)
 
-        # Final summary after all users are processed
-        await message.reply(f"Finished processing {processed_users} users.")
-
-    except Exception as e:
-        # Handle errors and resume processing from the last user
-        await message.reply(f"An error occurred: {e}")
-        print(f"Error: {e}")
-
-        # Resume from the last processed user in future executions
-        if last_processed_user_id:
-            await message.reply(f"Resuming from user ID {last_processed_user_id}.")
+    # Final summary after all users are processed
+    await message.reply(f"Finished processing {processed_users} users.")
 
 # Add the command handler
 @app.on_message(filters.command("ull"))
 async def handle_ucount_all(client, message):
     await ucount_all(client, message)
+
 
 
 
