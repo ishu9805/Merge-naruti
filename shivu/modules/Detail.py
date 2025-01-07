@@ -7,7 +7,7 @@ async def ucount_all(update: Update, context: CallbackContext):
     ADMIN_IDS = [7378476666]
 
     # Restrict the command to admins
-    if update.effective_user.id ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
