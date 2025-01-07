@@ -2,7 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from shivu import user_collection, ban_collection
-from shivu import shivuu
+from shivu import shivuu, user_count
 
 
 from pyrogram import Client, filters
@@ -155,6 +155,16 @@ async def on_callback_query(client, callback_query):
                 'characters': [gift['character']],
             })
 
+        await user_count.update_one(
+            {'user_id': sender_id},
+            {'$inc': {'ccount': -1}},
+            upsert=True
+        ) 
+        await user_count.update_one(
+            {'user_id': r_id},
+            {'$inc': {'ccount': 1}},
+            upsert=True
+        )        
         # Set the cooldown for the sender (15 seconds from now)
         cooldowns[sender_id] = time.time()
 
