@@ -61,7 +61,7 @@ async def send_characters(client, message):
             if image_url:
                 await app.send_photo(chat_id="-1002398468292", photo=image_url, caption=caption)
             elif video_url:
-                await app.send_video(chat_id="-1002398468292", video=video_url, caption=caption)
+                await app.send_video(chat_id="-1002398468292", video=video_url, caption=caption, supports_streaming=True)
             else:
                 await app.send_message(chat_id=message.chat.id, text="🚫 *No media available for this character.*")
 
