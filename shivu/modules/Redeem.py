@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler
 from telegram.constants import ParseMode
 import random
 import string
-from shivu import application, user_collection, collection, PARTNER, ban_collection
+from shivu import application, user_collection, collection, PARTNER, ban_collection, user_count
 
 # Dictionary to store last usage time and generated waifus
 last_usage_time = {}
@@ -72,6 +72,11 @@ async def claimwaifu(update, context):
             await user_collection.update_one(
                 {'id': user_id},
                 {'$push': {'characters': waifu}}
+            )
+            await user_count.update_one(
+                {'user_id': r_id},
+                {'$inc': {'ccount': 1}},
+                upsert=True
             )
 
             details['quantity'] -= 1
