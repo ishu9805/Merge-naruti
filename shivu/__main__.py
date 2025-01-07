@@ -368,10 +368,10 @@ def error_handler(update: Update, context: CallbackContext):
 
 def main() -> None:
     """Run bot."""
-    application.job_queue.run_once(preload_characters, when=0)
-    application.add_handler(CommandHandler(["guess"], guess, block=False))
-    application.add_handler(CommandHandler("fav", fav, block=False))
-    application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
+    #application.job_queue.run_once(preload_characters, when=0)
+    #application.add_handler(CommandHandler(["guess"], guess, block=False))
+    #application.add_handler(CommandHandler("fav", fav, block=False))
+    #application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
 
     # Use asyncio.create_task to run the bot in the background
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
