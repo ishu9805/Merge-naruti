@@ -83,3 +83,20 @@ async def ucount_all(update: Update, context: CallbackContext):
 
 # Add the command handler
 application.add_handler(CommandHandler("ull", ucount_all))
+
+
+
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count, application
+
+async def count_user_documents(update: Update, context: CallbackContext):
+    # Count the number of documents in the user_count collection
+    count = await user_count.count_documents({})
+
+    # Send the count as a reply
+    await update.message.reply_text(f"There are {count} documents in the user_count collection.")
+
+# Add the command handler
+application.add_handler(CommandHandler("countusers", count_user_documents))
