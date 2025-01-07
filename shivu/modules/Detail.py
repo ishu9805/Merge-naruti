@@ -18,13 +18,6 @@ async def ucount_all(update: Update, context: CallbackContext):
     batch_size = 100  # Batch size for fetching users
     skip = 0  # Initialize skip variable
 
-    # Fetch the last processed user (if any)
-    last_processed = await user_count.find_one({}, sort=[("user_id", -1)])  # Find the last user processed
-    last_processed_user_id = last_processed.get("user_id") if last_processed else None
-
-    if last_processed_user_id:
-        skip = 1  # Skip the already processed user if exists
-
     # Fetch users in batches
     while True:
         cursor = user_collection.find({}).skip(skip).limit(batch_size)
@@ -35,14 +28,15 @@ async def ucount_all(update: Update, context: CallbackContext):
             if not user_id:
                 continue  # Skip entries without a valid user ID
 
-            # Skip already processed users
-            if user_id == last_processed_user_id:
-                continue
+            # Check if the user is already processed (exists in user_count collection)
+            existing_user = await user_count.find_one({'user_id': user_id})
+            if existing_user:
+                continue  # Skip if user has already been processed
 
             # Count the number of characters the user has
             total_characters = len(user.get('characters', []))
 
-            # Prepare the new document for insertion if it doesn't exist
+            # Prepare the new document for insertion
             document = {
                 'user_id': user_id,
                 'ccount': total_characters
@@ -62,13 +56,6 @@ async def ucount_all(update: Update, context: CallbackContext):
             if processed_users % progress_threshold == 0:
                 await update.message.reply_text(f"Processed {processed_users} users so far...")
 
-            # Update the last processed user
-            await user_count.update_one(
-                {'user_id': user_id},  # Find user by ID
-                {'$set': {'user_id': user_id}},  # Update the document with the current user ID
-                upsert=True
-            )
-
         # If no more users are left to process, exit the loop
         if batch_processed < batch_size:
             break
@@ -83,6 +70,7 @@ async def ucount_all(update: Update, context: CallbackContext):
 
 # Add the command handler
 application.add_handler(CommandHandler("ull", ucount_all))
+
 
 
 
