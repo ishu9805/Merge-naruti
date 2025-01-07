@@ -26,6 +26,7 @@ async def nhmode(event):
     await event.respond("Select a rarity mode:", buttons=buttons)
 
 # Handler for callback queries
+# Handler for callback queries
 @app.on(events.CallbackQuery)
 async def callback_query_handler(event):
     try:
@@ -35,21 +36,21 @@ async def callback_query_handler(event):
             rarities_buttons = [
                 [Button.inline("⚪️", data="rarity:⚪️ Common"), 
                  Button.inline("🟣", data="rarity:🟣 Rare"), 
-                 Button.inline("🟡", data="rarity:🟡 Legendary")],
-                [Button.inline("🟢", data="rarity:🟢 Medium"), 
-                 Button.inline("💮", data="rarity:💮 Special Edition"), 
-                 Button.inline("🔮", data="rarity:🔮 Limited Edition")],
-                [Button.inline("💸", data="rarity:💸 Premium Edition"),
+                 Button.inline("🟡", data="rarity:🟡 Legendary"),
+                 Button.inline("🟢", data="rarity:🟢 Medium")],
+                [Button.inline("💮", data="rarity:💮 Special Edition"), 
+                 Button.inline("🔮", data="rarity:🔮 Limited Edition"),
+                 Button.inline("💸", data="rarity:💸 Premium Edition"),
                  Button.inline("🎖", data="rarity:🎖 Apex Lot ( AUCTION )")],
                 [Button.inline("🌤", data="rarity:🌤 Summer"), 
                  Button.inline("🎐", data="rarity:🎐 Celestial"), 
-                 Button.inline("☃️", data="rarity:❄️ Winter")],
-                [Button.inline("💝", data="rarity:💝 Valentine"), 
-                 Button.inline("🎃", data="rarity:🎃 Halloween"), 
-                 Button.inline("🎄", data="rarity:🎄 Christmas Special")],
-                [Button.inline("🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
-                 Button.inline("🎭", data="rarity:🎭 Cosplay Master 🎭"),
-                 Button.inline("🎗️", data="rarity:🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙")]
+                 Button.inline("☃️", data="rarity:❄️ Winter"),
+                 Button.inline("💝", data="rarity:💝 Valentine")],
+                [Button.inline("🎃", data="rarity:🎃 Halloween"), 
+                 Button.inline("🎄", data="rarity:🎄 Christmas Special"),
+                 Button.inline("🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
+                 Button.inline("🎭", data="rarity:🎭 Cosplay Master 🎭")],
+                [Button.inline("🎗️", data="rarity:🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙")]
             ]
             await event.edit("Select a rarity:", buttons=rarities_buttons)
 
@@ -70,8 +71,8 @@ async def callback_query_handler(event):
             )
             await event.edit("Your rarity mode is now set to All.")
 
-        # Schedule the deletion of the callback query message after 2 minutes
-        await asyncio.sleep(120)
+        # Schedule the deletion of the callback query message after 20 seconds
+        await asyncio.sleep(20)
         await event.delete()
 
     except Exception as e:
