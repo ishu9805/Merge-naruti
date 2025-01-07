@@ -145,7 +145,30 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
 
 
-
+async def _send_harem_message(update, harem_message, reply_markup, characters=None):
+    if characters:
+        random_character = random.choice(characters)
+        if 'img_url' in random_character:
+            if update.message:
+                await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup)
+            else:
+                try:
+                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                except BadRequest:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+        elif 'vid_url' in random_character:
+            if update.message:
+                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup)
+            else:
+                try:
+                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                except BadRequest:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+        else:
+            await _send_text_message(update, harem_message, reply_markup)
+    else:
+        await _send_text_message(update, harem_message, reply_markup)
+        
 
     
 async def _send_text_message(update, text, reply_markup):
