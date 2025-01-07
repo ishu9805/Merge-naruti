@@ -31,7 +31,7 @@ RARITY_MAPPING = {
     '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': '🪐',
     '🎭 Cosplay Master 🎭': '🎭',
     '🎖 Apex Lot ( AUCTION )': '🎖',
-    '🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🧿'
+    '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🎗️'
 }
 
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
@@ -77,7 +77,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     total_count = len(user['characters'])
     has_animated = any(
-        char.get('rarity') == "🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
+        char.get('rarity') == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
     )
 
     keyboard = [
@@ -85,8 +85,8 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     ]
 
     if has_animated:
-        keyboard.append([
-            InlineKeyboardButton("See Animated Collection", switch_inline_query_current_chat=f"collection.vid.{user_id}")
+        keyboard[0].append([
+            InlineKeyboardButton("🎗️ Animated", switch_inline_query_current_chat=f"collection.vid.{user_id}")
         ])
 
     if total_pages > 1:
