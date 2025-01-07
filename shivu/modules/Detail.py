@@ -1,97 +1,67 @@
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from pymongo import MongoClient
-import asyncio
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
 from shivu import user_collection, user_count
-# Replace with your MongoDB connection and collection details
-from shivu import shivuu as app
-# Define a command to start counting characters
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from pymongo import MongoClient
-import asyncio
 
-            # Simulate a small delay to avoid spamming updates
-            
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from pymongo import MongoClient
-import asyncio
+# Admin IDs for restricted access
+ADMIN_IDS = [123456789]  # Replace with actual admin user IDs
 
-
-# Define a function to process users in batches
-async def ucount_all(client: Client, message: Message):
-    # Replace with your admin user ID
-    ADMIN_IDS = [7378476666]
-
-    # Check if the user is an admin
-    if message.from_user.id not in ADMIN_IDS:
-        await message.reply("You are not authorized to use this command.")
+async def ucount_all(update: Update, context: CallbackContext):
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
         return
 
     # Initialize counters
     processed_users = 0
-    progress_threshold = 50  # Send a progress update every 50 users
-    batch_size = 100  # Number of users to process per batch
+    skipped_users = 0
+    batch_size = 100  # Process in batches for better performance
 
-    # Fetch the total number of users
-    total_users = await user_collection.count_documents({})
+    try:
+        # Fetch all users from user_collection
+        cursor = user_collection.find({'id': {'$exists': True, '$ne': None}})
 
-    # Process users in batches
-    for skip in range(0, total_users, batch_size):
-        # Fetch the next batch of users
-        users_batch = user_collection.find().skip(skip).limit(batch_size)
+        async for user in cursor:
+            # Directly use user['id'] as 'id' is guaranteed to exist and be non-null
+            user_id = user['id']
 
-        # Convert the cursor to a list to allow iteration
-        users = await users_batch.to_list(length=batch_size)
-
-        # If there are no users in the batch, break the loop
-        if not users:
-            break
-
-        # Iterate through each user in the current batch
-        for user in users:
-            user_id = user.get('id')
-            if not user_id:
-                continue  # Skip invalid user entries
+            # Check if the user_id is already present in user_count
+            user_exists = await user_count.find_one({'user_id': user_id})
+            if user_exists:
+                skipped_users += 1
+                continue  # Skip users already in user_count
 
             # Count the number of characters the user has
             total_characters = len(user.get('characters', []))
 
-            # Prepare the document for updating the user_count collection
+            # Prepare the new document for insertion or update
             document = {
                 'user_id': user_id,
                 'ccount': total_characters
             }
 
-            # Update or insert the user's character count
+            # Update or insert the user's character count in user_count
             await user_count.update_one(
-                {'user_id': user_id},
-                {'$set': document},
-                upsert=True
+                {'user_id': user_id},  # Match user by ID
+                {'$set': document},    # Insert or update with this document
+                upsert=True            # Create new document if not present
             )
 
-            # Increment processed user count
             processed_users += 1
 
-            # Send progress updates every 'progress_threshold' users
-            if processed_users % progress_threshold == 0:
-                await message.reply(f"Processed {processed_users} users so far...")
+            # Provide progress updates every batch_size users
+            if processed_users % batch_size == 0:
+                await update.message.reply_text(f"Processed {processed_users} users so far...")
 
-            # Simulate a small delay to avoid spamming updates
-            await asyncio.sleep(1)
+        # Final summary message
+        await update.message.reply_text(
+            f"Finished processing {processed_users} users. Skipped {skipped_users} users already in user_count."
+        )
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
 
-    # Final summary after all users are processed
-    await message.reply(f"Finished processing {processed_users} users.")
-
-# Add the command handler
-@app.on_message(filters.command("userk"))
-async def handle_ucount_all(client, message):
-    await ucount_all(client, message)
-
-# 
-
-
+# Add the command handler to the application
+application.add_handler(CommandHandler("ull", ucount_all))
 
 
 from telegram import Update
