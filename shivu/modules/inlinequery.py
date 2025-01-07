@@ -70,13 +70,17 @@ async def inlinequery(client, update):
                 ]
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
+                    global_count = len([u for u in await user_collection.find({'characters.id': char['id']}).to_list(length=None)])
+                    user_anime_count = len([c for c in user.get('characters', []) if c['anime'] == char['anime']])
+                    total_anime_count = len([c for c in all_characters_cache['all_characters'] if c['anime'] == char['anime']])
+
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', user['id']))}</a>'s Character\n\n"
-                        f"⌬ {char['anime']} 〔{len([c for c in user.get('characters', []) if c['name'] == char['name']])/len(user['characters'])}〕\n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{len([c for c in user.get('characters', []) if c['name'] == char['name']])}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[0]}\n\n"
-                        f"🌍 **Global Count**: {len([u for u in user_collection if any(c['id'] == char['id'] for c in u.get('characters', []))])} users\n"
+                        f"🌍 **Global Count**: {global_count} users\n"
                     )
                     results.append(
                         InlineQueryResultPhoto(
@@ -104,13 +108,17 @@ async def inlinequery(client, update):
                 ]
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
+                    global_count = len([u for u in await user_collection.find({'characters.id': char['id']}).to_list(length=None)])
+                    user_anime_count = len([c for c in user.get('characters', []) if c['anime'] == char['anime']])
+                    total_anime_count = len([c for c in all_characters_cache['all_characters'] if c['anime'] == char['anime']])
+
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', user['id']))}</a>'s Character\n\n"
-                        f"⌬ {char['anime']} 〔{len([c for c in user.get('characters', []) if c['name'] == char['name']])/len(user['characters'])}〕\n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{len([c for c in user.get('characters', []) if c['name'] == char['name']])}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[0]}\n\n"
-                        f"🌍 **Global Count**: {len([u for u in user_collection if any(c['id'] == char['id'] for c in u.get('characters', []))])} users\n"
+                        f"🌍 **Global Count**: {global_count} users\n"
                     )
                     results.append(
                         InlineQueryResultVideo(
@@ -134,12 +142,13 @@ async def inlinequery(client, update):
 
         for character in characters[offset:offset + limit]:
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
+            
             caption = (
                 f"**Look At This Character!!**\n\n"
                 f"⌬ {character['anime']}\n"
                 f"◈⌠{rarity_emoji}⌡ {character['name']}\n"
                 f"**ID**: {character['id']} | **Rarity**: {character['rarity'].split()[0]}\n\n"
-                f"🌍 **Global Count**: {len([u for u in user_collection if any(c['id'] == character['id'] for c in u.get('characters', []))])} users\n"
+                
             )
             if 'vid_url' in character and character['vid_url']:
                 results.append(
@@ -165,4 +174,4 @@ async def inlinequery(client, update):
     # Pagination
     next_offset = str(offset + limit) if len(results) == limit else ""
     await update.answer(results, next_offset=next_offset, cache_time=6, is_gallery=True)
-    
+                     
