@@ -52,7 +52,9 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
-
+    
+    total_count = len(user['characters'])
+    
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
 
@@ -60,7 +62,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if page < 0 or page >= total_pages:
         page = 0
 
-    harem_message = f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n"
+    harem_message = f"{escape(update.effective_user.first_name)}'s Harem {total_count}- Page {page+1}/{total_pages}\n\n"
     current_characters = characters[page*15:(page+1)*15]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
 
@@ -75,13 +77,12 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if len(harem_message) > MAX_CAPTION_LENGTH:
         harem_message = harem_message[:MAX_CAPTION_LENGTH]
 
-    total_count = len(user['characters'])
     has_animated = any(
         char.get('rarity') == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
     )
 
     keyboard = [
-        [InlineKeyboardButton(f"See Image Collection ({total_count})", switch_inline_query_current_chat=f"collection.img.{user_id}")]
+        [InlineKeyboardButton(f"🦋 Static", switch_inline_query_current_chat=f"collection.img.{user_id}")]
     ]
 
     if has_animated:
