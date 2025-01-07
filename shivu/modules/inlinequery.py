@@ -142,7 +142,7 @@ async def inlinequery(client, update):
 
         for character in characters[offset:offset + limit]:
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
-            global_count = len([u for u in await user_collection.find({'characters.id': char['id']}).to_list(length=None)])
+            global_count = len([u for u in await user_collection.find({'characters.id': character['id']}).to_list(length=None)])
             
             caption = (
                 f"**Look At This Character!!**\n\n"
