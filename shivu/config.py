@@ -6,7 +6,7 @@ class Config(object):
     sudo_users = "5578365728", "7378476666", "6759666329", "6965783469", "5316848198", "7228816990", "1118244185", "7469481988", "1744744841", "1017948073", "7036155390"
     PARTNER =  "7378476666", "1744744841"
     GROUP_ID = -1002198664660
-    TOKEN = "7598148687:AAFhYjAibAV5wQt7nh8WRnZs8V_8xMLhVgw"
+    TOKEN = "7313450832:AAENQ36XLHY-XLmf_SrNdYQ3VC_e0Tj_3iQ"
     TOKENs = "7107840748:AAHuqgu6Cc7eCGAHOemyyVtLiak50A-X73U"
     mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     PHOTO_URL = ["https://telegra.ph/file/a75e0d1a655943665b662.jpg", "https://telegra.ph/file/bee112f781897c3447515.jpg", "https://telegra.ph/file/a0123f958a26695bd9e14.jpg"]
