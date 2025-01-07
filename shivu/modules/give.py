@@ -7,7 +7,7 @@ import random
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from shivu import collection, user_collection, application, PARTNER, ban_collection
+from shivu import collection, user_collection, application, PARTNER, ban_collection, user_count
 
 
 async def give_character_reply(update: Update, context: CallbackContext) -> None:
@@ -222,7 +222,7 @@ async def remove_character(update: Update, context: CallbackContext):
         del user['characters'][character_index]
         await user_collection.update_one({'id': user_id}, {'$set': {'characters': user['characters']}})
         await user_count.update_one(
-            {'user_id': r_id},
+            {'user_id': user_id},
             {'$inc': {'ccount': -1}},
             upsert=True
         )
