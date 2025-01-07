@@ -11,10 +11,21 @@ from pyrogram.types import Message
 from pymongo import MongoClient
 import asyncio
 
+            # Simulate a small delay to avoid spamming updates
+            
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pymongo import MongoClient
+import asyncio
+
 # MongoDB connection and collections
+client = MongoClient("mongodb://localhost:27017/")
+db = client['my_database']
+user_collection = db['user_collection']
+user_count = db['user_count']
 
 # Pyrogram app setup
-
+app = Client("my_bot")
 
 # Define a function to process users in batches
 async def ucount_all(client: Client, message: Message):
@@ -39,8 +50,15 @@ async def ucount_all(client: Client, message: Message):
         # Fetch the next batch of users
         users_batch = user_collection.find().skip(skip).limit(batch_size)
 
+        # Convert the cursor to a list to allow iteration
+        users = await users_batch.to_list(length=batch_size)
+
+        # If there are no users in the batch, break the loop
+        if not users:
+            break
+
         # Iterate through each user in the current batch
-        for user in users_batch:
+        for user in users:
             user_id = user.get('id')
             if not user_id:
                 continue  # Skip invalid user entries
@@ -78,6 +96,8 @@ async def ucount_all(client: Client, message: Message):
 @app.on_message(filters.command("ull"))
 async def handle_ucount_all(client, message):
     await ucount_all(client, message)
+
+# 
 
 
 
