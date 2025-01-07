@@ -34,8 +34,6 @@ RARITY_MAPPING = {
     '🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🧿'
 }
 
-
-
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
@@ -78,9 +76,18 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         harem_message = harem_message[:MAX_CAPTION_LENGTH]
 
     total_count = len(user['characters'])
+    has_animated = any(
+        char.get('rarity') == "🧿 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
+    )
+
     keyboard = [
-        [InlineKeyboardButton(f"See Collection ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]
+        [InlineKeyboardButton(f"See Image Collection ({total_count})", switch_inline_query_current_chat=f"collection.img.{user_id}")]
     ]
+
+    if has_animated:
+        keyboard.append([
+            InlineKeyboardButton("See Animated Collection", switch_inline_query_current_chat=f"collection.vid.{user_id}")
+        ])
 
     if total_pages > 1:
         nav_buttons = []
@@ -136,30 +143,11 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     except Exception as e:
         print(f"Failed to edit message: {e}")
 
-async def _send_harem_message(update, harem_message, reply_markup, characters=None):
-    if characters:
-        random_character = random.choice(characters)
-        if 'img_url' in random_character:
-            if update.message:
-                await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup)
-            else:
-                try:
-                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
-                except BadRequest:
-                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-        elif 'vid_url' in random_character:
-            if update.message:
-                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup)
-            else:
-                try:
-                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
-                except BadRequest:
-                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-        else:
-            await _send_text_message(update, harem_message, reply_markup)
-    else:
-        await _send_text_message(update, harem_message, reply_markup)
 
+
+
+
+    
 async def _send_text_message(update, text, reply_markup):
     if update.message:
         await update.message.reply_text(text, reply_markup=reply_markup)
