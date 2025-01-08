@@ -327,3 +327,39 @@ async def count_collection(update: Update, context: CallbackContext):
 application.add_handler(CommandHandler("countn", count_collection))
 
 
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import main_count
+
+async def view_collection_count(update: Update, context: CallbackContext):
+    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+    ADMIN_IDS = [YOUR_ADMIN_ID]
+
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        # Fetch the document from main_count
+        document = await main_count.find_one({'id': 'collection_count'})
+
+        if document:
+            total_items = document.get('total_items', 0)
+            rarity_counts = document.get('rarity_counts', {})
+
+            # Prepare the message
+            response_message = f"Total items in collection: {total_items}\n\nRarity Counts:\n"
+            for rarity, count in rarity_counts.items():
+                response_message += f"{rarity}: {count}\n"
+
+            await update.message.reply_text(response_message)
+        else:
+            await update.message.reply_text("No collection count found in the database.")
+
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler to the application
+application.add_handler(CommandHandler("viewcc", view_collection_count))
