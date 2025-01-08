@@ -266,6 +266,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=keyboard
         )
         await add_coins(int(user_id), 40)
+                
+        await user_count.update_one(
+            {'user_id': user_id},
+            {'$inc': {f'rarity_count.{rarity}': 1}},
+            upsert=True
+        )
+        
+        
         await user_count.update_one(
             {'user_id': user_id},
             {'$inc': {'ccount': 1}},
