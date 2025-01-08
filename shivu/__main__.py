@@ -177,6 +177,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if character.get('rarity') == '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣':
         await context.bot.send_message(chat_id=7378476666, text=f"An animated character has spawned! Character id: {character['id']}")
 
+    if character.get('rarity') == '🔮 Limited Edition':
+        await context.bot.send_message(chat_id=7378476666, text=f"An limited character has spawned! Character id: {character['id']}")
+
+    if character.get('rarity') == '❄️ Winter':
+        await context.bot.send_message(chat_id=7378476666, text=f"An winter character has spawned! Character id: {character['id']}")
+
+
+    
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
