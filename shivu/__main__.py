@@ -160,7 +160,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': 0  # New rarity spawn count
     }
 
-    if chat_id == -1002338924488 and message_counts[chat_id] % 3000 == 0:
+    if chat_id == -1002338924488 and message_counts[chat_id] % 4000 == 0:
         spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 1
         
     characters_to_spawn = []
