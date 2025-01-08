@@ -245,3 +245,86 @@ async def get_user_rarity_counts(update: Update, context: CallbackContext):
 # Add the command handler
 application.add_handler(CommandHandler("rcount", get_user_rarity_counts))
 
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import main_count, collection
+
+async def count_collection(update: Update, context: CallbackContext):
+    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+    ADMIN_IDS = [YOUR_ADMIN_ID]
+
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        # Count all items in the collection directly
+        total_items = await collection.count_documents({})
+
+        # Store the total count directly in main_count
+        document = {
+            'id': 'collection_count',
+            'total_items': total_items,
+            'rarity_counts': {}  # To be updated next
+        }
+
+        # Update main_count with the total count
+        await main_count.update_one(
+            {'id': 'collection_count'},  # Unique identifier for this document
+            {'$set': document},          # Insert or update with this document
+            upsert=True                  # Create new document if not present
+        )
+
+        # Fetch rarity counts
+        rarity_counts = {
+            "⚪️ Common": 0,
+            "🟣 Rare": 0,
+            "🟡 Legendary": 0,
+            "🟢 Medium": 0,
+            "💮 Special Edition": 0,
+            "🔮 Limited Edition": 0,
+            "💸 Premium Edition": 0,
+            "🌤 Summer": 0,
+            "🎐 Celestial": 0,
+            "❄️ Winter": 0,
+            "💝 Valentine": 0,
+            "🎃 Halloween": 0,
+            "🎄 Christmas Special": 0,
+            "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
+            "🎭 Cosplay Master 🎭": 0,
+            "🎖 Apex Lot ( AUCTION )": 0,
+            "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙": 0
+        }
+
+        # Aggregate rarity counts
+        cursor = collection.aggregate([
+            {'$unwind': '$rarities'},
+            {'$group': {'_id': '$rarities', 'count': {'$sum': 1}}}
+        ])
+
+        async for rarity in cursor:
+            rarity_name = rarity['_id']
+            if rarity_name in rarity_counts:
+                rarity_counts[rarity_name] = rarity['count']
+
+        # Update rarity_counts in main_count
+        document['rarity_counts'] = rarity_counts
+        await main_count.update_one(
+            {'id': 'collection_count'},  # Unique identifier for this document
+            {'$set': document},          # Insert or update with this document
+            upsert=True                  # Create new document if not present
+        )
+
+        # Confirmation message
+        await update.message.reply_text(f"Total items in collection: {total_items}")
+
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler to the application
+application.add_handler(CommandHandler("countn", count_collection))
+
+
