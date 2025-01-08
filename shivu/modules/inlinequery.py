@@ -64,9 +64,10 @@ async def inlinequery(client, update):
                     user_collection_cache[user_id] = user
 
             if user:
+                regex = re.compile(query[14:], re.IGNORECASE)  # Extract the search term after 'collection.img.'
                 characters = [
                     char for char in user.get('characters', [])
-                    if 'img_url' in char and char['img_url']
+                    if 'img_url' in char and char['img_url'] and (regex.search(char['name']) or regex.search(char['anime'])) or regex.search(char['rarity'])
                 ]
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
@@ -101,9 +102,10 @@ async def inlinequery(client, update):
                     user_collection_cache[user_id] = user
 
             if user:
+                regex = re.compile(query[14:], re.IGNORECASE)  # Extract the search term after 'collection.img.'
                 characters = [
                     char for char in user.get('characters', [])
-                    if 'vid_url' in char and char['vid_url']
+                    if 'vid_url' in char and char['vid_url'] and (regex.search(char['name']) or regex.search(char['anime']))
                 ]
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
