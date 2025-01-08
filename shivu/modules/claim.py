@@ -1,3 +1,4 @@
+
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -193,20 +194,18 @@ async def hfind(_, message: t.Message):
     )
 
     try:
-        # Check if vid_url or img_url is present, and choose the appropriate media
         media_url = waifu.get('img_url') or waifu.get('vid_url')
-        if media_url:
-            # If it's a video URL, send it as a video, otherwise send as a photo
-            if 'vid_url' in waifu:
-                await message.reply_video(video=media_url, caption=caption, supports_streaming=True)
-            else:
-                await message.reply_photo(photo=media_url, caption=caption)
+
+        if 'vid_url' in waifu:
+            # Send video
+            send = await message.reply_video(video=media_url, caption=caption, supports_streaming=True)
         else:
-            await message.reply_text("🚫 No media available for this character.")
-        
+            # Send photo
+            send = await message.reply_photo(photo=media_url, caption=caption)
+
         # Optional: delete the message after 30 seconds
         await asyncio.sleep(30)
-        await message.delete()
+        await send.delete()
     except Exception as e:
         logging.error(f"Error sending character info for ID {waifu_id}: {e}")
         await message.reply_text("🚫 Failed to send character information. Please try again later.")
