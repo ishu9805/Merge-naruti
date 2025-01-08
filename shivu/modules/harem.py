@@ -31,7 +31,7 @@ RARITY_MAPPING = {
     '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': '🪐',
     '🎭 Cosplay Master 🎭': '🎭',
     '🎖 Apex Lot ( AUCTION )': '🎖',
-    '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🎗️'
+    '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️'
 }
 
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
