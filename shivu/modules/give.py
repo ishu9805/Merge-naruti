@@ -40,11 +40,13 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
             {'id': user_id},
             {'$push': {'characters': character}}
         )
+        rarity = character['rarity']
         await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {'ccount': 1}},
+            {'user_id': sender_id},
+            {'$inc': {f'rarity_count.{rarity}': 1}},
             upsert=True
-        )
+            
+        
 
         await update.message.reply_text(f'Character "{character["name"]}" has been given to user with ID {user_id}.')
     except Exception as e:
@@ -221,6 +223,12 @@ async def remove_character(update: Update, context: CallbackContext):
         # Remove the character from the user's collection
         del user['characters'][character_index]
         await user_collection.update_one({'id': user_id}, {'$set': {'characters': user['characters']}})
+        rarity = user['characters'][character_index][rarity]
+        await user_count.update_one(
+            {'user_id': sender_id},
+            {'$inc': {f'rarity_count.{rarity}': 1}},
+            upsert=True
+            
         await user_count.update_one(
             {'user_id': user_id},
             {'$inc': {'ccount': -1}},
