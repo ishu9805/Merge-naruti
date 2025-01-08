@@ -42,7 +42,7 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
         )
         rarity = character['rarity']
         await user_count.update_one(
-            {'user_id': sender_id},
+            {'user_id': user_id},
             {'$inc': {f'rarity_count.{rarity}': 1}},
             upsert=True
             
@@ -225,8 +225,8 @@ async def remove_character(update: Update, context: CallbackContext):
         await user_collection.update_one({'id': user_id}, {'$set': {'characters': user['characters']}})
         rarity = user['characters'][character_index][rarity]
         await user_count.update_one(
-            {'user_id': sender_id},
-            {'$inc': {f'rarity_count.{rarity}': 1}},
+            {'user_id': user_id},
+            {'$inc': {f'rarity_count.{rarity}': -1}},
             upsert=True
             
         await user_count.update_one(
