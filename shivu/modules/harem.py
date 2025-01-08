@@ -34,17 +34,16 @@ RARITY_MAPPING = {
     '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': '🎗️'
 }
 
-
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
-    user = await user_collection.find_one({'id': user_id}, {"projection": {"characters": 1, "rarity_mode": 1}})
-    user_info = await user_count.find_one({'user_id': user_id}, {"projection": {"ccount": 1, "rarity_counts": 1}})
+    user = await user_collection.find_one({'id': user_id})
+    user_info = await user_count.find_one({'user_id': user_id})
     is_banned = await ban_collection.find_one({"user_id": user_id})
-
+    
     if is_banned:
         return  # Do nothing if the user is banned
 
-    if not user or not user_info:
+    if not user:
         message = 'You Have Not Guessed any Characters Yet..'
         if update.message:
             await update.message.reply_text(message)
@@ -57,7 +56,8 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     
     total_count = user_info.get('ccount', 0)
     count_selected_rarity = user_info.get(f'{rarity_mode}_count', 0)
-
+    
+    
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
         count = user_info.get('rarity_counts', {}).get(rarity_mode, 0)
@@ -67,6 +67,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     total_pages = math.ceil(count / 20)
     if page < 0 or page >= total_pages:
         page = 0
+   
 
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem {total_count}- Page {page+1}/{total_pages}\n\n"
     current_characters = characters[page*15:(page+1)*20]
@@ -111,51 +112,76 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
-        fav_character_id = user['favorites'][0] if 'favorites' in user and user['favorites'] else None
-        fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
-        if fav_character:
-            if 'img_url' in fav_character:
-                await _send_harem_message(update, harem_message, reply_markup)
-            elif 'vid_url' in fav_character:
+        if 'favorites' in user and user['favorites']:
+            fav_character_id = user['favorites'][0]
+            fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
+            if fav_character:
+                if 'img_url' in fav_character:
+                    if update.message:
+                        await update.message.reply_photo(
+                            photo=fav_character['img_url'], 
+                            caption=harem_message, 
+                            reply_markup=reply_markup
+                        )
+                    else:
+                        try:
+                            await update.callback_query.edit_message_caption(
+                                caption=harem_message, 
+                                reply_markup=reply_markup
+                            )
+                        except BadRequest:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+                elif 'vid_url' in fav_character:
+                    if update.message:
+                        await update.message.reply_video(
+                            video=fav_character['vid_url'], 
+                            caption=harem_message, 
+                            reply_markup=reply_markup,
+                            supports_streaming=True
+                        )
+                    else:
+                        try:
+                            await update.callback_query.edit_message_caption(
+                                caption=harem_message, 
+                                reply_markup=reply_markup
+                            )
+                        except BadRequest:
+                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+            else:
                 await _send_harem_message(update, harem_message, reply_markup)
         else:
-            await _send_harem_message(update, harem_message, reply_markup)
+            await _send_harem_message(update, harem_message, reply_markup, user['characters'])
     except Exception as e:
         print(f"Failed to edit message: {e}")
 
 
-async def _send_harem_message(update, harem_message, reply_markup):
-    user = await user_collection.find_one({'id': update.effective_user.id}, {"projection": {"characters": 1}})
-    if not user or not user.get('characters'):
-        await _send_text_message(update, harem_message, reply_markup)
-        return
 
-    random_character = random.choice(user['characters'])
-    if 'img_url' in random_character:
-        await _send_photo_message(update, random_character['img_url'], harem_message, reply_markup)
-    elif 'vid_url' in random_character:
-        await _send_video_message(update, random_character['vid_url'], harem_message, reply_markup)
+async def _send_harem_message(update, harem_message, reply_markup, characters=None):
+    if characters:
+        random_character = random.choice(characters)
+        if 'img_url' in random_character:
+            if update.message:
+                await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup)
+            else:
+                try:
+                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                except BadRequest:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+        elif 'vid_url' in random_character:
+            if update.message:
+                await update.message.reply_video(video=random_character['vid_url'], caption=harem_message, reply_markup=reply_markup, supports_streaming=True)
+            else:
+                try:
+                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                except BadRequest:
+                    await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+        else:
+            await _send_text_message(update, harem_message, reply_markup)
     else:
         await _send_text_message(update, harem_message, reply_markup)
+        
 
-async def _send_photo_message(update, photo_url, harem_message, reply_markup):
-    if update.message:
-        await update.message.reply_photo(photo=photo_url, caption=harem_message, reply_markup=reply_markup)
-    else:
-        try:
-            await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
-        except BadRequest:
-            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-
-async def _send_video_message(update, video_url, harem_message, reply_markup):
-    if update.message:
-        await update.message.reply_video(video=video_url, caption=harem_message, reply_markup=reply_markup, supports_streaming=True)
-    else:
-        try:
-            await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
-        except BadRequest:
-            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-
+    
 async def _send_text_message(update, text, reply_markup):
     if update.message:
         await update.message.reply_text(text, reply_markup=reply_markup)
@@ -164,6 +190,8 @@ async def _send_text_message(update, text, reply_markup):
             await update.callback_query.edit_message_caption(caption=text, reply_markup=reply_markup)
         except BadRequest:
             await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+            
+
 
 
 
