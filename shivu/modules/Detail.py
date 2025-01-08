@@ -205,3 +205,43 @@ async def ucount_rall(update: Update, context: CallbackContext):
 
 # Add the command handler to the application
 application.add_handler(CommandHandler("rall", ucount_rall))
+
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count
+
+async def get_user_rarity_counts(update: Update, context: CallbackContext):
+    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+    
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    # Extract the user_id from the command argument, if provided
+    user_id = context.args[0] if context.args else None
+    if not user_id:
+        await update.message.reply_text("Please provide a valid user ID.")
+        return
+
+    try:
+        # Query the user_count collection to find the user's data
+        user_data = await user_count.find_one({'user_id': user_id})
+
+        if user_data and 'rarity_counts' in user_data:
+            rarity_data = user_data['rarity_counts']
+            response_text = "Rarity Counts for User:\n"
+            for rarity, count in rarity_data.items():
+                response_text += f"{rarity}: {count}\n"
+            await update.message.reply_text(response_text)
+        else:
+            await update.message.reply_text("No rarity data found for this user.")
+
+    except Exception as e:
+        # Handle errors gracefully
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler
+application.add_handler(CommandHandler("rcount", get_user_rarity_counts))
+
