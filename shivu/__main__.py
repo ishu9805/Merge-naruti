@@ -142,16 +142,16 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     }
 
     spawn_counts = {
-        '⚪️ Common': 5,
-        '🟣 Rare': 5,
-        '🟢 Medium': 5,
-        '🟡 Legendary': 5,
-        '💮 Special Edition': 3,
-        '🔮 Limited Edition': 1,
+        '⚪️ Common': 0,
+        '🟣 Rare': 0,
+        '🟢 Medium': 0,
+        '🟡 Legendary': 0,
+        '💮 Special Edition': 0,
+        '🔮 Limited Edition': 0,
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
-        '❄️ Winter': 1,
+        '❄️ Winter':0,
         '💝 Valentine': 0,
         '🎃 Halloween': 0,
         '🎄 Christmas Special': 0,
@@ -160,7 +160,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 1 if chat_id == -1002338924488 else 0 # New rarity spawn count
     }
     # Get the message count for the chat_id, defaulting to 0 if it doesn't exist
-    message_count = message_counts.get(chat_id, 0)
+    #message_count = message_counts.get(chat_id, 0)
 
     # Check if the chat_id is -1002338924488 and if the message count is a multiple of 500
     
