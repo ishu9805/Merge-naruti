@@ -41,7 +41,7 @@ async def send_characters(client, message):
             "🎄 Christmas Special": "❄️ Celebrate the joy of the season!",
             "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": "🌌 Boundless and extraordinary!",
             "🎭 Cosplay Master 🎭": "🎭 Crafting the art of transformation!",
-            "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙": "🎞️ A stunning motion picture of art in action!"
+            "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": "🎞️ A stunning motion picture of art in action!"
         }.get(rarity_id, "Unknown rarity")
 
         # Create caption
