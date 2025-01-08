@@ -118,8 +118,18 @@ async def hclaim(_, message: t.Message):
             {'$inc': {'ccount': 1}},
             upsert=True
         )
+        
+        
+        
+        
 
         for character in unique_characters:
+            rarity = character['rarity']
+            await user_count.update_one(
+                {'user_id': sender_id},
+                {'$inc': {f'rarity_count.{rarity}': 1}},
+                upsert=True
+            )
             await message.reply_photo(photo=character['img_url'], caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*")
 
     except Exception as e:
