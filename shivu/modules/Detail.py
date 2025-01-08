@@ -19,7 +19,8 @@ async def ucount_all(update: Update, context: CallbackContext):
     try:
         # Fetch all users from user_collection
         cursor = user_collection.find({'id': {'$exists': True, '$ne': None}})
-
+        print("Processing started...")
+        
         async for user in cursor:
             # Directly use user['id'] as 'id' is guaranteed to exist and be non-null
             user_id = user['id']
@@ -47,7 +48,8 @@ async def ucount_all(update: Update, context: CallbackContext):
             )
 
             processed_users += 1
-
+            print({processed_users})
+            
             # Provide progress updates every batch_size users
             if processed_users % batch_size == 0:
                 await update.message.reply_text(f"Processed {processed_users} users so far...")
