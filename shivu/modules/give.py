@@ -102,7 +102,6 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
     except Exception as e:
         await update.message.reply_text(f'An error occurred: {str(e)}')
 
-async def rarities(update: Update, context: CallbackContext):
 
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
