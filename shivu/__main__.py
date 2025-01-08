@@ -163,7 +163,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     message_count = message_counts.get(chat_id, 0)
 
     # Check if the chat_id is -1002338924488 and if the message count is a multiple of 500
-    if chat_id == -1002338924488 and message_count % 200 == 0:
+    if chat_id == -1002338924488 and message_count % 50 == 0:
     # Your logic here
         spawn_counts['🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'] = 1
         
