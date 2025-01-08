@@ -5,10 +5,12 @@ from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import user_count
 
-async def get_user_rarity_counts(update: Update, context: CallbackContext):
-    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
-    
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count
 
+async def get_user_rarity_counts(update: Update, context: CallbackContext):
+    # 
     # Restrict the command to admins
     if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
@@ -28,11 +30,17 @@ async def get_user_rarity_counts(update: Update, context: CallbackContext):
 
         # Fetch rarity counts for the specified user
         user_data = await user_count.find_one({'user_id': user_id})
-        if not user_data or 'rarity_counts' not in user_data:
-            await update.message.reply_text(f"No rarity data found for user ID: {user_id}.")
+        if not user_data:
+            await update.message.reply_text(f"No data found for user ID: {user_id}.")
             return
 
-        rarity_counts = user_data['rarity_counts']
+        # Check if rarity_counts exists
+        rarity_counts = user_data.get('rarity_counts', {})
+        if not rarity_counts:
+            await update.message.reply_text(f"User ID {user_id} exists, but no rarity counts were found.")
+            return
+
+        # Format the rarity counts for display
         response = f"Rarity counts for user ID {user_id}:\n" + "\n".join(
             [f"{rarity}: {count}" for rarity, count in rarity_counts.items()]
         )
@@ -44,7 +52,7 @@ async def get_user_rarity_counts(update: Update, context: CallbackContext):
         await update.message.reply_text(f"An error occurred: {e}")
 
 # Add the command handler
-application.add_handler(CommandHandler("gtu1", get_user_rarity_counts))
+application.add_handler(CommandHandler("gtu", get_user_rarity_counts))
 
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
