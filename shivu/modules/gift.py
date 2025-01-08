@@ -322,7 +322,29 @@ async def on_trade_callback_query(client, callback_query):
         # Update the user collections in the database
         await user_collection.update_one({'id': s_id}, {'$set': {'characters': sender['characters']}})
         await user_collection.update_one({'id': r_id}, {'$set': {'characters': receiver['characters']}})
+       
+        sender_new_character_rarity = trade['receiver_character']['rarity']
+        receiver_new_character_rarity = trade['sender_character']['rarity']
 
+        # Update the user count for sender
+        await user_count.update_one(
+            {'user_id': s_id},
+            {'$inc': {f'rarity_count.{trade["sender_character"]["rarity"]}': -1}}
+        )
+        await user_count.update_one(
+            {'user_id': s_id},
+            {'$inc': {f'rarity_count.{sender_new_character_rarity}': 1}}
+        )
+
+        # Update the user count for receiver
+        await user_count.update_one(
+            {'user_id': r_id},
+            {'$inc': {f'rarity_count.{trade["receiver_character"]["rarity"]}': -1}}
+        )
+        await user_count.update_one(
+            {'user_id': r_id},
+            {'$inc': {f'rarity_count.{receiver_new_character_rarity}': 1}}
+        )
         # Set the cooldown for the sender (15 seconds from now)
         cooldowns[s_id] = time.time()
 
