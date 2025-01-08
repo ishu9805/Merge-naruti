@@ -79,3 +79,36 @@ async def count_user_documents(update: Update, context: CallbackContext):
 
 # Add the command handler
 application.add_handler(CommandHandler("countusers", count_user_documents))
+
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count
+
+async def top_users(update: Update, context: CallbackContext):
+    """
+    Fetch and display the top 10 users with the highest ccount.
+    """
+    try:
+        # Fetch the top 10 users sorted by ccount in descending order
+        top_users = await user_count.find({}).sort('ccount', -1).limit(10).to_list(length=10)
+
+        if not top_users:
+            await update.message.reply_text("No users found in the database.")
+            return
+
+        # Create a response message with the top users
+        response = "🏆 Top 10 Users with Highest ccount 🏆\n\n"
+        for rank, user in enumerate(top_users, start=1):
+            user_id = user.get('user_id', 'Unknown')
+            ccount = user.get('ccount', 0)
+            response += f"{rank}. User ID: {user_id} - ccount: {ccount}\n"
+
+        await update.message.reply_text(response)
+
+    except Exception as e:
+        # Handle errors and notify the admin
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler to the application
+application.add_handler(CommandHandler("topusers", top_users))
