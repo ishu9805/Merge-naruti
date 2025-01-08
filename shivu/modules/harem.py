@@ -36,14 +36,9 @@ RARITY_MAPPING = {
 
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
-    user = await user_collection.find_one({'id': user_id})
-    user_info = await user_count.find_one({'user_id': user_id})
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    
-    if is_banned:
-        return  # Do nothing if the user is banned
+    user_info_cache = await user_count.find_one({'user_id': user_id})
 
-    if not user:
+    if not user_info_cache:
         message = 'You Have Not Guessed any Characters Yet..'
         if update.message:
             await update.message.reply_text(message)
@@ -51,42 +46,44 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             await update.callback_query.edit_message_text(message)
         return
 
-    characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
+    is_banned = await ban_collection.find_one({"user_id": user_id})
+    if is_banned:
+        return  # Do nothing if the user is banned
+
+    user_info = user_info_cache
+    characters = sorted(user_info_cache['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
     
-    total_count = user_info.get('ccount', 0)
-    count_selected_rarity = user_info.get(f'{rarity_mode}_count', 0)
-    
-    
     if rarity_mode != 'All':
-        characters = [char for char in characters if char.get('rarity') == rarity_mode]
+        filtered_characters = [char for char in characters if char.get('rarity') == rarity_mode]
         count = user_info.get('rarity_counts', {}).get(rarity_mode, 0)
     else:
-        count = total_count
+        count = user_info.get('ccount', 0)
     
     total_pages = math.ceil(count / 20)
     if page < 0 or page >= total_pages:
         page = 0
-   
 
-    harem_message = f"{escape(update.effective_user.first_name)}'s Harem {total_count}- Page {page+1}/{total_pages}\n\n"
-    current_characters = characters[page*15:(page+1)*20]
-    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
+    items_per_page = 20
+    start_index = page * items_per_page
+    end_index = start_index + items_per_page
+    current_characters = characters[start_index:end_index]
 
-    for anime, characters in current_grouped_characters.items():
-        harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
-        for character in characters:
-            rarity = character['rarity']
+    current_grouped_characters = {k: list(v) for k, v in groupby(sorted(characters, key=lambda x: x['anime']), key=lambda x: x['anime'])}
+
+    harem_message = f"{escape(update.effective_user.first_name)}'s Harem {count}- Page {page+1}/{total_pages}\n\n"
+    for anime, chars in current_grouped_characters.items():
+        harem_message += f"⌬ {anime} 〔{len(chars)}〕\n"
+        for char in chars:
+            rarity = char['rarity']
             rarity_emoji = RARITY_MAPPING.get(rarity, 'Unknown')
-            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']}\n"
+            harem_message += f"◈⌠{rarity_emoji}⌡ {char['id']} {char['name']}\n"
         harem_message += "\n"
 
     if len(harem_message) > MAX_CAPTION_LENGTH:
         harem_message = harem_message[:MAX_CAPTION_LENGTH]
 
-    has_animated = any(
-        char.get('rarity') == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
-    )
+    has_animated = any(char.get('rarity') == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in characters)
 
     keyboard = [
         [
@@ -97,7 +94,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # Remove None values from keyboard
     keyboard[0] = [button for button in keyboard[0] if button]
-    
 
     if total_pages > 1:
         nav_buttons = []
@@ -111,48 +107,31 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    try:
-        if 'favorites' in user and user['favorites']:
-            fav_character_id = user['favorites'][0]
-            fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
-            if fav_character:
-                if 'img_url' in fav_character:
-                    if update.message:
-                        await update.message.reply_photo(
-                            photo=fav_character['img_url'], 
-                            caption=harem_message, 
-                            reply_markup=reply_markup
-                        )
-                    else:
-                        try:
-                            await update.callback_query.edit_message_caption(
-                                caption=harem_message, 
-                                reply_markup=reply_markup
-                            )
-                        except BadRequest:
-                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-                elif 'vid_url' in fav_character:
-                    if update.message:
-                        await update.message.reply_video(
-                            video=fav_character['vid_url'], 
-                            caption=harem_message, 
-                            reply_markup=reply_markup,
-                            supports_streaming=True
-                        )
-                    else:
-                        try:
-                            await update.callback_query.edit_message_caption(
-                                caption=harem_message, 
-                                reply_markup=reply_markup
-                            )
-                        except BadRequest:
-                            await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
-            else:
-                await _send_harem_message(update, harem_message, reply_markup)
+    if 'favorites' in user_info_cache and user_info_cache['favorites']:
+        fav_character_id = user_info_cache['favorites'][0]
+        fav_character = next((c for c in user_info_cache['characters'] if c['id'] == fav_character_id), None)
+        if fav_character:
+            if 'img_url' in fav_character:
+                if update.message:
+                    await update.message.reply_photo(photo=fav_character['img_url'], caption=harem_message, reply_markup=reply_markup)
+                else:
+                    try:
+                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                    except BadRequest:
+                        await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
+            elif 'vid_url' in fav_character:
+                if update.message:
+                    await update.message.reply_video(video=fav_character['vid_url'], caption=harem_message, reply_markup=reply_markup, supports_streaming=True)
+                else:
+                    try:
+                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
+                    except BadRequest:
+                        await update.callback_query.edit_message_reply_markup(reply_markup=reply_markup)
         else:
-            await _send_harem_message(update, harem_message, reply_markup, user['characters'])
-    except Exception as e:
-        print(f"Failed to edit message: {e}")
+            await _send_harem_message(update, harem_message, reply_markup)
+    else:
+        await _send_harem_message(update, harem_message, reply_markup)
+
 
 
 
