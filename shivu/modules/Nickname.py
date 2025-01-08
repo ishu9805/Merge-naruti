@@ -50,7 +50,7 @@ async def callback_query_handler(event):
                  Button.inline("🎄", data="rarity:🎄 Christmas Special"),
                  Button.inline("🪐", data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"), 
                  Button.inline("🎭", data="rarity:🎭 Cosplay Master 🎭")],
-                [Button.inline("🎗️", data="rarity:🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙")]
+                [Button.inline("🎗️", data="rarity:🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣")]
             ]
             await event.edit("Select a rarity:", buttons=rarities_buttons)
 
