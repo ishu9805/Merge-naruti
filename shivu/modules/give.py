@@ -41,11 +41,12 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
             {'$push': {'characters': character}}
         )
         rarity = character['rarity']
-        await user_count.update_one(
+        '''await user_count.update_one(
             {'user_id': user_id},
             {'$inc': {f'rarity_count.{rarity}': 1}},
             upsert=True
         )
+        '''
         
 
         await update.message.reply_text(f'Character "{character["name"]}" has been given to user with ID {user_id}.')
