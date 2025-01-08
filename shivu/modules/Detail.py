@@ -333,7 +333,7 @@ from shivu import main_count
 
 async def view_collection_count(update: Update, context: CallbackContext):
     # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
-    ADMIN_IDS = [YOUR_ADMIN_ID]
+    
 
     # Restrict the command to admins
     if update.effective_user.id not in ADMIN_IDS:
