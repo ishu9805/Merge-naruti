@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler, CallbackContext
 from shivu import user_collection, user_count
 
 # Admin IDs for restricted access
-ADMIN_IDS = [123456789]  # Replace with actual admin user IDs
+ADMIN_IDS = [7378476666]  # Replace with actual admin user IDs
 
 async def ucount_all(update: Update, context: CallbackContext):
     # Restrict the command to admins
