@@ -55,16 +55,13 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     rarity_mode = await get_user_rarity_mode(user_id)
     
     total_count = user_info.get('ccount', 0)
-    count_selected_rarity = user_info.get(f'{rarity_mode}_count', 0)
     
     
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
-        count = user_info.get('rarity_counts', {}).get(rarity_mode, 0)
-    else:
-        count = total_count
+
     
-    total_pages = math.ceil(count / 20)
+    total_pages = math.ceil(len(characters) / 20)
     if page < 0 or page >= total_pages:
         page = 0
    
