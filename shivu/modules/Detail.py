@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
-from shivu import user_collection, user_count
+from shivu import user_collection, user_count, application 
 
 # Admin IDs for restricted access
 ADMIN_IDS = [7378476666]  # Replace with actual admin user IDs
