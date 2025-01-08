@@ -378,11 +378,12 @@ async def fav(update: Update, context: CallbackContext) -> None:
 
 
 
-async def show_message_count(update: Update, context: CallbackContext) -> None:
+"""async def show_message_count(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(f"Message")
     chat_id = str(update.effective_chat.id)
     count = message_counters.get(chat_id, 0)
     await update.message.reply_text(f"Message count for this group: {count}")
+    """
     
 
 def error_handler(update: Update, context: CallbackContext):
@@ -395,7 +396,7 @@ def main() -> None:
     application.add_handler(CommandHandler(["guess"], guess, block=False))
     application.add_handler(CommandHandler("fav", fav, block=False))
     application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
-    application.add_handler(CommandHandler("mecount", show_message_count, block=False))
+    #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
     # Use asyncio.create_task to run the bot in the background
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
