@@ -54,50 +54,6 @@ async def get_user_rarity_counts(update: Update, context: CallbackContext):
 # Add the command handler
 application.add_handler(CommandHandler("gtu", get_user_rarity_counts))
 
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext
-from shivu import user_count
-
-async def get_user_rarity_counts(update: Update, context: CallbackContext):
-    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
-    
-    # Restrict the command to admins
-    if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("You are not authorized to use this command.")
-        return
-
-    try:
-        # Ensure the user ID is provided as an argument
-        if not context.args:
-            await update.message.reply_text("Please provide a user ID. Usage: /gtu <user_id>")
-            return
-
-        try:
-            user_id = context.args[0]
-        except ValueError:
-            await update.message.reply_text("Invalid user ID. Please provide a valid numerical ID.")
-            return
-
-        # Fetch rarity counts for the specified user
-        user_data = await user_count.find_one({'user_id': user_id})
-        if not user_data or 'rarity_counts' not in user_data:
-            await update.message.reply_text(f"No rarity data found for user ID: {user_id}.")
-            return
-
-        rarity_counts = user_data['rarity_counts']
-        response = f"Rarity counts for user ID {user_id}:\n" + "\n".join(
-            [f"{rarity}: {count}" for rarity, count in rarity_counts.items()]
-        )
-
-        await update.message.reply_text(response)
-
-    except Exception as e:
-        # Log error and inform the user
-        await update.message.reply_text(f"An error occurred: {e}")
-
-# Add the command handler
-application.add_handler(CommandHandler("gtu2", get_user_rarity_counts))
-
 
 
 # Admin IDs for restricted access
@@ -216,93 +172,90 @@ from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import user_collection, user_count
 
-# Admin IDs for restricted access
-# Replace with actual admin user IDs
+#Replace with your actual admin ID(s)
 
-# Rarity counts initialized to zero
-rarity_counts = {
-    "⚪️ Common": 0,
-    "🟣 Rare": 0,
-    "🟡 Legendary": 0,
-    "🟢 Medium": 0,
-    "💮 Special Edition": 0,
-    "🔮 Limited Edition": 0,
-    "💸 Premium Edition": 0,
-    "🌤 Summer": 0,
-    "🎐 Celestial": 0,
-    "❄️ Winter": 0,
-    "💝 Valentine": 0,
-    "🎃 Halloween": 0,
-    "🎄 Christmas Special": 0,
-    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
-    "🎭 Cosplay Master 🎭": 0,
-    "🎖 Apex Lot ( AUCTION )": 0,
-    "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙":0
-}
-
-async def ucount_rall(update: Update, context: CallbackContext):
-    # Restrict the command to admins
+async def recalco(update: Update, context: CallbackContext):
+    """Recalculate rarity counts for all users and update user_count."""
     if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
-    # Initialize counters
-    processed_users = 0
+    # Initialize rarity template
+    rarity_template = {
+        "⚪️ Common": 0,
+        "🟣 Rare": 0,
+        "🟡 Legendary": 0,
+        "🟢 Medium": 0,
+        "💮 Special Edition": 0,
+        "🔮 Limited Edition": 0,
+        "💸 Premium Edition": 0,
+        "🌤 Summer": 0,
+        "🎐 Celestial": 0,
+        "❄️ Winter": 0,
+        "💝 Valentine": 0,
+        "🎃 Halloween": 0,
+        "🎄 Christmas Special": 0,
+        "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
+        "🎭 Cosplay Master 🎭": 0,
+        "🎖 Apex Lot ( AUCTION )": 0,
+        "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙": 0
+    }
+
+    # Track progress
+    total_users = 0
+    updated_users = 0
     skipped_users = 0
-    batch_size = 50  # Process in batches for better performance
+    batch_size = 50  # Batch size for progress updates
 
     try:
         # Fetch all users from user_collection
         cursor = user_collection.find({'id': {'$exists': True, '$ne': None}})
 
         async for user in cursor:
-            # Directly use user['id'] as 'id' is guaranteed to exist and be non-null
+            total_users += 1
             user_id = user['id']
 
-            # Check if the user_id is already in user_count and if rarity_counts already exists
+            # Check if the user already has `rarity_counts` in user_count
             user_exists = await user_count.find_one({'user_id': user_id})
             if user_exists and 'rarity_counts' in user_exists:
                 skipped_users += 1
-                continue  # Skip users already in user_count with existing rarity_counts
+                continue
 
-            # Count the number of characters the user has
-            
-            # Calculate the rarity counts
+            # Initialize rarity counts for the user
+            rarity_counts = rarity_template.copy()
+
+            # Calculate rarities for the user's characters
             for character in user.get('characters', []):
                 rarity = character.get('rarity')
                 if rarity in rarity_counts:
                     rarity_counts[rarity] += 1
 
-            # Prepare the new document for insertion or update
-            document = {
-                'user_id': user_id,
-                'rarity_counts': rarity_counts.copy()  # Make a copy to avoid altering the original counts
-            }
-
-            # Update or insert the user's character count and rarity counts in user_count
+            # Update or insert the user's rarity counts in user_count
             await user_count.update_one(
-                {'user_id': user_id},  # Match user by ID
-                {'$set': document},    # Insert or update with this document
-                upsert=True            # Create new document if not present
+                {'user_id': user_id},
+                {'$set': {'rarity_counts': rarity_counts}},
+                upsert=True
             )
 
-            processed_users += 1
-            rarity_counts.clear()  # Reset the counts for the next user
+            updated_users += 1
 
-            # Provide progress updates every batch_size users
-            if processed_users % batch_size == 0:
-                await update.message.reply_text(f"Processed {processed_users} users so far...")
+            # Send progress updates every batch_size users
+            if total_users % batch_size == 0:
+                await update.message.reply_text(
+                    f"Processed {total_users} users. Updated: {updated_users}, Skipped: {skipped_users}."
+                )
 
-        # Final summary message
+        # Final summary
         await update.message.reply_text(
-            f"Finished processing {processed_users} users. Skipped {skipped_users} users already in user_count."
+            f"Recalculation completed!\nTotal Users: {total_users}\nUpdated: {updated_users}\nSkipped: {skipped_users}."
         )
     except Exception as e:
         # Log error and inform the user
         await update.message.reply_text(f"An error occurred: {e}")
 
-# Add the command handler to the application
-application.add_handler(CommandHandler("rall", ucount_rall))
+# Add the command handler
+application.add_handler(CommandHandler("recalco", recalco))
+
 
 
 from telegram import Update
