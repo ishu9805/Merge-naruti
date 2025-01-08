@@ -1,6 +1,96 @@
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import user_collection, user_count, application 
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count
+
+async def get_user_rarity_counts(update: Update, context: CallbackContext):
+    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+    
+
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        # Ensure the user ID is provided as an argument
+        if not context.args:
+            await update.message.reply_text("Please provide a user ID. Usage: /gtu <user_id>")
+            return
+
+        try:
+            user_id = int(context.args[0])
+        except ValueError:
+            await update.message.reply_text("Invalid user ID. Please provide a valid numerical ID.")
+            return
+
+        # Fetch rarity counts for the specified user
+        user_data = await user_count.find_one({'user_id': user_id})
+        if not user_data or 'rarity_counts' not in user_data:
+            await update.message.reply_text(f"No rarity data found for user ID: {user_id}.")
+            return
+
+        rarity_counts = user_data['rarity_counts']
+        response = f"Rarity counts for user ID {user_id}:\n" + "\n".join(
+            [f"{rarity}: {count}" for rarity, count in rarity_counts.items()]
+        )
+
+        await update.message.reply_text(response)
+
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler
+application.add_handler(CommandHandler("gtu1", get_user_rarity_counts))
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_count
+
+async def get_user_rarity_counts(update: Update, context: CallbackContext):
+    # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
+    
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        # Ensure the user ID is provided as an argument
+        if not context.args:
+            await update.message.reply_text("Please provide a user ID. Usage: /gtu <user_id>")
+            return
+
+        try:
+            user_id = context.args[0]
+        except ValueError:
+            await update.message.reply_text("Invalid user ID. Please provide a valid numerical ID.")
+            return
+
+        # Fetch rarity counts for the specified user
+        user_data = await user_count.find_one({'user_id': user_id})
+        if not user_data or 'rarity_counts' not in user_data:
+            await update.message.reply_text(f"No rarity data found for user ID: {user_id}.")
+            return
+
+        rarity_counts = user_data['rarity_counts']
+        response = f"Rarity counts for user ID {user_id}:\n" + "\n".join(
+            [f"{rarity}: {count}" for rarity, count in rarity_counts.items()]
+        )
+
+        await update.message.reply_text(response)
+
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler
+application.add_handler(CommandHandler("gtu2", get_user_rarity_counts))
+
+
 
 # Admin IDs for restricted access
 ADMIN_IDS = [7378476666]  # Replace with actual admin user IDs
