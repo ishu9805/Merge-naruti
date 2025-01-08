@@ -112,3 +112,94 @@ async def top_users(update: Update, context: CallbackContext):
 
 # Add the command handler to the application
 application.add_handler(CommandHandler("topusers", top_users))
+
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_collection, user_count
+
+# Admin IDs for restricted access
+# Replace with actual admin user IDs
+
+# Rarity counts initialized to zero
+rarity_counts = {
+    "⚪️ Common": 0,
+    "🟣 Rare": 0,
+    "🟡 Legendary": 0,
+    "🟢 Medium": 0,
+    "💮 Special Edition": 0,
+    "🔮 Limited Edition": 0,
+    "💸 Premium Edition": 0,
+    "🌤 Summer": 0,
+    "🎐 Celestial": 0,
+    "❄️ Winter": 0,
+    "💝 Valentine": 0,
+    "🎃 Halloween": 0,
+    "🎄 Christmas Special": 0,
+    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
+    "🎭 Cosplay Master 🎭": 0
+}
+
+async def ucount_all(update: Update, context: CallbackContext):
+    # Restrict the command to admins
+    if update.effective_user.id not in ADMIN_IDS:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    # Initialize counters
+    processed_users = 0
+    skipped_users = 0
+    batch_size = 50  # Process in batches for better performance
+
+    try:
+        # Fetch all users from user_collection
+        cursor = user_collection.find({'id': {'$exists': True, '$ne': None}})
+
+        async for user in cursor:
+            # Directly use user['id'] as 'id' is guaranteed to exist and be non-null
+            user_id = user['id']
+
+            # Check if the user_id is already in user_count and if rarity_counts already exists
+            user_exists = await user_count.find_one({'user_id': user_id})
+            if user_exists and 'rarity_counts' in user_exists:
+                skipped_users += 1
+                continue  # Skip users already in user_count with existing rarity_counts
+
+            # Count the number of characters the user has
+            
+            # Calculate the rarity counts
+            for character in user.get('characters', []):
+                rarity = character.get('rarity')
+                if rarity in rarity_counts:
+                    rarity_counts[rarity] += 1
+
+            # Prepare the new document for insertion or update
+            document = {
+                'user_id': user_id,
+                'rarity_counts': rarity_counts.copy()  # Make a copy to avoid altering the original counts
+            }
+
+            # Update or insert the user's character count and rarity counts in user_count
+            await user_count.update_one(
+                {'user_id': user_id},  # Match user by ID
+                {'$set': document},    # Insert or update with this document
+                upsert=True            # Create new document if not present
+            )
+
+            processed_users += 1
+            rarity_counts.clear()  # Reset the counts for the next user
+
+            # Provide progress updates every batch_size users
+            if processed_users % batch_size == 0:
+                await update.message.reply_text(f"Processed {processed_users} users so far...")
+
+        # Final summary message
+        await update.message.reply_text(
+            f"Finished processing {processed_users} users. Skipped {skipped_users} users already in user_count."
+        )
+    except Exception as e:
+        # Log error and inform the user
+        await update.message.reply_text(f"An error occurred: {e}")
+
+# Add the command handler to the application
+application.add_handler(CommandHandler("rall", ucount_rall))
