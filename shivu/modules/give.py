@@ -9,6 +9,55 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from shivu import collection, user_collection, application, PARTNER, ban_collection, user_count
 
+from threading import Lock
+
+# Global variable to store rarity counts
+global_rarity_counts = {
+    "⚪️ Common": 0,
+    "🟣 Rare": 0,
+    "🟡 Legendary": 0,
+    "🟢 Medium": 0,
+    "💮 Special Edition": 0,
+    "🔮 Limited Edition": 0,
+    "💸 Premium Edition": 0,
+    "🌤 Summer": 0,
+    "🎐 Celestial": 0,
+    "❄️ Winter": 0,
+    "💝 Valentine": 0,
+    "🎃 Halloween": 0,
+    "🎄 Christmas Special": 0,
+    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
+    "🎭 Cosplay Master 🎭": 0,
+    "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": 0
+}
+
+# Lock to ensure thread-safe access to the global variable
+lock = Lock()
+
+async def update_rarity_counts():
+    async for character in collection.find({}):
+        rarity = character.get('rarity')
+        with lock:  # Ensure that only one thread updates the global variable at a time
+            if rarity in global_rarity_counts:
+                global_rarity_counts[rarity] += 1
+            else:
+                print(f"Unknown rarity: '{rarity}'")
+
+async def rarities(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+
+    is_banned = await ban_collection.find_one({"user_id": user_id})
+    if is_banned:
+        return
+
+    with lock:  # Ensure we safely access the global variable
+        rarity_message = "<b>Rarity Counts:</b>\n"
+        for rarity, count in global_rarity_counts.items():
+            rarity_message += f"{rarity}: {count}\n"
+
+    await update.message.reply_text(rarity_message, parse_mode='HTML')
+
+application.add_handler(CommandHandler("rarities", rarities))
 
 async def give_character_reply(update: Update, context: CallbackContext) -> None:
     if str(update.effective_user.id) not in PARTNER:
@@ -55,47 +104,6 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
 
 async def rarities(update: Update, context: CallbackContext):
 
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-    characters_cursor = collection.find({})  # Get the cursor for all characters
-
-    rarity_counts = {
-        "⚪️ Common": 0,
-        "🟣 Rare": 0,
-        "🟡 Legendary": 0,
-        "🟢 Medium": 0,
-        "💮 Special Edition": 0,
-        "🔮 Limited Edition": 0,
-        "💸 Premium Edition": 0,
-        "🌤 Summer": 0,
-        "🎐 Celestial": 0,
-        "❄️ Winter": 0,
-        "💝 Valentine": 0,
-        "🎃 Halloween": 0,
-        "🎄 Christmas Special": 0,
-        "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
-        "🎭 Cosplay Master 🎭": 0
-    }
-
-    async for character in characters_cursor:  # Iterate over the cursor asynchronously
-        rarity = character.get('rarity')
-        print(f"Encountered rarity: '{rarity}'")  # Print out the rarity value
-        if rarity in rarity_counts:
-            rarity_counts[rarity] += 1
-        else:
-            print(f"Unknown rarity: '{rarity}'")
-
-    rarity_message = "<b>Rarity Counts:</b>\n"
-    for rarity, count in rarity_counts.items():
-        rarity_message += f"{rarity}: {count}\n"
-
-    await update.message.reply_text(rarity_message, parse_mode='HTML')
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, CallbackQueryHandler
@@ -322,7 +330,5 @@ application.add_handler(CommandHandler("sync", sync_user_characters))
 application.add_handler(CommandHandler("whi", search_character_users))
 application.add_handler(CommandHandler("takec", remove_character))
 
-
-application.add_handler(CommandHandler("rarities", rarities))
 GIVE_CHARACTER_REPLY_HANDLER = CommandHandler('givec', give_character_reply, block=False)
 application.add_handler(GIVE_CHARACTER_REPLY_HANDLER)
