@@ -154,7 +154,19 @@ async def on_callback_query(client, callback_query):
                 'first_name': gift['receiver_first_name'],
                 'characters': [gift['character']],
             })
-
+        
+        rarity = gift['character']['rarity']
+        await user_count.update_one(
+            {'user_id': sender_id},
+            {'$inc': {f'rarity_count.{rarity}': -1}},
+            upsert=True
+        )
+        
+        await user_count.update_one(
+            {'user_id': r_id},
+            {'$inc': {f'rarity_count.{rarity}': 1}},
+            upsert=True
+        )
         await user_count.update_one(
             {'user_id': sender_id},
             {'$inc': {'ccount': -1}},
