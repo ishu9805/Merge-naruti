@@ -78,6 +78,15 @@ async def claimwaifu(update, context):
                 {'$inc': {'ccount': 1}},
                 upsert=True
             )
+                    
+            rarity = waifu['rarity']
+            await user_count.update_one(
+                {'user_id': sender_id},
+                {'$inc': {f'rarity_count.{rarity}': 1}},
+                upsert=True
+            )
+        
+        
 
             details['quantity'] -= 1
             claimed_waifus.setdefault(code, []).append(user_id)
