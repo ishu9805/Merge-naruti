@@ -71,13 +71,13 @@ async def inlinequery(client, update):
                     characters = [
                         char for char in user.get('characters', [])
                         if ('img_url' in char and char['img_url'] and 
-                            (not regex or regex.search(char['name']) or regex.search(char['anime'])))
+                            (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
                     ]
                 elif query.startswith('collection.vid.'):
                     characters = [
                         char for char in user.get('characters', [])
                         if ('vid_url' in char and char['vid_url'] and
-                            (not regex or regex.search(char['name']) or regex.search(char['anime'])))
+                            (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
                     ]
 
                 for char in characters[offset:offset + limit]:
