@@ -61,13 +61,13 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
     
-    total_pages = math.ceil(len(characters) / 15)
+    total_pages = math.ceil({count} / 20)
     if page < 0 or page >= total_pages:
         page = 0
    
 
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem {total_count}- Page {page+1}/{total_pages}\n\n"
-    current_characters = characters[page*15:(page+1)*15]
+    current_characters = characters[page*15:(page+1)*20]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
 
     for anime, characters in current_grouped_characters.items():
