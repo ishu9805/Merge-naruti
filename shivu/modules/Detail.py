@@ -252,8 +252,7 @@ from shivu import main_count, collection
 
 async def count_collection(update: Update, context: CallbackContext):
     # Replace YOUR_ADMIN_ID with your Telegram user ID or list of admin IDs
-    ADMIN_IDS = [YOUR_ADMIN_ID]
-
+    
     # Restrict the command to admins
     if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
