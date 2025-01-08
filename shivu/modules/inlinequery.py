@@ -64,22 +64,28 @@ async def inlinequery(client, update):
                     user_collection_cache[user_id] = user
 
             if user:
-                characters = [
-                    char for char in user.get('characters', [])
-                    if 'img_url' in char and char['img_url']
-                ]
+                if query:
+                    regex = re.compile(query, re.IGNORECASE)
+                    characters = [
+                        char for char in user.get('characters', [])
+                        if 'img_url' in char and char['img_url'] and (
+                            regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])
+                        )
+                    ]
+                else:
+                    characters = [
+                        char for char in user.get('characters', [])
+                        if 'img_url' in char and char['img_url']
+                    ]
+
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
-                    #global_count = len([u for u in await user_collection.find({'characters.id': char['id']}).to_list(length=None)])
-                    #user_anime_count = len([c for c in user.get('characters', []) if c['anime'] == char['anime']])
-                    
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
                         f"⌬ {char['anime']} \n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{len([c for c in user.get('characters', []) if c['name'] == char['name']])}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n\n"
-                        #f"🌍 **Global Count**: {global_count} users\n"
                     )
                     results.append(
                         InlineQueryResultPhoto(
@@ -91,7 +97,7 @@ async def inlinequery(client, update):
                     )
 
     elif query.startswith('collection.vid.'):
-        # User collection search for videos (similar to the image search, just video format)
+        # User collection search for videos
         user_id = query.split('.', 2)[2]
         if user_id.isdigit():
             user = user_collection_cache.get(user_id)
@@ -101,22 +107,28 @@ async def inlinequery(client, update):
                     user_collection_cache[user_id] = user
 
             if user:
-                characters = [
-                    char for char in user.get('characters', [])
-                    if 'vid_url' in char and char['vid_url']
-                ]
+                if query:
+                    regex = re.compile(query, re.IGNORECASE)
+                    characters = [
+                        char for char in user.get('characters', [])
+                        if 'vid_url' in char and char['vid_url'] and (
+                            regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])
+                        )
+                    ]
+                else:
+                    characters = [
+                        char for char in user.get('characters', [])
+                        if 'vid_url' in char and char['vid_url']
+                    ]
+
                 for char in characters[offset:offset + limit]:
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
-                    #global_count = len([u for u in await user_collection.find({'characters.id': char['id']}).to_list(length=None)])
-                    #user_anime_count = len([c for c in user.get('characters', []) if c['anime'] == char['anime']])
-                    
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
                         f"⌬ {char['anime']} \n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{len([c for c in user.get('characters', []) if c['name'] == char['name']])}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n\n"
-                        #f"🌍 **Global Count**: {global_count} users\n"
                     )
                     results.append(
                         InlineQueryResultVideo(
@@ -140,14 +152,11 @@ async def inlinequery(client, update):
 
         for character in characters[offset:offset + limit]:
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
-            #global_count = len([u for u in await user_collection.find({'characters.id': character['id']}).to_list(length=None)])
-            
             caption = (
                 f"**Look At This Character!!**\n\n"
                 f"⌬ {character['anime']}\n"
                 f"◈⌠{rarity_emoji}⌡ {character['name']}\n"
                 f"**ID**: {character['id']} | **Rarity**: {character['rarity'].split()[1]}\n\n"
-                #f"🌍 **Global Count**: {global_count} users\n"
             )
             if 'vid_url' in character and character['vid_url']:
                 results.append(
@@ -173,4 +182,5 @@ async def inlinequery(client, update):
     # Pagination
     next_offset = str(offset + limit) if len(results) == limit else ""
     await update.answer(results, next_offset=next_offset, cache_time=6, is_gallery=True)
+        
                     
