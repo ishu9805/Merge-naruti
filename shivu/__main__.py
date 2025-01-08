@@ -138,7 +138,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         13: '🎄 Christmas Special',
         14: '🎭 Cosplay Master 🎭',
         15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
-        16: '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'  # New rarity added
+        16: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'  # New rarity added
     }
 
     spawn_counts = {
@@ -157,11 +157,11 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 0,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
-        '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙': 0  # New rarity spawn count
+        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0  # New rarity spawn count
     }
 
-    if chat_id == -1002338924488 and message_counts[chat_id] % 5000 == 0:
-        spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 1
+    if chat_id == -1002338924488 and message_counts[chat_id] % 500 == 0:
+        spawn_counts['🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'] = 1
         
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
@@ -172,7 +172,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     character = random.choice(characters_to_spawn)
 
-    if character.get('rarity') == '🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙':
+    if character.get('rarity') == '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣':
         await context.bot.send_message(chat_id=7378476666, text=f"An animated character has spawned! Character id: {character['id']}")
 
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
@@ -199,7 +199,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             supports_streaming=True
         )
 
-    spawn_counts['🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙'] = 0  # Reset after spawning
+    spawn_counts['🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'] = 0  # Reset after spawning
 
 
 
