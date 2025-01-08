@@ -137,10 +137,12 @@ rarity_counts = {
     "🎃 Halloween": 0,
     "🎄 Christmas Special": 0,
     "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
-    "🎭 Cosplay Master 🎭": 0
+    "🎭 Cosplay Master 🎭": 0,
+    "🎖 Apex Lot ( AUCTION )": 0,
+    "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙":0
 }
 
-async def ucount_all(update: Update, context: CallbackContext):
+async def ucount_rall(update: Update, context: CallbackContext):
     # Restrict the command to admins
     if update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
