@@ -82,13 +82,13 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         harem_message = harem_message[:MAX_CAPTION_LENGTH]
 
     has_animated = any(
-        char.get('rarity') == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙" and 'vid_url' in char for char in user['characters']
+        char.get('rarity') == "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣" and 'vid_url' in char for char in user['characters']
     )
 
     keyboard = [
         [
             InlineKeyboardButton("🦋 Static", switch_inline_query_current_chat=f"collection.img.{user_id}"),
-            InlineKeyboardButton("🎗️ Animated", switch_inline_query_current_chat=f"collection.vid.{user_id}") if has_animated else None
+            InlineKeyboardButton("🎗️ 𝘼𝙈𝙑", switch_inline_query_current_chat=f"collection.vid.{user_id}") if has_animated else None
         ]
     ]
 
