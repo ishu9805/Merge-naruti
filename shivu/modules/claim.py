@@ -126,7 +126,7 @@ async def hclaim(_, message: t.Message):
         for character in unique_characters:
             rarity = character['rarity']
             await user_count.update_one(
-                {'user_id': sender_id},
+                {'user_id': user_id},
                 {'$inc': {f'rarity_count.{rarity}': 1}},
                 upsert=True
             )
