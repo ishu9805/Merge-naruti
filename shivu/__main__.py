@@ -157,15 +157,13 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 0,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
-        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0  # New rarity spawn count
+        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 1 # New rarity spawn count
     }
     # Get the message count for the chat_id, defaulting to 0 if it doesn't exist
     message_count = message_counts.get(chat_id, 0)
 
     # Check if the chat_id is -1002338924488 and if the message count is a multiple of 500
-    if chat_id == -1002338924488 and message_count % 50 == 0:
-    # Your logic here
-        spawn_counts['🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'] = 1
+    
         
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
