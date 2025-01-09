@@ -123,7 +123,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         today_message_count = 0
 
     rarities = {
-        1: '⚪️ Common',
+        1: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣',
         2: '🟣 Rare',
         3: '🟡 Legendary',
         4: '🟢 Medium',
@@ -142,8 +142,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     }
 
     spawn_counts = {
-        '⚪️ Common': 1,
-        '🟣 Rare': 0,
+        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 1,
+        '🟣 Rare': 1,
         '🟢 Medium': 0,
         '🟡 Legendary': 0,
         '💮 Special Edition': 0,
