@@ -51,27 +51,55 @@ active_ids = set()
 id_lock = Lock()
 import requests
 
-def upload_to_catbox(file_path):
-    url = "https://catbox.moe/user/api.php"
-    # Set the payload to specify that the upload type is a file and choose the `fileupload` option
-    payload = {
-        'reqtype': 'fileupload',
-    }
-    # Open the file in binary mode and send it to Catbox
-    files = {
-        'fileToUpload': open(file_path, 'rb'),
-    }
-    # Send the POST request to Catbox with the file and payload
-    response = requests.post(url, files=files, data=payload)
-
-    # Check if the upload was successful
-    if response.status_code == 200:
-        return response.text.strip()  # Return the URL of the uploaded image
-    else:
-        raise Exception(f"Failed to upload to Catbox. Status Code: {response.status_code}")
+def upload_to_envs(file_path=None, file_url=None, expires=None, secret=None):
+    url = "https://envs.sh"
+    files = {}
+    data = {}
+    
+    # If uploading a local file
+    if file_path:
+        try:
+            files = {'file': open(file_path, 'rb')}
+        except Exception as e:
+            print(f"Error opening file: {str(e)}")
+            return None
+    
+    # If uploading a remote URL
+    elif file_url:
+        data = {'url': file_url}
+    
+    # Add secret and expiration if provided
+    if secret:
+        data['secret'] = secret
+    if expires:
+        data['expires'] = expires  # Expiration time in hours
+    
+    # Try to make the request
+    try:
+        response = requests.post(url, files=files, data=data)
         
+        # Close the file if it's a local file upload
+        if file_path:
+            files['file'].close()
+        
+        if response.status_code == 200:
+            print("File uploaded successfully to envs.sh!")
+            print("File URL:", response.text.strip())
+            return response.text.strip()
+        else:
+            print("Failed to upload file to envs.sh.")
+            print("Status Code:", response.status_code)
+            print("Response:", response.text)
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error during upload: {str(e)}")
+        return None
 
 
+def check_file_size(file_path, max_size_mb=20):
+    if os.path.getsize(file_path) > max_size_mb * 1024 * 1024:
+        raise Exception("File size exceeds the 10 MB limit.")
+        
 
 
 # Example usage:
@@ -127,7 +155,7 @@ async def ul(client, message):
             path = await reply.download()
 
             # Upload image to Catbox
-            catbox_url = upload_to_catbox(path)
+            catbox_url = upload_to_envs(path)
             character['img_url'] = catbox_url
             
             # Insert character into the database
