@@ -4,7 +4,7 @@ from pyrogram import Client, filters
 from shivu import shivuu as app, collection, db
 
 # Initialize the Pyrogram client
-#@app.on_message(filters.command("b"))
+@app.on_message(filters.command("b"))
 async def send_characters(client, message):
     try:
         # Fetch the character ID from the command
