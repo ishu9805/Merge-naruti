@@ -112,7 +112,7 @@ async def buy_character(update: Update, context: CallbackContext) -> None:
 
         character = characters[character_index]
 
-        user = await user_collection.find_one({" id": user_id})
+        user = await user_collection.find_one({"id": user_id})
         if not user:
             await query.answer("User  not found.")
             return
