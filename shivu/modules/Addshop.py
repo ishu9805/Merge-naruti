@@ -24,15 +24,19 @@ from shivu import (application, PHOTO_URL, OWNER_ID,
                     group_user_totals_collection)
 
 from shivu import PARTNER
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telegram.ext import CallbackContext
+from bson import ObjectId
+from shivu import shops_collection, user_collection, ban_collection
+import logging
 
+# Set up logging
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
     level=logging.INFO,
 )
 LOGGER = logging.getLogger(__name__)
-
-
 
 async def show_shop(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -47,6 +51,9 @@ async def show_shop(update: Update, context: CallbackContext) -> None:
         characters_cursor = shops_collection.find()
         characters = await characters_cursor.to_list(length=None)
 
+        # Filter out characters with zero quantity
+        characters = [char for char in characters if char['quantity'] > 0]
+
         if not characters:
             await update.message.reply_text("🚨 **No characters found in the shop!** 🚨")
             return
@@ -59,7 +66,8 @@ async def show_shop(update: Update, context: CallbackContext) -> None:
                          f"🔺 **Anime:** {character['anime']}\n" \
                          f"💡 **Rarity:** {character['rarity']}\n" \
                          f"💸 **Price:** {character['price']} tokens\n" \
-                         f"🔢 **ID:** {character['id']}\n\n" \
+                         f"🔢 **ID:** {character['id']}\n" \
+                         f"🔢 **Quantity Available:** {character['quantity']}\n\n" \
                          f"**Unleash Your Inner Otaku and Buy Now! 🎊**"
                          
         keyboard = [
@@ -95,13 +103,16 @@ async def buy_character(update: Update, context: CallbackContext) -> None:
         characters_cursor = shops_collection.find()
         characters = await characters_cursor.to_list(length=None)
 
+        # Filter out characters with zero quantity
+        characters = [char for char in characters if char['quantity'] > 0]
+
         if character_index >= len(characters):
             await query.answer("Character not found.")
             return
 
         character = characters[character_index]
 
-        user = await user_collection.find_one({"id": user_id})
+        user = await user_collection.find_one({" id": user_id})
         if not user:
             await query.answer("User  not found.")
             return
@@ -113,21 +124,28 @@ async def buy_character(update: Update, context: CallbackContext) -> None:
             return
 
         new_tokens = current_balance - price
-
         character_data = {
             "_id": ObjectId(),
             "img_url": character["img_url"],
             "name": character["name"],
             "anime": character["anime"],
             "rarity": character["rarity"],
-            "id": character["id"],
-            "message_id": character.get("message_id")
+            "id": character["id"]
         }
 
         if "characters" not in user:
             user["characters"] = []
 
         user["characters"].append(character_data)
+
+        # Decrement the quantity of the character
+        if character['quantity'] > 1:
+            await shops_collection.update_one(
+                {"id": character["id"]},
+                {"$inc": {"quantity": -1}}
+            )
+        else:
+            await shops_collection.delete_one({"id": character["id"]})
 
         await user_collection.update_one(
             {"id": user_id},
@@ -155,6 +173,9 @@ async def next_item(update: Update, context: CallbackContext) -> None:
         characters_cursor = shops_collection.find()
         characters = await characters_cursor.to_list(length=None)
 
+        # Filter out characters with zero quantity
+        characters = [char for char in characters if char['quantity'] > 0]
+
         if not characters:
             await update.callback_query.answer("No characters found in the shop.")
             return
@@ -168,7 +189,8 @@ async def next_item(update: Update, context: CallbackContext) -> None:
                          f"🔺 **Anime:** {character['anime']}\n" \
                          f"💡 **Rarity:** {character['rarity']}\n" \
                          f"💸 **Price:** {character['price']} tokens\n" \
-                         f"🔢 **ID:** {character['id']}\n\n" \
+                         f"🔢 **ID:** {character['id']}\n" \
+                         f"🔢 **Quantity Available:** {character['quantity']}\n\n" \
                          f"**Unleash Your Inner Otaku and Buy Now! 🎊**"
                          
         keyboard = [
@@ -192,6 +214,7 @@ async def next_item(update: Update, context: CallbackContext) -> None:
         LOGGER.error(f"Error occurred: {e}")
         await update.callback_query.answer("An error occurred while displaying the next item. Please try again later.")
 
+# Additional functions and handlers can be added here as needed.
 
 
 application.add_handler(CallbackQueryHandler(next_item, pattern="^next$"))
