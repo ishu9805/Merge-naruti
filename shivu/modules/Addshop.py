@@ -75,7 +75,7 @@ async def show_shop(update: Update, context: CallbackContext) -> None:
             [InlineKeyboardButton("Next", callback_data="next")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_photo(photo=character['img_url'], caption=caption_message, reply_markup=reply_markup, parse_mode='HTML')
+        await update.message.reply_photo(photo=character['img_url'], caption=caption_message, reply_markup=reply_markup, parse_mode='Markdown')
 
         context.user_data["current_index"] = (current_index + 1) % len(characters)
 
