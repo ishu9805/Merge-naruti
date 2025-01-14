@@ -324,7 +324,7 @@ async def pay_coins(update: Update, context: CallbackContext) -> None:
 
       
 
-async def show_shop(update: Update, context: CallbackContext) -> None:
+"""async def show_shop(update: Update, context: CallbackContext) -> None:
 
 
     user_id = update.effective_user.id
@@ -518,7 +518,7 @@ async def next_item(update: Update, context: CallbackContext) -> None:
 
     except Exception as e:
         LOGGER.error(f"Error occurred: {e}")
-        await update.callback_query.answer("An error occurred while displaying the next item. Please try again later.")
+        await update.callback_query.answer("An error occurred while displaying the next item. Please try again later.")"""
 
 
 async def bonus_coins(update: Update, context: CallbackContext) -> None:
