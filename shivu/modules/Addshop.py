@@ -298,3 +298,52 @@ async def add_character_to_shop(update: Update, context: CallbackContext) -> Non
 
 # Add the command handler to your application
 application.add_handler(CommandHandler("addsh", add_character_to_shop))
+
+
+
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackContext
+from bson import ObjectId
+from shivu import shops_collection, user_collection, application
+import logging
+
+# Set up logging
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
+    level=logging.INFO,
+)
+LOGGER = logging.getLogger(__name__)
+
+async def remove_character_from_shop(update: Update, context: CallbackContext) -> None:
+    try:
+        # Check if the user is authorized (you can implement your own logic here)
+        if str(update.effective_user.id) not in PARTNER:  # PARTNER list should contain authorized user IDs
+            await update.message.reply_text("You are not authorized to use this command.")
+            return
+
+        # Check if the correct number of arguments is provided
+        if len(context.args) != 1:
+            await update.message.reply_text("Usage: /remsh <id>")
+            return
+
+        character_id = context.args[0]
+
+        # Retrieve character from the shops collection
+        character = await shops_collection.find_one({"id": character_id})
+
+        if not character:
+            await update.message.reply_text("Character not found in the shop.")
+            return
+
+        # Remove character from the shop
+        await shops_collection.delete_one({"id": character_id})
+
+        await update.message.reply_text(f"Character '{character['name']}' removed from the shop.")
+
+    except Exception as e:
+        LOGGER.error(f"Error occurred while removing character from shop: {e}")
+        await update.message.reply_text("An error occurred while removing the character from the shop. Please try again later.")
+
+# Add the command handler to your application
+application.add_handler(CommandHandler("remsh", remove_character_from_shop))
