@@ -32,15 +32,7 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger(__name__)
 
-shops_collection = db["shops"]
 
-# Set up logging
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
-    level=logging.INFO,
-)
-LOGGER = logging.getLogger(__name__)
 
 async def show_shop(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
