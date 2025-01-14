@@ -28,8 +28,7 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger(__name__)
 
-shops_collection = db["shops"]
-# Owner ID
+
 OWNER_ID = "5856750053"
 
 
@@ -681,9 +680,9 @@ application.add_handler(bonus_handler)
 
 
 
-application.add_handler(CallbackQueryHandler(next_item, pattern="^next$"))
+"""application.add_handler(CallbackQueryHandler(next_item, pattern="^next$"))
 application.add_handler(CallbackQueryHandler(buy_character, pattern=r'^buy_\d+$'))
-application.add_handler(CommandHandler(['Shop', 'shopmenu'], show_shop))
+application.add_handler(CommandHandler(['Shop', 'shopmenu'], show_shop))"""
 application.add_handler(CommandHandler('pay', pay_coins))
 
 # Define command handlers
