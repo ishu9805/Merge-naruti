@@ -222,3 +222,56 @@ application.add_handler(CallbackQueryHandler(buy_character, pattern=r'^buy_\d+$'
 application.add_handler(CommandHandler(['Shop', 'shopmenu'], show_shop))
       
       # Additional functions and handlers can be added here as needed.
+
+
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import user_collection, shops_collection, collection  # Assuming original_collection is where characters are stored
+import logging
+
+
+async def add_character_to_shop(update: Update, context: CallbackContext) -> None:
+    try:
+        # Check if the user is authorized (you can implement your own logic here)
+        if str(update.effective_user.id) not in PARTNER:
+            await update.message.reply_text("You are not authorized to use this command.")
+            return
+
+        # Check if the correct number of arguments is provided
+        if len(context.args) != 3:
+            await update.message.reply_text("Usage: /addsh <id> <price> <quantity>")
+            return
+
+        character_id = context.args[0]
+        price = int(context.args[1])
+        quantity = int(context.args[2])
+
+        # Retrieve character data from the original collection
+        character = await collection.find_one({"id": character_id})
+
+        if not character:
+            await update.message.reply_text("Character not found in the original collection.")
+            return
+
+        # Prepare the character data to be added to the shop
+        character_data = {
+            "name": character["name"],
+            "anime": character["anime"],
+            "rarity": character["rarity"],
+            "price": price,
+            "id": character["id"],
+            "img_url": character["img_url"],
+            "quantity": quantity
+        }
+
+        # Insert the character into the shops_collection
+        await shops_collection.insert_one(character_data)
+
+        await update.message.reply_text(f"Character '{character['name']}' added to the shop with price {price} and quantity {quantity}.")
+
+    except Exception as e:
+        LOGGER.error(f"Error occurred while adding character to shop: {e}")
+        await update.message.reply_text("An error occurred while adding the character to the shop. Please try again later.")
+
+# Add the command handler to your application
+application.add_handler(CommandHandler("addsh", add_character_to_shop))
