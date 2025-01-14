@@ -30,14 +30,13 @@ from bson import ObjectId
 from shivu import shops_collection, user_collection, ban_collection
 import logging
 
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from telegram.ext import CallbackContext
-from bson import ObjectId
-from shivu import shops_collection, user_collection, ban_collection
-import logging
-from pymongo import ReturnDocument
-from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from bson import ObjectId
+from shivu import shops_collection, user_collection, ban_collection, application
+from pymongo import ReturnDocument
+import logging
 
 # Set up logging
 logging.basicConfig(
@@ -47,71 +46,109 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger(__name__)
 
+# Display the shop
 async def show_shop(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
-
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return
 
     try:
-        context.user_data["shop_user_id"] = update.effective_user.id
-
         characters_cursor = shops_collection.find()
         characters = await characters_cursor.to_list(length=None)
 
-        # Filter out characters with zero quantity
+        # Filter characters with non-zero quantity
         characters = [char for char in characters if char['quantity'] > 0]
-
         if not characters:
-            await update.message.reply_text("\ud83d\udea8 **No characters found in the shop!** \ud83d\udea8")
+            await update.message.reply_text("🚨 **No characters found in the shop!** 🚨")
             return
 
-        current_index = context.user_data.get("current_index", 0)
-        character = characters[current_index]
-        
-        caption_message = f"\ud83d\uded2 **Welcome to the Luxury Shop!** \ud83d\uded2\n\n" \
-                         f"\ud83d\udd39 **Character:** {character['name']}\n" \
-                         f"\u25b3 **Anime:** {character['anime']}\n" \
-                         f"\ud83d\udca1 **Rarity:** {character['rarity']}\n" \
-                         f"\ud83d\udcb8 **Price:** {character['price']} tokens\n" \
-                         f"\u2795 **Quantity Available:** {character['quantity']}\n\n" \
-                         f"**Unleash Your Inner Otaku and Buy Now! \ud83c\df89**"
-                         
-        keyboard = [
-            [InlineKeyboardButton("Buy", callback_data=f"buy_{str(current_index)}")],
-            [InlineKeyboardButton("Next", callback_data="next")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_photo(photo=character['img_url'], caption=caption_message, reply_markup=reply_markup, parse_mode='Markdown')
+        # Initialize shop data in user context
+        context.user_data["shop_characters"] = characters
+        context.user_data["current_index"] = 0
 
-        context.user_data["current_index"] = (current_index + 1) % len(characters)
-        LOGGER.info("Character displayed in the shop.")
+        await send_shop_item(update, context)
 
     except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text("An error occurred while displaying the shop. Please try again later.")
+        LOGGER.error(f"Error occurred in shop: {e}")
+        await update.message.reply_text("An error occurred. Please try again later.")
 
+# Send a specific character item based on the current index
+async def send_shop_item(update, context, edit=False) -> None:
+    characters = context.user_data.get("shop_characters", [])
+    current_index = context.user_data.get("current_index", 0)
+
+    if not characters or current_index >= len(characters):
+        return
+
+    character = characters[current_index]
+    caption_message = (
+        f"🛍️ **Luxury Shop** 🛍️\n\n"
+        f"🔹 **Character:** {character['name']}\n"
+        f"🔺 **Anime:** {character['anime']}\n"
+        f"💡 **Rarity:** {character['rarity']}\n"
+        f"💸 **Price:** {character['price']} tokens\n"
+        f"🔢 **ID:** {character['id']}\n"
+        f"🔢 **Quantity Available:** {character['quantity']}\n\n"
+        f"**Unleash Your Inner Otaku and Buy Now! 🎊**"
+    )
+
+    keyboard = [
+        [InlineKeyboardButton("Buy", callback_data=f"buy_{current_index}")],
+        [
+            InlineKeyboardButton("Previous", callback_data="previous"),
+            InlineKeyboardButton("Next", callback_data="next"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if edit:
+        await update.callback_query.message.edit_media(
+            InputMediaPhoto(media=character['img_url'], caption=caption_message, parse_mode='Markdown'),
+            reply_markup=reply_markup,
+        )
+    else:
+        await update.message.reply_photo(
+            photo=character['img_url'],
+            caption=caption_message,
+            reply_markup=reply_markup,
+            parse_mode='Markdown',
+        )
+
+# Handle navigation (Next/Previous buttons)
+async def navigate_shop(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    action = query.data
+
+    try:
+        characters = context.user_data.get("shop_characters", [])
+        current_index = context.user_data.get("current_index", 0)
+
+        if not characters:
+            await query.answer("No characters available.")
+            return
+
+        if action == "next":
+            context.user_data["current_index"] = (current_index + 1) % len(characters)
+        elif action == "previous":
+            context.user_data["current_index"] = (current_index - 1) % len(characters)
+
+        await send_shop_item(update, context, edit=True)
+        await query.answer()
+
+    except Exception as e:
+        LOGGER.error(f"Error in navigation: {e}")
+        await query.answer("An error occurred. Please try again later.", show_alert=True)
+
+# Handle Buy button click
 async def buy_character(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
 
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        return
-
-    if user_id != context.user_data.get("shop_user_id"):
-        await query.answer("You are not authorized to perform this action.")
-        return
-
     try:
+        # Get character index
         character_index = int(query.data.split("_")[1])
-
-        characters_cursor = shops_collection.find()
-        characters = await characters_cursor.to_list(length=None)
-
-        # Filter out characters with zero quantity
-        characters = [char for char in characters if char['quantity'] > 0]
+        characters = context.user_data.get("shop_characters", [])
 
         if character_index >= len(characters):
             await query.answer("Character not found.")
@@ -119,35 +156,35 @@ async def buy_character(update: Update, context: CallbackContext) -> None:
 
         character = characters[character_index]
 
+        # Ask for confirmation
+        caption_message = (
+            f"🛍️ **Confirm Purchase!** 🛍️\n\n"
+            f"🔹 **Character:** {character['name']}\n"
+            f"💸 **Price:** {character['price']} tokens\n\n"
+            f"Do you want to proceed?"
+        )
         keyboard = [
-            [InlineKeyboardButton("Confirm Purchase", callback_data=f"confirm_{str(character_index)}")],
-            [InlineKeyboardButton("Cancel", callback_data="cancel")]
+            [InlineKeyboardButton("Confirm", callback_data=f"confirm_{character_index}")],
+            [InlineKeyboardButton("Cancel", callback_data="cancel")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        await query.edit_message_text(
-            text=f"Are you sure you want to buy **{character['name']}** for {character['price']} tokens?",
-            reply_markup=reply_markup,
-            parse_mode='Markdown'
-        )
+
+        await query.message.edit_caption(caption_message, reply_markup=reply_markup, parse_mode='Markdown')
         await query.answer()
 
     except Exception as e:
-        LOGGER.error(f"Error in buy_character: {e}")
+        LOGGER.error(f"Error in buy button: {e}")
         await query.answer("An error occurred. Please try again later.", show_alert=True)
 
+# Confirm purchase
 async def confirm_purchase(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
 
     try:
+        # Get character index
         character_index = int(query.data.split("_")[1])
-
-        characters_cursor = shops_collection.find()
-        characters = await characters_cursor.to_list(length=None)
-
-        # Filter out characters with zero quantity
-        characters = [char for char in characters if char['quantity'] > 0]
+        characters = context.user_data.get("shop_characters", [])
 
         if character_index >= len(characters):
             await query.answer("Character not found.")
@@ -157,16 +194,17 @@ async def confirm_purchase(update: Update, context: CallbackContext) -> None:
         user = await user_collection.find_one({"id": user_id})
 
         if not user:
-            await query.answer("User not found.", show_alert=True)
+            await query.answer("User not found.")
             return
 
+        # Check user's token balance
         price = character["price"]
         current_balance = user.get("tokens", 0)
-
         if current_balance < price:
             await query.answer(f"Insufficient funds. You need {price - current_balance} more tokens.", show_alert=True)
             return
 
+        # Deduct price and add character
         new_tokens = current_balance - price
         character_data = {
             "_id": ObjectId(),
@@ -174,51 +212,44 @@ async def confirm_purchase(update: Update, context: CallbackContext) -> None:
             "name": character["name"],
             "anime": character["anime"],
             "rarity": character["rarity"],
-            "id": character["id"]
+            "id": character["id"],
         }
-
         if "characters" not in user:
             user["characters"] = []
-
         user["characters"].append(character_data)
 
-        # Decrement the quantity of the character
+        # Update quantities
         if character['quantity'] > 1:
             await shops_collection.update_one(
-                {"id": character["id"]},
-                {"$inc": {"quantity": -1}}
+                {"id": character["id"]}, {"$inc": {"quantity": -1}}
             )
         else:
             await shops_collection.delete_one({"id": character["id"]})
 
         await user_collection.update_one(
-            {"id": user_id},
-            {"$set": {"tokens": new_tokens, "characters": user["characters"]}}
+            {"id": user_id}, {"$set": {"tokens": new_tokens, "characters": user["characters"]}}
         )
 
-        keyboard = [[InlineKeyboardButton("Reopen Shop", callback_data="reopen_shop")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        await query.edit_message_text(
-            text=f"Congratulations! You purchased **{character['name']}** for {price} tokens.",
-            reply_markup=reply_markup,
-            parse_mode='Markdown'
-        )
-
-        await query.answer("Purchase successful.")
+        await query.answer("Purchase successful!")
+        await query.message.edit_caption(f"🎉 **Character purchased:** {character['name']}!", parse_mode='Markdown')
 
     except Exception as e:
-        LOGGER.error(f"Error in confirm_purchase: {e}")
-        await query.answer("An error occurred while processing the purchase. Please try again later.", show_alert=True)
+        LOGGER.error(f"Error in confirm button: {e}")
+        await query.answer("An error occurred. Please try again later.", show_alert=True)
 
-async def reopen_shop(update: Update, context: CallbackContext) -> None:
-    await show_shop(update, context)
+# Cancel action
+async def cancel_action(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    await query.answer("Purchase canceled.")
+    await query.message.edit_caption("❌ **Purchase canceled.**", parse_mode='Markdown')
 
-# Handlers
+# Add handlers
+application.add_handler(CommandHandler(['shop', 'shopmenu'], show_shop))
+application.add_handler(CallbackQueryHandler(navigate_shop, pattern=r'^(next|previous)$'))
 application.add_handler(CallbackQueryHandler(buy_character, pattern=r'^buy_\d+$'))
 application.add_handler(CallbackQueryHandler(confirm_purchase, pattern=r'^confirm_\d+$'))
-application.add_handler(CallbackQueryHandler(reopen_shop, pattern=r'^reopen_shop$'))
-application.add_handler(CommandHandler(['Shop', 'shopmenu'], show_shop))
+application.add_handler(CallbackQueryHandler(cancel_action, pattern=r'^cancel$'))
+
 
 
 
