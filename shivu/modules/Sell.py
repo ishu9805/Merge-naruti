@@ -5,10 +5,10 @@ from shivu import shivuu as app
 
 # Rarity-to-price mapping
 rarity_prices = {
-    "⚪️ Common": 10, "🟣 Rare": 15, "🟡 Legendary": 20, "🟢 Medium": 30,
-    "💮 Special Edition": 40, "🔮 Limited Edition": 50, "💸 Premium Edition": 60,
-    "🌤 Summer": 25, "🎐 Celestial": 35, "❄️ Winter": 25, "💝 Valentine": 30,
-    "🎃 Halloween": 40, "🎄 Christmas Special": 50
+    "⚪️ Common": 30, "🟣 Rare": 45, "🟡 Legendary": 80, "🟢 Medium": 40,
+    "💮 Special Edition": 150, "🔮 Limited Edition": 280,
+    "🌤 Summer": 2500, "🎐 Celestial": 10000, "❄️ Winter": 5000, "💝 Valentine": 5000,
+    "🎃 Halloween": 5000, "🎄 Christmas Special": 5000
 }
 
 @app.on_message(filters.command("sell", prefixes="/"))
