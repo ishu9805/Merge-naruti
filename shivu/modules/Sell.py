@@ -82,7 +82,7 @@ async def add_coins(user_id: int, coins: int) -> None:
     await user_collection.update_one({'id': user_id}, {'$inc': {'coins': coins}})
 
 
-@app.on_message(filters.command("selllist", prefixes="/"))
+@app.on_message(filters.command("sellinfo", prefixes="/"))
 async def selllist(client, message: Message):
     price_list = "\n".join([f"{rarity}: **{price} coins**" for rarity, price in rarity_prices.items()])
     message_text = (
