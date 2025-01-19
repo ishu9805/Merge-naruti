@@ -67,7 +67,7 @@ async def sell_character(client, message: Message):
         await message.reply(
             f"✨ **You sold {amount}x {rarity_name} {character_name} for {total_coins} coins 💸!**"
         )
-        await client.send_message(chat_id=7378476666, text="✨ ** {user_id} sold {amount}x {rarity_name} {character_name} for {total_coins} coins 💸!**")
+        await client.send_message(chat_id=7378476666, text=f"✨ ** {user_id} sold {amount}x {rarity_name} {character_name} for {total_coins} coins 💸!**")
 
     except Exception as e:
         await message.reply("❌ **An error occurred while processing your request.**")
