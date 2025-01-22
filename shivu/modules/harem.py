@@ -87,7 +87,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     keyboard = [
         [
-            InlineKeyboardButton("🦋 Static {total_count}", switch_inline_query_current_chat=f"collection.img.{user_id}"),
+            InlineKeyboardButton(f"🦋 Static [{total_count}]", switch_inline_query_current_chat=f"collection.img.{user_id}"),
             InlineKeyboardButton("🎗️ 𝘼𝙈𝙑", switch_inline_query_current_chat=f"collection.vid.{user_id}") if has_animated else None
         ]
     ]
