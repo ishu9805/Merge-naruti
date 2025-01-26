@@ -47,6 +47,9 @@ RARITY_MAPPING = {
 }
 
 
+# Global variable to store total anime counts
+anime_count_cache = {}
+
 @app.on_inline_query()
 async def inlinequery(client, update):
     query = update.query.strip()
@@ -98,10 +101,22 @@ async def inlinequery(client, update):
                     char = char_data['character']
                     count = char_data['count']
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
+                    
+                    # Get number of characters the user has for this anime
+                    user_anime_count = sum(1 for c in user.get('characters', []) if c.get('anime') == char['anime'])
+                    
+                    # Check if total count for the anime is already cached
+                    if char['anime'] in anime_count_cache:
+                        total_anime_count = anime_count_cache[char['anime']]
+                    else:
+                        # If not cached, query the collection and store the result
+                        total_anime_count = await collection.count_documents({'anime': char['anime']})
+                        anime_count_cache[char['anime']] = total_anime_count
+                    
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>"
                         f"{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
-                        f"⌬ {char['anime']} \n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
                         f"◈⌠{rarity_emoji}⌡ {char['name']} x{count}\n"
                         f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n\n"
                     )
@@ -151,9 +166,21 @@ async def inlinequery(client, update):
             character = character_data['character']
             count = character_data['count']
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
+            
+            # Get number of characters the user has for this anime
+            user_anime_count = sum(1 for c in user.get('characters', []) if c.get('anime') == character['anime'])
+            
+            # Check if total count for the anime is already cached
+            if character['anime'] in anime_count_cache:
+                total_anime_count = anime_count_cache[character['anime']]
+            else:
+                # If not cached, query the collection and store the result
+                total_anime_count = await collection.count_documents({'anime': character['anime']})
+                anime_count_cache[character['anime']] = total_anime_count
+
             caption = (
                 f"**Look At This Character!!**\n\n"
-                f"⌬ {character['anime']}\n"
+                f"⌬ {character['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
                 f"◈⌠{rarity_emoji}⌡ {character['name']} x{count}\n"
                 f"**ID**: {character['id']} | **Rarity**: {character['rarity'].split()[1]}\n\n"
             )
@@ -181,4 +208,4 @@ async def inlinequery(client, update):
     # Pagination
     next_offset = str(offset + limit) if len(results) == limit else ""
     await update.answer(results, next_offset=next_offset, cache_time=6, is_gallery=True)
-    
+                            
