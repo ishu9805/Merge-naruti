@@ -167,9 +167,7 @@ async def inlinequery(client, update):
             count = character_data['count']
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
             
-            # Get number of characters the user has for this anime
-            user_anime_count = sum(1 for c in user.get('characters', []) if c.get('anime') == character['anime'])
-            
+           
             # Check if total count for the anime is already cached
             if character['anime'] in anime_count_cache:
                 total_anime_count = anime_count_cache[character['anime']]
@@ -180,7 +178,7 @@ async def inlinequery(client, update):
 
             caption = (
                 f"**Look At This Character!!**\n\n"
-                f"⌬ {character['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
+                f"⌬ {character['anime']} 〔{total_anime_count}〕\n"
                 f"◈⌠{rarity_emoji}⌡ {character['name']} x{count}\n"
                 f"**ID**: {character['id']} | **Rarity**: {character['rarity'].split()[1]}\n\n"
             )
