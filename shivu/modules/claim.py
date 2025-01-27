@@ -60,7 +60,7 @@ async def hclaim(_, message: t.Message):
         return
 
       # Set the lock
-    claim_lock[user_id] = True 
+    
     try:
         # Check if the user is banned
         is_banned = await ban_collection.find_one({"user_id": user_id})
@@ -82,7 +82,8 @@ async def hclaim(_, message: t.Message):
         )
         await message.reply_text(messages, reply_markup=reply_markup)
         return
-        
+
+    claim_lock[user_id] = True 
     
     try:
         user_data = await user_collection.find_one({'id': user_id}) or {
