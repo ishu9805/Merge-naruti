@@ -16,7 +16,7 @@ async def send_characters(client, message):
         character_id = message.command[1]
 
         # Fetch character data from MongoDB (without await, as it's synchronous)
-        character = collection.find_one({'id': character_id})
+        character = await.collection.find_one({'id': character_id})
         if not character:
             await app.send_message(CHAT_ID, f"🚫 *Character with ID {character_id} not found.*")
             return
