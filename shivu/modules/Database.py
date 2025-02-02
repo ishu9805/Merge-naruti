@@ -28,6 +28,7 @@ async def send_characters(client, message):
         image_url = character.get('img_url', '')
         video_url = character.get('vid_url', '')
 
+        # Prepare the caption with formatted character details
         caption = (
             f"🌟 **Character Detail** 🌟\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
@@ -36,11 +37,9 @@ async def send_characters(client, message):
             f"🔹 **ID:** {character_id}\n"
             f"🔸 **Rarity:** {rarity_id}\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
-        
         )
 
-
-        # Send the media
+        # Send the media with the caption
         try:
             if image_url:
                 await app.send_photo(CHAT_ID, photo=image_url, caption=caption)
