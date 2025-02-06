@@ -101,16 +101,23 @@ async def inlinequery(client, update):
                     count = char_data['count']
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
 
-                    # Fancy Border Style Caption
+                    # Get number of characters the user has for this anime
+                    user_anime_count = sum(1 for c in user.get('characters', []) if c.get('anime') == char['anime'])
+
+                    # Check if total count for the anime is already cached
+                    if char['anime'] in anime_count_cache:
+                        total_anime_count = anime_count_cache[char['anime']]
+                    else:
+                        # If not cached, query the collection and store the result
+                        total_anime_count = await collection.count_documents({'anime': char['anime']})
+                        anime_count_cache[char['anime']] = total_anime_count
+
+                    # User Collection Caption
                     caption = (
-                        f"╔════════════════════════════════╗\n"
-                        f"║       **{char['name']}**       ║\n"
-                        f"╠════════════════════════════════╣\n"
-                        f"║ 🎬 Anime: {char['anime']}\n"
-                        f"║ 🎲 Rarity: {char['rarity']}\n"
-                        f"║ 🆔 ID: {char['id']}\n"
-                        f"║ 👥 Owned by: {count} users\n"
-                        f"╚════════════════════════════════╝"
+                        f"Look At <a href='tg://user?id={user['id']}'>{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
+                        f"◈⌠{rarity_emoji}⌡ {char['name']} x{count}\n"
+                        f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n"
                     )
 
                     if query.startswith('collection.img.'):
@@ -180,16 +187,15 @@ async def inlinequery(client, update):
                 total_user_count = await user_collection.count_documents({'characters.id': character['id']})
                 character_user_count_cache[character['id']] = total_user_count
 
-            # Fancy Border Style Caption
+            # Global Search Caption
             caption = (
-                f"╔════════════════════════════════╗\n"
-                f"║       **{character['name']}**       ║\n"
-                f"╠════════════════════════════════╣\n"
-                f"║ 🎬 Anime: {character['anime']}\n"
-                f"║ 🎲 Rarity: {character['rarity']}\n"
-                f"║ 🆔 ID: {character['id']}\n"
-                f"║ 👥 Owned by: {total_user_count} users\n"
-                f"╚════════════════════════════════╝"
+                f"✨ **OwO! Check out this waifu!** ✨\n\n"
+                f"🎬 **Anime**: {character['anime']} [{total_anime_count}]\n"
+                f"🆔 **ID**: {character['id']}\n"
+                f"🌟 **Name**: {character['name']}\n"
+                f"🔮 **Rarity**: {character['rarity']}\n"
+                f"👥 **Owned by**: {total_user_count} users\n"
+      
             )
 
             if 'vid_url' in character and character['vid_url']:
