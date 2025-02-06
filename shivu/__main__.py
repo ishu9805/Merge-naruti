@@ -168,6 +168,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0
     }
 
+    
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
         characters_to_spawn.extend([c for c in all_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
@@ -175,34 +176,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if not characters_to_spawn:
         characters_to_spawn = all_characters
 
-    # Filter Valentine characters and check global ownership count
-    valentine_characters = [c for c in characters_to_spawn if c.get('rarity') == '💝 Valentine']
-    if valentine_characters:
-        valentine_character = random.choice(valentine_characters)
-        waifu_id = valentine_character['id']
-
-        # Check global ownership count of the Valentine character
-        user_ownership_data = await user_collection.aggregate([
-            {'$match': {'characters.id': waifu_id}},
-            {'$unwind': '$characters'},
-            {'$match': {'characters.id': waifu_id}},
-            {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
-            {'$sort': {'count': -1}}
-        ]).to_list(length=10)
-
-        global_count = sum(user['count'] for user in user_ownership_data)
-
-        if global_count < 15:
-            character = valentine_character
-        else:
-            # If global count is 15 or more, skip spawning Valentine characters
-            characters_to_spawn = [c for c in characters_to_spawn if c.get('rarity') != '💝 Valentine']
-            if not characters_to_spawn:
-                characters_to_spawn = all_characters
-            character = random.choice(characters_to_spawn)
-    else:
-        character = random.choice(characters_to_spawn)
-
+    character = random.choice(characters_to_spawn)
+    
     if character.get('rarity') == '🔮 Limited Edition':
         await context.bot.send_message(chat_id=7378476666, text=f"A limited character has spawned! Character id: {character['id']}")
     if character.get('rarity') == '💝 Valentine':
