@@ -130,24 +130,30 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         3: '🟡 Legendary',
         4: '🟢 Medium',
         5: '💮 Special edition',
-        6: '🔮 Limited Edition',
-        7: '💸 Premium Edition',
-        8: '🌤 Summer',
-        9: '🎐 Celestial',
-        10: '❄️ Winter',
-        11: '💝 Valentine',
-        12: '🎃 Halloween',
-        13: '🎄 Christmas Special',
-        14: '🎭 Cosplay Master 🎭',
-        15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
-        16: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
+        6: '⚪️ Common',
+        7: '🟡 Legendary',
+        8: '🔮 Limited Edition',
+        9: '🟡 Legendary',
+        10: '🟢 Medium',
+        11: '💸 Premium Edition',
+        12: '🌤 Summer',
+        13: '🎐 Celestial',
+        14: '❄️ Winter',
+        15: '💝 Valentine',
+        16: '🎃 Halloween',
+        17: '🎄 Christmas Special',
+        18: '🟢 Medium',
+        19: '🎭 Cosplay Master 🎭',
+        20: '💮 Special edition',
+        21: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
+        22: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
     }
 
     spawn_counts = {
         '⚪️ Common': 5,
         '🟣 Rare': 5,
-        '🟢 Medium': 5,
-        '🟡 Legendary': 5,
+        '🟢 Medium': 8,
+        '🟡 Legendary': 10,
         '💮 Special Edition': 3,
         '🔮 Limited Edition': 1,
         '💸 Premium Edition': 0,
@@ -199,7 +205,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     if character.get('rarity') == '🔮 Limited Edition':
         await context.bot.send_message(chat_id=7378476666, text=f"A limited character has spawned! Character id: {character['id']}")
-
+    if character.get('rarity') == '💝 Valentine':
+        await context.bot.send_message(chat_id=7378476666, text=f"A valentine character has spawned! Character id: {character['id']}")
+        
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
