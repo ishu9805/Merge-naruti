@@ -107,6 +107,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             await send_image(update, context)
             message_counts[chat_id] = 0
 
+
+
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -138,7 +140,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         13: '🎄 Christmas Special',
         14: '🎭 Cosplay Master 🎭',
         15: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
-        16: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'  # New rarity added
+        16: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
     }
 
     spawn_counts = {
@@ -151,20 +153,15 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
-        '❄️ Winter': 1,
-        '💝 Valentine': 0,
+        '❄️ Winter': 0,  # Stop spawning Winter characters
+        '💝 Valentine': 1,  # Start spawning Valentine characters
         '🎃 Halloween': 0,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 0,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
-        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0 if chat_id == -1002338924488 else 0 # New rarity spawn count
+        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0
     }
-    # Get the message count for the chat_id, defaulting to 0 if it doesn't exist
-    message_count = message_counts.get(chat_id, 0)
 
-    # Check if the chat_id is -1002338924488 and if the message count is a multiple of 500
-    
-        
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
         characters_to_spawn.extend([c for c in all_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
@@ -172,19 +169,37 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if not characters_to_spawn:
         characters_to_spawn = all_characters
 
-    character = random.choice(characters_to_spawn)
+    # Filter Valentine characters and check global ownership count
+    valentine_characters = [c for c in characters_to_spawn if c.get('rarity') == '💝 Valentine']
+    if valentine_characters:
+        valentine_character = random.choice(valentine_characters)
+        waifu_id = valentine_character['id']
 
-    if character.get('rarity') == '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣':
-        await context.bot.send_message(chat_id=7378476666, text=f"An animated character has spawned! Character id: {character['id']}")
+        # Check global ownership count of the Valentine character
+        user_ownership_data = await user_collection.aggregate([
+            {'$match': {'characters.id': waifu_id}},
+            {'$unwind': '$characters'},
+            {'$match': {'characters.id': waifu_id}},
+            {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
+            {'$sort': {'count': -1}}
+        ]).to_list(length=10)
+
+        global_count = sum(user['count'] for user in user_ownership_data)
+
+        if global_count < 15:
+            character = valentine_character
+        else:
+            # If global count is 15 or more, skip spawning Valentine characters
+            characters_to_spawn = [c for c in characters_to_spawn if c.get('rarity') != '💝 Valentine']
+            if not characters_to_spawn:
+                characters_to_spawn = all_characters
+            character = random.choice(characters_to_spawn)
+    else:
+        character = random.choice(characters_to_spawn)
 
     if character.get('rarity') == '🔮 Limited Edition':
-        await context.bot.send_message(chat_id=7378476666, text=f"An limited character has spawned! Character id: {character['id']}")
+        await context.bot.send_message(chat_id=7378476666, text=f"A limited character has spawned! Character id: {character['id']}")
 
-    if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=7378476666, text=f"An winter character has spawned! Character id: {character['id']}")
-
-
-    
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
@@ -193,25 +208,43 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
+    # Define captions based on rarity
+    captions = {
+        '⚪️ Common': "✨ A *Common* character has appeared!\nGuess their name with /guess [Name] to add them to your collection! 🎉",
+        '🟣 Rare': "🌟 A *Rare* character has arrived!\nUse /guess [Name] to claim them! 🔥",
+        '🟡 Legendary': "💫 A *Legendary* character has emerged!\nGuess their name with /guess [Name] to make them yours! 🏆",
+        '🟢 Medium': "🌿 A *Medium* character is here!\nUse /guess [Name] to add them to your harem! 🌸",
+        '💮 Special edition': "🎴 A *Special Edition* character has appeared!\nGuess their name with /guess [Name] to win them! 🎁",
+        '🔮 Limited Edition': "🔮 A *Limited Edition* character has arrived!\nUse /guess [Name] to claim this exclusive character! ⏳",
+        '💸 Premium Edition': "💰 A *Premium Edition* character is here!\nGuess their name with /guess [Name] to add them to your collection! 💎",
+        '🌤 Summer': "☀️ A *Summer* character has arrived!\nUse /guess [Name] to claim this seasonal character! 🌊",
+        '🎐 Celestial': "🌌 A *Celestial* character has descended!\nGuess their name with /guess [Name] to make them yours! 🌠",
+        '❄️ Winter': "❄️ A *Winter* character has appeared!\nUse /guess [Name] to add them to your collection! ⛄",
+        '💝 Valentine': "💖 A *Valentine* character has arrived!\nGuess their name with /guess [Name] to win their heart! 💌",
+        '🎃 Halloween': "🎃 A *Halloween* character has emerged!\nUse /guess [Name] to claim this spooky character! 👻",
+        '🎄 Christmas Special': "🎄 A *Christmas Special* character has arrived!\nGuess their name with /guess [Name] to add them to your collection! 🎅",
+        '🎭 Cosplay Master 🎭': "🎭 A *Cosplay Master* character has appeared!\nUse /guess [Name] to claim this unique character! 🎨",
+        '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': "🪐 An *Omniversal* character has arrived!\nGuess their name with /guess [Name] to make them yours! 🌌",
+        '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': "🎬 An *AMV Edition* character has appeared!\nUse /guess [Name] to claim this special character! 🎥"
+    }
+
+    caption = captions.get(rarity_name, "🌟 A new character has arrived!\nGuess their name with /guess [Name] to add them to your collection! 🎉")
+
     if character.get('img_url'):
         await context.bot.send_photo(
             chat_id=chat_id,
             photo=character['img_url'],
-            caption=f"🌟 A new *{rarity_name}* character has arrived! 🔥 Guess their name with /guess [Name] to add them to your harem! 🌟",
+            caption=caption,
             parse_mode='Markdown'
         )
     elif character.get('vid_url'):
         await context.bot.send_video(
             chat_id=chat_id,
             video=character['vid_url'],
-            caption=f"🌟 Get ready! A *{rarity_name}* character has emerged! 🏃‍♂️ Guess their name with /guess [Name] to add them to your harem! 🌟",
+            caption=caption,
             parse_mode='Markdown',
             supports_streaming=True
         )
-
-    spawn_counts['🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'] = 0  # Reset after spawning
-
-
 
 
 async def guess(update: Update, context: CallbackContext) -> None:
