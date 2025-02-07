@@ -1,6 +1,10 @@
 from pyrogram import Client, filters
 import asyncio
 from shivu import shivuu as app
+from shivu import db
+
+
+ac = db['allowedchat']
 
 LOG_CHANNEL_ID = -1002455650183
 
