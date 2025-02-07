@@ -1,11 +1,11 @@
 from pyrogram import Client, filters
-
+import asyncio
 from shivu import shivuu as app
 
 LOG_CHANNEL_ID = -1002455650183
 
 @app.on_message(filters.new_chat_members, group=2)
-def welcome_new_member(client, message):
+async def welcome_new_member(client, message):
     try:
         chat = message.chat
         count = await app.get_chat_members_count(chat.id)
