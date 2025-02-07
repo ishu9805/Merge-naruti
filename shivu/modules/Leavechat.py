@@ -8,7 +8,14 @@ LOG_CHANNEL_ID = -1002455650183
 async def welcome_new_member(client, message):
     try:
         chat = message.chat
-        count = await app.get_chat_members_count(chat.id)
+        bot = 0
+        async for member in app.get_chat_members(chat.id):
+            user = member.user
+            if user.is_bot:
+                bot += 1
+            
+        c = await app.get_chat_members_count(chat.id)
+        count = c-bot
         username = (
                     message.chat.username if message.chat.username else "𝐏ʀɪᴠᴀᴛᴇ 𝐆ʀᴏᴜᴘ"
         )
