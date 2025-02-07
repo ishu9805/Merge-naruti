@@ -19,7 +19,7 @@ async def welcome_new_member(client, message):
         username = (
                     message.chat.username if message.chat.username else "𝐏ʀɪᴠᴀᴛᴇ 𝐆ʀᴏᴜᴘ"
         )
-        if count < 35:
+        if count < 25:
             await app.leave_chat(chat.id)
             msg = f"Left group: {chat.title} (ID: {chat.id}, Members: {count}), link = @{username}"
             await app.send_message(LOG_CHANNEL_ID, msg)
