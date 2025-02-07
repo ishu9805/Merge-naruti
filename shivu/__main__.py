@@ -66,8 +66,8 @@ def escape_markdown(text):
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
 async def message_counter(update: Update, context: CallbackContext) -> None:
-    if update.effective_user.is_bot:
-        return
+    """if update.effective_user.is_bot:
+        return""""
 
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
