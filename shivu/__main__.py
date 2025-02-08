@@ -152,8 +152,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     spawn_counts = {
         '⚪️ Common': 5,
         '🟣 Rare': 5,
-        '🟢 Medium': 8,
-        '🟡 Legendary': 10,
+        '🟢 Medium': 6,
+        '🟡 Legendary': 6,
         '💮 Special Edition': 3,
         '🔮 Limited Edition': 1,
         '💸 Premium Edition': 0,
