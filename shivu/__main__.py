@@ -325,7 +325,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         return
     else:
         pass
-
+    await asyncio.sleep(0)
     if chat_id not in last_characters:
         return
 
