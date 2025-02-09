@@ -466,8 +466,8 @@ async def fav(update: Update, context: CallbackContext) -> None:
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return
-
-    if not context.args:
+    await asyncio.sleep(0)
+    if not context. args:
         await update.message.reply_text('🚨 Please provide the character ID to proceed.')
         return
 
