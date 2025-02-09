@@ -55,6 +55,7 @@ last_characters = {}
 sent_characters = {}
 first_correct_guesses = {}
 message_counts = {}
+total_message_counts ={}
 
 for module_name in ALL_MODULES:
     imported_module = importlib.import_module("shivu.modules." + module_name)
