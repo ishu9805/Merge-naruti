@@ -129,23 +129,23 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         2: '🟣 Rare',
         3: '🟡 Legendary',
         4: '🟢 Medium',
-        5: '🟣 Rare'
+        5: '🟣 Rare',
         6: '🟡 Legendary',
         7: '💮 Special edition',
         8: '🔮 Limited Edition',
-        10: '🟢 Medium',
-        11: '💸 Premium Edition',
-        12: '🌤 Summer',
-        13: '🎐 Celestial',
-        14: '❄️ Winter',
-        15: '💝 Valentine',
-        16: '🎃 Halloween',
-        17: '🎄 Christmas Special',
-        18: '🟢 Medium',
-        19: '🎭 Cosplay Master 🎭',
-        20: '💮 Special edition',
-        21: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
-        22: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
+        9: '🟢 Medium',
+        10: '💸 Premium Edition',
+        11: '🌤 Summer',
+        12: '🎐 Celestial',
+        13: '❄️ Winter',
+        14: '💝 Valentine',
+        15: '🎃 Halloween',
+        16: '🎄 Christmas Special',
+        17: '🟢 Medium',
+        18: '🎭 Cosplay Master 🎭',
+        19: '💮 Special edition',
+        20: '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐',
+        21: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
     }
 
     spawn_counts = {
