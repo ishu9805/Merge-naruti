@@ -85,7 +85,7 @@ async def welcome_new_member(client, message):
         
         # Check if the non-bot member count is below the threshold
         if non_bot_count < MIN_MEMBER_COUNT:
-            await app.send_message(message.chat.id, f"i am leaving this because this chat is spam group if its not then u can said to @sashtadeb to add bot in your group")
+            await app.send_message(message.chat.id, "🚫 Leaving this group as it appears to be a spam group. If this is incorrect, please contact @sashtadeb to review.")
             await app.leave_chat(chat.id)
             msg = (f"Left group: {chat.title} (ID: {chat.id}, Members: {non_bot_count}), "
                    f"link = @{username}")
