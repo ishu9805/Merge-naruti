@@ -29,6 +29,7 @@ from shivu.modules.coin import add_coins, update_leaderboards
 from shivu.modules.leaderboard import create_indexes
 
 all_characters = []
+valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
 
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 
@@ -79,11 +80,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     lock = locks[chat_id]
 
     async with lock:
+        # Initialize total message count and random threshold for Valentine spawn
+        if chat_id not in total_message_counts:
+            total_message_counts[chat_id] = 0
+            valentine_spawn_thresholds[chat_id] = random.randint(3000, 4000)
+
         # Increment total message count for the chat
-        if chat_id in total_message_counts:
-            total_message_counts[chat_id] += 1
-        else:
-            total_message_counts[chat_id] = 1
+        total_message_counts[chat_id] += 1
 
         # Existing logic for message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
@@ -109,10 +112,12 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             await send_image(update, context)
             message_counts[chat_id] = 0
 
-        # Check if total message count is a multiple of 4000
-        if total_message_counts[chat_id] % 4000 == 0:
+        # Check if total message count matches the random threshold
+        if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
-
+            # Reset the threshold for the next spawn
+            valentine_spawn_thresholds[chat_id] = random.randint(3000, 4000)
+            
 
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
