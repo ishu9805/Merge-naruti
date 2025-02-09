@@ -65,14 +65,12 @@ def escape_markdown(text):
     escape_chars = r'\*_`\\~>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
-async def message_counter(update: Update, context: CallbackContext) -> None:
-    """if update.effective_user.is_bot:
-        return"""
 
+async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
     is_banned = await ban_collection.find_one({"user_id": user_id})
-    
+
     if is_banned:
         return
 
@@ -81,11 +79,15 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     lock = locks[chat_id]
 
     async with lock:
-        chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
-        if chat_frequency:
-            message_frequency = chat_frequency.get('message_frequency', 100)
+        # Increment total message count for the chat
+        if chat_id in total_message_counts:
+            total_message_counts[chat_id] += 1
         else:
-            message_frequency = 100
+            total_message_counts[chat_id] = 1
+
+        # Existing logic for message frequency
+        chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
+        message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
@@ -107,6 +109,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             await send_image(update, context)
             message_counts[chat_id] = 0
 
+        # Check if total message count is a multiple of 4000
+        if total_message_counts[chat_id] % 4000 == 0:
+            await spawn_valentine_character(update, context)
 
 
 async def send_image(update: Update, context: CallbackContext) -> None:
@@ -131,7 +136,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         4: '🟢 Medium',
         5: '🟣 Rare',
         6: '🟡 Legendary',
-        7: '💮 Special edition',
+        7: '💮 Special Edition',
         8: '🔮 Limited Edition',
         9: '🟢 Medium',
         10: '💸 Premium Edition',
@@ -216,7 +221,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🟣 Rare': "🌟 A *Rare* character has arrived!\nUse /guess [Name] to claim them! 🔥",
         '🟡 Legendary': "💫 A *Legendary* character has emerged!\nGuess their name with /guess [Name] to make them yours! 🏆",
         '🟢 Medium': "🌿 A *Medium* character is here!\nUse /guess [Name] to add them to your harem! 🌸",
-        '💮 Special edition': "🎴 A *Special Edition* character has appeared!\nGuess their name with /guess [Name] to win them! 🎁",
+        '💮 Special Edition': "🎴 A *Special Edition* character has appeared!\nGuess their name with /guess [Name] to win them! 🎁",
         '🔮 Limited Edition': "🔮 A *Limited Edition* character has arrived!\nUse /guess [Name] to claim this exclusive character! ⏳",
         '💸 Premium Edition': "💰 A *Premium Edition* character is here!\nGuess their name with /guess [Name] to add them to your collection! 💎",
         '🌤 Summer': "☀️ A *Summer* character has arrived!\nUse /guess [Name] to claim this seasonal character! 🌊",
@@ -249,6 +254,62 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         )
 
 
+async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+
+    # Filter Valentine characters
+    valentine_characters = [c for c in all_characters if c.get('rarity') == '💝 Valentine']
+
+    if not valentine_characters:
+        LOGGER.warning("No Valentine characters found in the database.")
+        return
+
+    # Select a random Valentine character
+    character = random.choice(valentine_characters)
+
+    # Check global ownership count
+    waifu_id = character['id']
+    user_ownership_data = await user_collection.aggregate([
+        {'$match': {'characters.id': waifu_id}},
+        {'$unwind': '$characters'},
+        {'$match': {'characters.id': waifu_id}},
+        {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
+        {'$sort': {'count': -1}}
+    ]).to_list(length=10)
+
+    global_count = sum(user['count'] for user in user_ownership_data)
+
+    if global_count >= 15:
+        LOGGER.info(f"Valentine character {waifu_id} has reached the global ownership limit.")
+        return
+
+    # Send the character to the chat
+    caption = "💖 A *Valentine* character has arrived!\nGuess their name with /guess [Name] to win their heart! 💌"
+    if character.get('img_url'):
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=character['img_url'],
+            caption=caption,
+            parse_mode='Markdown'
+        )
+    elif character.get('vid_url'):
+        await context.bot.send_video(
+            chat_id=chat_id,
+            video=character['vid_url'],
+            caption=caption,
+            parse_mode='Markdown',
+            supports_streaming=True
+        )
+
+    
+    # Update sent characters and last character
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
+    sent_characters[chat_id].append(character.get('id'))
+    last_characters[chat_id] = character
+
+    # Notify admin (optional)
+    await context.bot.send_message(chat_id=7378476666, text=f"A Valentine character has spawned! Character id: {character['id']}")
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
