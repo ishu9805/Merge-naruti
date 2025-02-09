@@ -259,6 +259,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         )
 
 
+
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
 
@@ -315,6 +316,8 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     # Notify admin (optional)
     await context.bot.send_message(chat_id=7378476666, text=f"A Valentine character has spawned! Character id: {character['id']}")
+
+
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
