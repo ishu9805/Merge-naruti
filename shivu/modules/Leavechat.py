@@ -81,7 +81,8 @@ async def welcome_new_member(client, message):
         username = message.chat.username if message.chat.username else "𝐏ʀɪᴠᴀᴛᴇ 𝐆ʀᴏᴜᴘ"
         
         # Check if the chat ID is in the allowed list
-        if ac.find_one({"chat_id": chat.id}):
+        allow = await ac.find_one({"chat_id": chat.id})
+        if allow:
             return  # Do not leave the chat if it's in the allowed list
         
         # Check if the non-bot member count is below the threshold
