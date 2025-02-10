@@ -7,7 +7,7 @@ class Config(object):
     PARTNER =  "7378476666", "1744744841"
     GROUP_ID = -1002198664660
     #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-tI"
-    TOKEN = "7107840748:AAHuqgu6Cc7eCGAHOemyyVtLiak50A-X73U"
+    TOKEN = "7107840748:AAHrWsTrn_xxW-TNKx8GqGv0K_pRAax63hk"
     mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     PHOTO_URL = ["https://telegra.ph/file/a75e0d1a655943665b662.jpg", "https://telegra.ph/file/bee112f781897c3447515.jpg", "https://telegra.ph/file/a0123f958a26695bd9e14.jpg"]
     SUPPORT_CHAT = "-1002338924488"
