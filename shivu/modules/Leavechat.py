@@ -13,10 +13,11 @@ MIN_MEMBER_COUNT = 30  # Minimum number of members to keep the group
 # Function to add chat ID
 async def add_chat_id(chat_id):
     try:
-        if ac.find_one({"chat_id": chat_id}):
+        have = await ac.find_one({"chat_id": chat_id}):
+        if have:
             return f"Chat ID {chat_id} already exists in allowed chats."
-        
-        ac.insert_one({"chat_id": chat_id})
+        else:
+            await ac.insert_one({"chat_id": chat_id})
         return f"Chat ID {chat_id} added to allowed chats."
     except Exception as e:
         return f"Error adding chat ID {chat_id}: {e}"
@@ -24,7 +25,7 @@ async def add_chat_id(chat_id):
 # Function to remove chat ID
 async def remove_chat_id(chat_id):
     try:
-        result = ac.delete_one({"chat_id": chat_id})
+        result = await ac.delete_one({"chat_id": chat_id})
         
         if result.deleted_count == 1:
             return f"Chat ID {chat_id} removed from allowed chats."
