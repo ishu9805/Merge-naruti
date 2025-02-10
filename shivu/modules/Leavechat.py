@@ -13,7 +13,7 @@ MIN_MEMBER_COUNT = 30  # Minimum number of members to keep the group
 # Function to add chat ID
 async def add_chat_id(chat_id):
     try:
-        have = await ac.find_one({"chat_id": chat_id}):
+        have = await ac.find_one({"chat_id": chat_id})
         if have:
             return f"Chat ID {chat_id} already exists in allowed chats."
         else:
