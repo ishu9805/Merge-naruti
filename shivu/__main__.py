@@ -518,6 +518,6 @@ def main() -> None:
     
 if __name__ == "__main__":
     shivuu.start()
-    app.start()
+    #app.start()
   
     main()
