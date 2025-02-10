@@ -9,7 +9,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Bot
 from telegram.constants import ReactionEmoji
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import (
-    app,
+    
     collection,
     top_global_groups_collection,
     group_user_totals_collection,
