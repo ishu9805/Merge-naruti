@@ -42,7 +42,7 @@ PARTNER = Config.PARTNER
 #application = Application.builder().token(TOKEN).build()
 application = Application.builder().token(TOKEN).concurrent_updates(True).build()
 shivuu = Client("Shivu", api_id, api_hash, bot_token=TOKEN)
-app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
+#app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
 lol = AsyncIOMotorClient(mongo_url)
 db = lol['Character_catcher']
 collection = db['anime_characters_lol']
