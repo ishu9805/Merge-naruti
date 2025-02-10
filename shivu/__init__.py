@@ -1,11 +1,11 @@
-import logging  
+import logging  #
 import os
 from pyrogram import Client 
 from telegram.ext import Application
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-from telethon import events, Button
-from telethon.sync import TelegramClient
+#from telethon import events, Button
+#from telethon.sync import TelegramClient
 
 
 
