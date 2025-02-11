@@ -18,7 +18,7 @@ async def nhmode(client, message):
     user_id = message.from_user.id
 
     # Check if the user is banned
-    is_banned = ban_collection.find_one({"user_id": user_id})
+    is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
         return  # Do nothing if the user is banned
 
@@ -31,7 +31,7 @@ async def nhmode(client, message):
     ]
 
     # Send a photo with the buttons
-    photo_url = "https://example.com/your_photo.jpg"  # Replace with your photo URL
+    photo_url = "https://files.catbox.moe/eroeup.jpg"  # Replace with your photo URL
     await message.reply_photo(
         photo=photo_url,
         caption="Select a rarity mode:",
@@ -85,7 +85,7 @@ async def callback_query_handler(client, callback_query):
         elif data.startswith("rarity:"):
             # Update the user's rarity mode in the database
             rarity_mode = data.split(":")[1]
-            user_collection.update_one(
+            await user_collection.update_one(
                 {'id': callback_query.from_user.id},
                 {'$set': {'rarity_mode': rarity_mode}},
                 upsert=True
@@ -94,7 +94,7 @@ async def callback_query_handler(client, callback_query):
 
         elif data == "rarity_mode:default":
             # Set the rarity mode to "All"
-            user_collection.update_one(
+            await user_collection.update_one(
                 {'id': callback_query.from_user.id},
                 {'$set': {'rarity_mode': 'All'}},
                 upsert=True
