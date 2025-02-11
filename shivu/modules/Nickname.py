@@ -1,6 +1,6 @@
 import asyncio
-from telethon import events, Button
-from telethon.sync import TelegramClient
+#from telethon import events, Button
+#from telethon.sync import TelegramClient
 from pymongo import MongoClient
 from shivu import shivuu as app
 from shivu import user_collection, ban_collection
