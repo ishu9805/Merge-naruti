@@ -29,7 +29,7 @@ async def fav(client: Client, message: Message):
 
     keyboard = IKM(
         [
-            [IKB("View Inline", switch_inline_query_current_chat=f"{character_id}")],
+            
             [
                 IKB("✔️ Confirm", callback_data=f'confirm_{user_id}_{character_id}'),
                 IKB("❌ Cancel", callback_data=f'cancel_{user_id}_{character_id}')
