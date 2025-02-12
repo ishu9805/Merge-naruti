@@ -1,24 +1,27 @@
 import logging
 import sys
 import time
+import random
+import sys
+import time
+from shivu import *
+from functools import wraps
+from telegram import Update
+from .watchers import *
+
+
 
 StartTime = time.time()
+dev_users = {7469481988}
 
+sudb = db.sudo
+devb = db.dev 
+app = shivuu
 # enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
-    level=logging.INFO,
-)
-
-logging.getLogger("apscheduler").setLevel(logging.ERROR)
-
-logging.getLogger("pyrate_limiter").setLevel(logging.ERROR)
-LOGGER = logging.getLogger(__name__)
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-    LOGGER.error(
+    print(
         "You MUST have a python version of at least 3.6! Multiple features depend on this. Bot quitting."
     )
     quit(1)
@@ -45,7 +48,7 @@ def __list_all_modules():
                 any(mod == module_name for module_name in all_modules)
                 for mod in to_load
             ):
-                LOGGER.error("Invalid loadorder names, Quitting...")
+                print"Invalid loadorder names, Quitting...")
                 quit(1)
 
             all_modules = sorted(set(all_modules) - set(to_load))
@@ -55,7 +58,7 @@ def __list_all_modules():
             to_load = all_modules
 
         if NO_LOAD:
-            LOGGER.info("Not loading: {}".format(NO_LOAD))
+            print("Not loading: {}".format(NO_LOAD))
             return [item for item in to_load if item not in NO_LOAD]
 
         return to_load
@@ -64,5 +67,5 @@ def __list_all_modules():
 
 
 ALL_MODULES = __list_all_modules()
-LOGGER.info("Modules to load: %s", str(ALL_MODULES))
+print("Modules to load: %s", str(ALL_MODULES))
 __all__ = ALL_MODULES + ["ALL_MODULES"]
