@@ -61,7 +61,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         unique_characters = [char for char in ucharacters if char.get('rarity') == rarity_mode]
 
     
-    total_pages = math.ceil(len(unique_characters) / 20)
+    total_pages = math.ceil(len(ucharacters) / 20)
     if page < 0 or page >= total_pages:
         page = 0
    
