@@ -1,4 +1,4 @@
-from pyrogram import Client, filters
+afrom pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from shivu import user_collection, ban_collection
@@ -104,7 +104,7 @@ async def gift(client, message):
 
 # Callback for Confirming or Cancelling Gift
 @shivuu.on_callback_query(filters.create(lambda _, __, query: query.data.startswith(("confirm_gift:", "cancel_gift:"))))
-async def on_callback_query(client, callback_query):
+async def on_gift_callback_query(client, callback_query):
     sender_id = callback_query.from_user.id
     data, process_id = callback_query.data.split(":")
 
