@@ -44,7 +44,7 @@ async def fav(client: Client, message: Message):
             reply_markup=keyboard
         )
     elif: 
-        character.get("vid_url"):
+        character.get("vid_url")
         await message.reply_video(
             video=character["vid_url"],
             caption=f"Do you want to make {character['name']} your favorite character?",
