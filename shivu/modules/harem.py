@@ -53,22 +53,22 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
-    
-    total_count = len(user['characters'])
-    
+    unique_characters = list({character['id']: character for character in characters}.values())
+    character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x['id'])}
+    total_count = len(characters)
     
     if rarity_mode != 'All':
         characters = [char for char in characters if char.get('rarity') == rarity_mode]
 
     
-    total_pages = math.ceil(len(characters) / 20)
+    total_pages = math.ceil(len(unique_characters) / 20)
     if page < 0 or page >= total_pages:
         page = 0
    
 
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n"
-    current_characters = characters[page*15:(page+1)*20]
-    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
+    current_characters = unique_characters[page*15:(page+1)*20]
+    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['id'])}
 
     for anime, characters in current_grouped_characters.items():
         harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
