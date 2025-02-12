@@ -68,14 +68,15 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n"
     current_characters = unique_characters[page*15:(page+1)*20]
-    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['id'])}
+    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
 
     for anime, characters in current_grouped_characters.items():
         harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
         for character in characters:
             rarity = character['rarity']
+            count = character_counts[character['id']]
             rarity_emoji = RARITY_MAPPING.get(rarity, 'Unknown')
-            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']}\n"
+            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']} (x{count})\n"
         harem_message += "\n"
 
     if len(harem_message) > MAX_CAPTION_LENGTH:
