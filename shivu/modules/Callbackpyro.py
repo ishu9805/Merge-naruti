@@ -9,7 +9,7 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
-
+from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 
 
 # Handler for callback queries
@@ -18,7 +18,12 @@ async def callback_query_handler(client, callback_query):
     try:
         data = callback_query.data
 
-        if data == "rarity_mode:see_by_rarities":
+        if data.startswith("confirm_gift:") or data.startswith("cancel_gift:"):
+            await on_gift_callback_query(client, callback_query)
+        elif data.startswith("confirm_trade_receiver:") or data.startswith("cancel_trade:"):
+            await on_trade_callback_query(client, callback_query)
+
+        elif data == "rarity_mode:see_by_rarities":
             # Create buttons for rarities (only emojis)
             rarities_buttons = [
                 [
