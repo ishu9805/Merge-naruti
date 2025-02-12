@@ -34,6 +34,8 @@ RARITY_MAPPING = {
     '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️'
 }
 
+
+
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
@@ -51,24 +53,24 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             await update.callback_query.edit_message_text(message)
         return
 
-    characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
     
-    total_count = len(user['characters'])
-    
-    
+    # Fetch only the required characters for the current page
+    query = {'id': user_id}
     if rarity_mode != 'All':
-        characters = [char for char in characters if char.get('rarity') == rarity_mode]
+        query['characters.rarity'] = rarity_mode
 
+    total_count = await user_collection.count_documents(query)
+    total_pages = math.ceil(total_count / 20)
     
-    total_pages = math.ceil(len(characters) / 20)
     if page < 0 or page >= total_pages:
         page = 0
-   
 
+    # Fetch characters for the current page
+    characters = await user_collection.find(query).skip(page * 20).limit(20).to_list(length=20)
+    
     harem_message = f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n"
-    current_characters = characters[page*15:(page+1)*20]
-    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
+    current_grouped_characters = {k: list(v) for k, v in groupby(characters, key=lambda x: x['anime'])}
 
     for anime, characters in current_grouped_characters.items():
         harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
@@ -82,7 +84,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         harem_message = harem_message[:MAX_CAPTION_LENGTH]
 
     has_animated = any(
-        char.get('rarity') == "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣" and 'vid_url' in char for char in user['characters']
+        char.get('rarity') == "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣" and 'vid_url' in char for char in characters
     )
 
     keyboard = [
@@ -111,7 +113,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     try:
         if 'favorites' in user and user['favorites']:
             fav_character_id = user['favorites'][0]
-            fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
+            fav_character = next((c for c in characters if c['id'] == fav_character_id), None)
             if fav_character:
                 if 'img_url' in fav_character:
                     if update.message:
@@ -147,7 +149,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             else:
                 await _send_harem_message(update, harem_message, reply_markup)
         else:
-            await _send_harem_message(update, harem_message, reply_markup, user['characters'])
+            await _send_harem_message(update, harem_message, reply_markup, characters)
     except Exception as e:
         print(f"Failed to edit message: {e}")
 
