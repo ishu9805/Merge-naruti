@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 
 from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT, OWNER_ID, user_collection
-
+from . import uploader_filter
 from shivu import shops_collection
 from telegraph import upload_file
 from pyrogram import filters
@@ -119,7 +119,7 @@ async def find_available_id():
         return str(max(map(int, ids)) + 1).zfill(2)  # Return the next available ID
 
 # Command to upload character information
-@shivuu.on_message(filters.command(["upload"]) & filters.user([6965783469, 7036155390, 6759666329, 7228816990, 7469481988, 5316848198, 7378476666, 5763471570, 6211352930]))
+@shivuu.on_message(filters.command(["upload"]) & uploader_filter)
 async def ul(client, message):
     reply = message.reply_to_message
     if reply and (reply.photo or reply.document):
