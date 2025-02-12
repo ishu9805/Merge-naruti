@@ -10,8 +10,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 
-# Initialize Pyrogram client
-
+# Initialize Pyrogram clie
 # Handler for the /nhmode command
 @app.on_message(filters.command("nhmode"))
 async def nhmode(client, message):
@@ -38,6 +37,7 @@ async def nhmode(client, message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
+"""
 # Handler for callback queries
 @app.on_callback_query()
 async def callback_query_handler(client, callback_query):
@@ -107,6 +107,6 @@ async def callback_query_handler(client, callback_query):
 
     except Exception as e:
         await callback_query.answer("An error occurred. Please try again.", show_alert=True)
-        print(f"Error handling callback query: {e}")
+        print(f"Error handling callback query: {e}")"""
 
 # Start the bot
