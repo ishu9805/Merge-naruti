@@ -7,7 +7,7 @@ import time
 from shivu import *
 from functools import wraps
 from telegram import Update
-from Grabber.utils import * 
+from shivu.utils import * 
 from .watchers import *
 
 
