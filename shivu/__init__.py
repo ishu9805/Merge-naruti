@@ -4,45 +4,16 @@ from pyrogram import Client
 from telegram.ext import Application
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-#from telethon import events, Button
-#from telethon.sync import TelegramClient
 
 
 
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
-    level=logging.INFO,
-)
-
-logging.getLogger("apscheduler").setLevel(logging.ERROR)
-logging.getLogger('httpx').setLevel(logging.WARNING)
-logging.getLogger("pyrate_limiter").setLevel(logging.ERROR)
-LOGGER = logging.getLogger(__name__)
+from config import *
 
 
-from shivu.config import Development as Config
-
-required_group_id = Config.required_group_id
-api_id = Config.api_id
-api_hash = Config.api_hash
-TOKEN = Config.TOKEN
-GROUP_ID = Config.GROUP_ID
-CHARA_CHANNEL_ID = Config.CHARA_CHANNEL_ID 
-mongo_url = Config.mongo_url 
-PHOTO_URL = Config.PHOTO_URL 
-SUPPORT_CHAT = Config.SUPPORT_CHAT 
-UPDATE_CHAT = Config.UPDATE_CHAT
-BOT_USERNAME = Config.BOT_USERNAME 
-sudo_users = Config.sudo_users
-OWNER_ID = Config.OWNER_ID 
-PARTNER = Config.PARTNER
-
-
-#application = Application.builder().token(TOKEN).build()
 application = Application.builder().token(TOKEN).concurrent_updates(True).build()
 shivuu = Client("Shivu", api_id, api_hash, bot_token=TOKEN)
 #app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
+
 lol = AsyncIOMotorClient(mongo_url)
 db = lol['Character_catcher']
 collection = db['anime_characters_lol']
@@ -57,3 +28,16 @@ ban_collection = db['bans']
 main_count = db['counts']
 user_count = db['ucount']
 banned_collection = db['banned']
+
+guild = db["guild_team"]
+gban = db["gban"]
+clan_collection = db['clans']
+join_requests_collection = db['join_requests']
+global_ban_users_collection = db['global_ban_users']
+users_collection = db['user']
+videos_collection = db['videos']
+sales_collection = db['sales']
+blocked_users_collection = db["blocked_users"]
+
+safari_cooldown_collection = db['safari_cooldown_collection']
+safari_users_collection = db['safari_users_collection']
