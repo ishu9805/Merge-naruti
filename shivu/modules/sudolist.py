@@ -149,10 +149,8 @@ async def sudo_list(client, message: Message):
                 user_list.append(f"• User ID: {user_id} (`{user_id}`)")
 
         response_text = f'Total sudo users: {len(user_list)}\n\n' + '\n'.join(user_list)
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Close", callback_data=f"sud_clos_{message.from_user.id}")]]
-        )
-        await message.reply_text(response_text, reply_markup=keyboard)
+        
+        await message.reply_text(response_text)
     except Exception as e:
         await message.reply_text(f"An error occurred while fetching the sudo list: {str(e)}")
 
@@ -173,10 +171,8 @@ async def dev_list(client, message: Message):
                 user_list.append(f"• User ID: {user_id} (`{user_id}`)")
 
         response_text = f'Total developers: {len(user_list)}\n\n' + '\n'.join(user_list)
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Close", callback_data=f"sud_clos_{message.from_user.id}")]]
-        )
-        await message.reply_text(response_text, reply_markup=keyboard)
+        
+        await message.reply_text(response_text)
     except Exception as e:
         await message.reply_text(f"An error occurred while fetching the developer list: {str(e)}")
 
@@ -197,16 +193,8 @@ async def uploader_list(client, message: Message):
                 user_list.append(f"• User ID: {user_id} (`{user_id}`)")
 
         response_text = f'Total uploaders: {len(user_list)}\n\n' + '\n'.join(user_list)
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Close", callback_data=f"sud_clos_{message.from_user.id}")]]
-        )
-        await message.reply_text(response_text, reply_markup=keyboard)
+        
+        await message.reply_text(response_text)
     except Exception as e:
         await message.reply_text(f"An error occurred while fetching the uploader list: {str(e)}")
 
-@app.on_callback_query(filters.regex(r"sud_clos_\d+"))
-async def close_callback(client, callback_query: CallbackQuery):
-    callback_user_id = int(callback_query.data.split("_")[-1])
-    if callback_query.from_user.id != callback_user_id:
-        return await callback_query.answer("This button is not for you!", show_alert=True)
-    await callback_query.message.delete()
