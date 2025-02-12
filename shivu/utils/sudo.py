@@ -1,4 +1,4 @@
-from shivuu import db
+from shivu import db
 from pyrogram import filters
 from pyrogram.types import Message
 import base64
