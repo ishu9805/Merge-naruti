@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuu as bot, user_collection, collection, ban_collection, PARTNER, required_group_id 
-from shivu import LOGGER, application, user_count
+from shivu import application, user_count
 # Constants
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
@@ -44,7 +44,7 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
         characters = await cursor.to_list(length=None)
         return characters
     except Exception as e:
-        logging.error(f"Error fetching unique characters: {e}")
+        print(f"Error fetching unique characters: {e}")
         return []
 
 @bot.on_message(filters.command(["hclaim"]))
@@ -135,7 +135,7 @@ async def hclaim(_, message: t.Message):
             await message.reply_photo(photo=character['img_url'], caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*")
 
     except Exception as e:
-        logging.error(f"Error in hclaim for user {user_id}: {e}")
+        print(f"Error in hclaim for user {user_id}: {e}")
         await message.reply_text("An error occurred while processing your claim. Please try again later.")
     finally:
         claim_lock.pop(user_id, None)
@@ -208,7 +208,7 @@ async def hfind(_, message: t.Message):
         await asyncio.sleep(30)
         await send.delete()
     except Exception as e:
-        logging.error(f"Error sending character info for ID {waifu_id}: {e}")
+        print(f"Error sending character info for ID {waifu_id}: {e}")
         await message.reply_text("🚫 Failed to send character information. Please try again later.")
         
 
