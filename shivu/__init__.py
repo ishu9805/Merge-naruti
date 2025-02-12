@@ -9,6 +9,14 @@ from resolve_peer import ResolvePeer
 
 from config import *
 
+class Client(PyrogramClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    async def resolve_peer(self, id):
+        obj = ResolvePeer(self)
+        return await obj.resolve_peer(id)
+
 
 application = Application.builder().token(TOKEN).concurrent_updates(True).build()
 shivuu = Client("Shivu", api_id, api_hash, bot_token=TOKEN)
