@@ -3,7 +3,7 @@ import importlib
 import random
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, Application
-from shivu import collection, user_collection, shivuu, LOGGER
+from shivu import collection, user_collection, shivuu
 
 from shivu import application, ban_collection
 
