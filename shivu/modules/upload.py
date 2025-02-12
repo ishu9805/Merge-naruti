@@ -12,7 +12,14 @@ from pyrogram import filters
 from shivu import shivuu, collection
 from pyrogram.types import InputMediaPhoto
 import os
-
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pymongo import ReturnDocument, UpdateOne
+import urllib.request
+import random
+from . import sudo_filter, app
+from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
+from . import uploader_filter
 
 # Channel ID for posting character information (replace with your actual channel ID)
 CHARA_CHANNEL_ID = -1002117539029
@@ -184,47 +191,38 @@ async def ul(client, message):
                 active_ids.discard(available_id)  # Remove the ID from the active set once done
     else:
         await message.reply_text("Please reply to a photo or document.")
+
+
         
-async def delete(update: Update, context: CallbackContext) -> None:
-    if str(update.effective_user.id) not in sudo_users:
-        await update.message.reply_text('You do not have permission to use this command.')
+@app.on_message(filters.command('delete') & sudo_filter)
+async def delete(client: Client, message: Message):
+    args = message.text.split(maxsplit=1)[1:]
+    if len(args) != 1:
+        await message.reply_text('Incorrect format... Please use: /delete ID')
         return
 
-    try:
-        args = context.args
-        if len(args) != 1:
-            await update.message.reply_text('Incorrect format. Please use: /delete_character <id>')
-            return
+    character_id = args[0]
+    character = await collection.find_one_and_delete({'id': character_id})
 
-        # Extract character ID
-        character_id = args[0]
+    if character:
+        await client.delete_messages(chat_id=CHARA_CHANNEL_ID, message_ids=character['message_id'])
 
-        # Delete the character from the main collection
-        main_result = await collection.delete_one({"id": character_id})
-        if main_result.deleted_count == 0:
-            await update.message.reply_text("Character not found in the main collection.")
-            return
+        bulk_operations = []
+        async for user in user_collection.find():
+            if 'characters' in user:
+                user['characters'] = [char for char in user['characters'] if char['id'] != character_id]
+                bulk_operations.append(
+                    UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+                )
 
-        # Delete the character from user collections
-        user_result = await user_collection.update_many(
-            {"characters.id": character_id},
-            {"$pull": {"characters": {"id": character_id}}}
-        )
+        if bulk_operations:
+            await user_collection.bulk_write(bulk_operations)
 
-        if user_result.modified_count > 0:
-            await update.message.reply_text(
-                f"Character with ID {character_id} deleted successfully.\n"
-                f"Removed from {user_result.modified_count} user collections."
-            )
-        else:
-            await update.message.reply_text(
-                f"Character with ID {character_id} deleted from the main collection but not found in user collections."
-            )
+        await message.reply_text('Character deleted from database and all user collections.')
+    else:
+        await message.reply_text('Character not found in database.')
 
-    except Exception as e:
-        await update.message.reply_text(f"An error occurred: {str(e)}")
 
-       
 
 async def check_total_characters(update: Update, context: CallbackContext) -> None:
     try:
@@ -235,81 +233,9 @@ async def check_total_characters(update: Update, context: CallbackContext) -> No
         await update.message.reply_text(f"Error occurred: {e}")
 
 
-async def add_sudo_user(update: Update, context: CallbackContext) -> None:
-    if int(update.effective_user.id) == 6257270528:  # Replace OWNER_ID with the ID of the bot owner
-        if update.message.reply_to_message and update.message.reply_to_message.from_user:
-            new_sudo_user_id = str(update.message.reply_to_message.from_user.id)
-            if new_sudo_user_id not in sudo_users:
-                sudo_users.append(new_sudo_user_id)
-                await update.message.reply_text("User added to sudo users.")
-            else:
-                await update.message.reply_text("User is already in sudo users.")
-        else:
-            await update.message.reply_text("Please reply to a message from the user you want to add to sudo users.")
-    else:
-        await update.message.reply_text("You are not authorized to use this command.")
 
 
 
-async def updates(update: Update, context: CallbackContext) -> None:
-    if str(update.effective_user.id) not in sudo_users:
-        await update.message.reply_text('You do not have permission to use this command.')
-        return
-
-    try:
-        args = context.args
-        if len(args) != 3:
-            await update.message.reply_text('Incorrect format. Please use: /update_character_all id field new_value')
-            return
-
-        # Extract arguments
-        character_id = args[0]
-        field = args[1]
-        new_value = args[2]
-
-        # Check if the field is valid
-        valid_fields = ['img_url', 'name', 'anime', 'rarity']
-        if field not in valid_fields:
-            await update.message.reply_text(f'Invalid field. Please use one of the following: {", ".join(valid_fields)}')
-            return
-
-        # Adjust value formatting
-        if field in ['name', 'anime']:
-            new_value = new_value.replace('-', ' ').title()
-        elif field == 'rarity':
-            rarity_map = {
-                1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
-                5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
-                8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
-                12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
-                15: "🎭 Cosplay Master 🎭", 16: "🎖 Apex Lot ( AUCTION )"
-            }
-            try:
-                new_value = rarity_map[int(new_value)]
-            except (ValueError, KeyError):
-                await update.message.reply_text('Invalid rarity. Please provide a valid rarity number.')
-                return
-
-        collection_result = await collection.update_one(
-            {"id": character_id},
-            {"$set": {field: new_value}}
-        )
-        # Update the character in `user_collection`
-        user_result = await user_collection.update_many(
-            {"characters.id": character_id},
-            {"$set": {f"characters.$[elem].{field}": new_value}},
-            array_filters=[{"elem.id": character_id}]
-        )
-
-        total_modified = collection_result.modified_count + user_result.modified_count
-
-        if total_modified == 0:
-            await update.message.reply_text("Character not found in any collection.")
-        else:
-            await update.message.reply_text(f"Character updated successfully in {total_modified} documents across all collections.")
-
-    except Exception as e:
-        await update.message.reply_text(f"An error occurred: {str(e)}")
 
 async def check(update: Update, context: CallbackContext) -> None:    
     try:
@@ -347,22 +273,135 @@ async def check(update: Update, context: CallbackContext) -> None:
 
 
 
-ADD_SUDO_USER_HANDLER = CommandHandler('add_sudo_user', add_sudo_user, block=False)
-application.add_handler(ADD_SUDO_USER_HANDLER)
-       
-        
-
-ADD_SUDO_USER_HANDLER = CommandHandler('addsudo', add_sudo_user, block=False)
-application.add_handler(ADD_SUDO_USER_HANDLER)
-
-
 application.add_handler(CommandHandler("total", check_total_characters))
 
+@app.on_message(filters.command('update') & uploader_filter)
+async def update(client: Client, message: Message):
+    args = message.text.split(maxsplit=3)[1:]
+    if len(args) != 3:
+        await message.reply_text('Incorrect format. Please use: /update id field new_value')
+        return
 
-DELETE_HANDLER = CommandHandler('delete', delete, block=False)
-application.add_handler(DELETE_HANDLER)
-UPDATE_HANDLER = CommandHandler('update', updates, block=False)
-application.add_handler(UPDATE_HANDLER)
+    character_id = args[0]
+    field = args[1]
+    new_value = args[2]
+
+    character = await collection.find_one({'id': character_id})
+    if not character:
+        await message.reply_text('Character not found.')
+        return
+
+    valid_fields = ['img_url', 'name', 'anime', 'rarity']
+    if field not in valid_fields:
+        await message.reply_text(f'Invalid field. Please use one of the following: {", ".join(valid_fields)}')
+        return
+
+    if field in ['name', 'anime']:
+        new_value = new_value.replace('-', ' ').title()
+    elif field == 'rarity':
+        try:
+            new_value = rarity_map[int(new_value)]
+        except KeyError:
+            await message.reply_text('Invalid rarity. Please use a number between 1 and 10.')
+            return
+
+    await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
+
+    bulk_operations = []
+    async for user in user_collection.find():
+        if 'characters' in user:
+            for char in user['characters']:
+                if char['id'] == character_id:
+                    char[field] = new_value
+            bulk_operations.append(
+                UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+            )
+
+    if bulk_operations:
+        await user_collection.bulk_write(bulk_operations)
+
+    await message.reply_text('Update done in Database and all user collections.')
+
+@app.on_message(filters.command('r') & sudo_filter)
+async def update_rarity(client: Client, message: Message):
+    args = message.text.split(maxsplit=2)[1:]
+    if len(args) != 2:
+        await message.reply_text('Incorrect format. Please use: /r id rarity')
+        return
+
+    character_id = args[0]
+    new_rarity = args[1]
+
+    character = await collection.find_one({'id': character_id})
+    if not character:
+        await message.reply_text('Character not found.')
+        return
+
+    try:
+        new_rarity_value = rarity_map[int(new_rarity)]
+    except KeyError:
+        await message.reply_text('Invalid rarity. Please use a number between 1 and 10.')
+        return
+
+    await collection.update_one({'id': character_id}, {'$set': {'rarity': new_rarity_value}})
+
+    bulk_operations = []
+    async for user in user_collection.find():
+        if 'characters' in user:
+            for char in user['characters']:
+                if char['id'] == character_id:
+                    char['rarity'] = new_rarity_value
+            bulk_operations.append(
+                UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+            )
+
+    if bulk_operations:
+        await user_collection.bulk_write(bulk_operations)
+
+    await message.reply_text('Rarity updated in Database and all user collections.')
+
+
+@app.on_message(filters.command('arrange') & sudo_filter)
+async def arrange_characters(client: Client, message: Message):
+    characters = await collection.find().sort('id', 1).to_list(length=None)
+    if not characters:
+        await message.reply_text('No characters found in the database.')
+        return
+
+    old_to_new_id_map = {}
+    new_id_counter = 1
+
+    bulk_operations = []
+    for character in characters:
+        old_id = character['id']
+        new_id = str(new_id_counter).zfill(2)
+        old_to_new_id_map[old_id] = new_id
+
+        if old_id != new_id:
+            bulk_operations.append(
+                UpdateOne({'_id': character['_id']}, {'$set': {'id': new_id}})
+            )
+        new_id_counter += 1
+
+    if bulk_operations:
+        await collection.bulk_write(bulk_operations)
+
+    user_bulk_operations = []
+    async for user in user_collection.find():
+        if 'characters' in user:
+            for char in user['characters']:
+                if char['id'] in old_to_new_id_map:
+                    char['id'] = old_to_new_id_map[char['id']]
+            user_bulk_operations.append(
+                UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+            )
+
+    if user_bulk_operations:
+        await user_collection.bulk_write(user_bulk_operations)
+
+    await message.reply_text('Characters have been rearranged and')
+    
+
 
 
 CHECK_HANDLER = CommandHandler('f', check, block=False)
