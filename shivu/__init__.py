@@ -4,7 +4,7 @@ from pyrogram import Client
 from telegram.ext import Application
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-
+from resolve_peer import ResolvePeer
 
 
 from config import *
