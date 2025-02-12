@@ -20,8 +20,8 @@ from shivu import (
     SUPPORT_CHAT,
     UPDATE_CHAT,
     db,
-    ban_collection,
-    LOGGER
+    ban_collection
+    
 )
 from shivu import user_count
 from shivu.modules import ALL_MODULES
@@ -39,14 +39,17 @@ async def preload_characters(context: CallbackContext) -> None:
         all_characters = await collection.find({}).to_list(length=None)
         
         if all_characters:
-            LOGGER.info(f"Preloaded {len(all_characters)} characters from the main characters from the collection.")
+            print(f"Preloaded {len(all_characters)} characters from the main characters from the collection.")
         else:
-            LOGGER.warning("No characters found in the databases.")
+            print("No characters found in the databases.")
     except Exception as e:
-        LOGGER.error(f"Error preloading characters: {e}")
+        print(f"Error preloading characters: {e}")
 
 async def react_to_message(chat_id, message_id, emoji):
-    await shivuu.send_reaction(chat_id, message_id, emoji)
+    try:
+       await shivuu.send_reaction(chat_id, message_id, emoji)
+    except:
+       pass
 
 locks = {}
 message_counters = {}
@@ -268,7 +271,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     valentine_characters = [c for c in all_characters if c.get('rarity') == '💝 Valentine']
 
     if not valentine_characters:
-        LOGGER.warning("No Valentine characters found in the database.")
+        print("No Valentine characters found in the database.")
         return
 
     # Select a random Valentine character
@@ -287,7 +290,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     global_count = sum(user['count'] for user in user_ownership_data)
 
     if global_count >= 15:
-        LOGGER.info(f"Valentine character {waifu_id} has reached the global ownership limit.")
+        print(f"Valentine character {waifu_id} has reached the global ownership limit.")
         return
 
     # Send the character to the chat
@@ -462,7 +465,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
 
    
 
-async def fav(update: Update, context: CallbackContext) -> None:
+"""async def fav(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
@@ -487,7 +490,7 @@ async def fav(update: Update, context: CallbackContext) -> None:
     user['favorites'] = [character_id]
     await user_collection.update_one({'id': user_id}, {'$set': {'favorites': user['favorites']}})
 
-    await update.message.reply_text(f'🌟 {character["name"]} has been added to your favorites!')
+    await update.message.reply_text(f'🌟 {character["name"]} has been added to your favorites!')"""
 
 
 
@@ -501,13 +504,13 @@ async def fav(update: Update, context: CallbackContext) -> None:
 
 def error_handler(update: Update, context: CallbackContext):
     """Log the error and handle it gracefully."""
-    LOGGER.error("An error occurred: %s", context.error)
+    print("An error occurred: %s", context.error)
 
 def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
-    application.add_handler(CommandHandler("fav", fav, block=False))
+    #application.add_handler(CommandHandler("fav", fav, block=False))
     application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
     #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
