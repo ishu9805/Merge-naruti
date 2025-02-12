@@ -7,7 +7,7 @@ import asyncio
 from resolve_peer import ResolvePeer
 
 
-from config import *
+from .config import *
 
 class Client(PyrogramClient):
     def __init__(self, *args, **kwargs):
