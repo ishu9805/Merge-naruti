@@ -1,6 +1,6 @@
 
     # Get this value from my.telegram.org/app
-OWNER_ID = "7378476666"
+OWNER_ID = 7378476666
 PARTNER =  "7378476666", "1744744841"
 sudo_users =  "7378476666", "1744744841"
 GROUP_ID = -1002198664660
