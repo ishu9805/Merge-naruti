@@ -1,4 +1,4 @@
-afrom pyrogram import Client, filters
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from shivu import user_collection, ban_collection
