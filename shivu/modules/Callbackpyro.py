@@ -1,6 +1,6 @@
 import asyncio
 #from telethon import events, Button
-#from telethon.sync import TelegramClient
+#from telethon.sync import TelegramClient and 
 from pymongo import MongoClient
 from shivu import shivuu as app
 from shivu import user_collection, ban_collection
@@ -71,7 +71,7 @@ async def callback_query_handler(client, callback_query):
             )
             await callback_query.edit_message_caption(f"Your rarity mode is now set to {rarity_mode}.")
 
-        elif data == "rarity_mode:default":
+        elif data == "rarity_mode:All":
             # Set the rarity mode to "All"
             await user_collection.update_one(
                 {'id': callback_query.from_user.id},
