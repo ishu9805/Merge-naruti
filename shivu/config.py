@@ -7,7 +7,7 @@ GROUP_ID = -1002198664660
     #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-tI"
 TOKEN = "7107840748:AAHiKR-lF03Dh-P-GlODsTkYk-I0eBgNKW8"
 mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-PHOTO_URL = ["https://telegra.ph/file/a75e0d1a655943665b662.jpg", "https://telegra.ph/file/bee112f781897c3447515.jpg", "https://telegra.ph/file/a0123f958a26695bd9e14.jpg"]
+PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "naruto_support_chat"
 UPDATE_CHAT = "blade_x_community"
 BOT_USERNAME = "Fancy_Waifu_Husbando_Bot"
