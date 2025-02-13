@@ -11,7 +11,7 @@ from .block import block_dec, temp_block
 active_scrabbles = {}
 MAX_ATTEMPTS = 3
 WIN_LIMIT = 15
-COOLDOWN_TIME = 45
+COOLDOWN_TIME = 50
 cooldown_users = {}
 
 # Define allowed rarities
@@ -132,7 +132,7 @@ async def check_answer(client, message: Message):
         await user_collection.replace_one({'id': user_id}, user_data, upsert=True)
 
         # Check if the win count is a multiple of 10
-        if user_data['wins'] % 6 == 0:
+        if user_data['wins'] % 10 == 0:
             try:
                 await message.reply_photo(
                     photo=scrabble_data['character']['img_url'],
