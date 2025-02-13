@@ -25,7 +25,7 @@ async def nhmode(client, message):
     buttons = [
         [
             InlineKeyboardButton("BY RARITY", callback_data="rarity_mode:see_by_rarities"),
-            InlineKeyboardButton("DEFAULT", callback_data="rarity_mode:default")
+            InlineKeyboardButton("DEFAULT", callback_data="rarity_mode:ALL")
         ]
     ]
 
