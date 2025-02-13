@@ -2,11 +2,177 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import random
+import re
 from datetime import datetime
 from pytz import timezone
-from . import collection, user_collection, app, nopvt
+from . import user_collection, app, nopvt
 from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
+
+# Predefined list of words
+WORDS_LIST = [
+
+    # Popular Anime Characters (Main Series)
+    "Naruto Uzumaki", "Sasuke Uchiha", "Sakura Haruno", "Kakashi Hatake",
+    "Itachi Uchiha", "Gaara", "Shikamaru Nara", "Ino Yamanaka", "Hinata Hyuga",
+    "Rock Lee", "Neji Hyuga", "Tsunade Senju", "Jiraiya", "Minato Namikaze", 
+    "Madara Uchiha", "Hashirama Senju", "Obito Uchiha", "Kushina Uzumaki",
+    "Pain (Nagato)", "Konan", "Deidara", "Hidan", "Zetsu", "Kabuto Yakushi", 
+
+    "Monkey D. Luffy", "Roronoa Zoro", "Nami", "Sanji Vinsmoke", 
+    "Nico Robin", "Usopp", "Franky", "Brook", "Jinbe", "Shanks", 
+    "Portgas D. Ace", "Gol D. Roger", "Kaido", "Big Mom", "Trafalgar Law", 
+    "Eustass Kid", "Yamato", "Boa Hancock", 
+
+    # Bleach: Thousand-Year Blood War
+    "Ichigo Kurosaki", "Rukia Kuchiki", "Renji Abarai", 
+    "Byakuya Kuchiki", "Toshiro Hitsugaya", "Uryu Ishida", 
+    "Yhwach", "Kenpachi Zaraki", "Shunsui Kyoraku", "Sosuke Aizen",
+
+    # Expand more series here, adding a variety of genres and sources...
+
+    # Honkai Star Rail
+    "Trailblazer", "Kafka", "Silver Wolf", "Dan Heng", "March 7th", 
+    "Himeko", "Welt", "Bronya", "Seele", "Clara", "Gepard", "Serval", 
+    "Sampo", "Natasha", "Hook", "Pela", "Arlan", "Asta", "Yanqing", 
+    "Bailu", "Jing Yuan", "Tingyun", "Luocha", "Sushang", "Fu Xuan", 
+    "Yukong", "Blade", "Topaz", "Guinaifen", "Hanabi", "Jingliu", 
+
+    # Games: Genshin Impact
+    "Albedo", "Amber", "Barbara", "Beidou", "Bennett", "Chongyun", 
+    "Diluc", "Diona", "Eula", "Fischl", "Ganyu", "Hu Tao", "Jean", 
+    "Kaeya", "Kazuha", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", 
+    "Noelle", "Qiqi", "Razor", "Rosaria", "Sayu", "Sucrose", "Tartaglia", 
+    "Venti", "Xiangling", "Xiao", "Xinyan", "Yanfei", "Yoimiya", 
+    "Zhongli", "Itto", "Gorou", "Shenhe", "Yelan", "Kuki Shinobu", 
+    "Tighnari", "Collei", "Dori", "Candace", "Cyno", "Alhaitham", 
+
+    # Studio Ghibli Characters
+    "Chihiro Ogino", "Haku Kohaku", "Sophie Hatter", "Howl Pendragon",
+    "San (Princess Mononoke)", "Ashitaka", "Kiki (Kiki's Delivery Service)",
+    "Totoro", "Mei Kusakabe", "Satsuki Kusakabe", 
+
+    # Light Novels
+    "Ainz Ooal Gown", "Shalltear Bloodfallen", "Albedo (Overlord)",
+    "Kirito (SAO)", "Asuna Yuuki", "Eugeo (Sword Art Online)", 
+    "Hajime Nagumo (Arifureta)", "Kaori Shirasaki", 
+
+    # Manga / Webtoons
+    "Sung Jin-Woo (Solo Leveling)", "Cha Hae-In", "Gojou Satoru", 
+    "Itadori Yuji", "Fushiguro Megumi", "Ryomen Sukuna", 
+
+    # Dota 2 / MOBA Games
+    "Invoker", "Anti-Mage", "Crystal Maiden", "Riki", "Lina", 
+    "Phantom Assassin", "Spectre", "Windranger", "Ember Spirit", 
+
+    # Overwatch
+    "Tracer", "Reaper", "Widowmaker", "Mercy", "D.Va", 
+    "Bastion", "Hanzo", "Genji", "Lucio", "Zenyatta", 
+
+    # Genshin Impact
+    "Albedo", "Amber", "Barbara", "Beidou", "Bennett", "Chongyun", 
+    "Diluc", "Diona", "Eula", "Fischl", "Ganyu", "Hu Tao", "Jean", 
+    "Kaeya", "Kazuha", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", 
+    "Noelle", "Qiqi", "Razor", "Rosaria", "Sayu", "Sucrose", "Tartaglia", 
+    "Venti", "Xiangling", "Xiao", "Xinyan", "Yanfei", "Yoimiya", 
+    "Zhongli", "Itto", "Gorou", "Shenhe", "Yelan", "Kuki Shinobu", 
+    "Tighnari", "Collei", "Dori", "Candace", "Cyno", "Alhaitham", 
+    "Dehya", "Mika", "Kirara", "Lynette", "Lyney", "Freminet", 
+    "Neuvillette", "Wriothesley", "Navia", "Clorinde", "Arlecchino",
+
+    # Honkai Star Rail
+    "Trailblazer", "Kafka", "Silver Wolf", "Dan Heng", "March 7th", 
+    "Himeko", "Welt", "Bronya", "Seele", "Clara", "Gepard", "Serval", 
+    "Sampo", "Natasha", "Hook", "Pela", "Arlan", "Asta", "Yanqing", 
+    "Bailu", "Jing Yuan", "Tingyun", "Luocha", "Sushang", "Fu Xuan", 
+    "Yukong", "Blade", "Topaz", "Guinaifen", "Hanabi", "Jingliu", 
+    "Imbibitor Lunae", "Lynx", "Herta", "Qingque", "Svarog", "Cocolia", 
+    "Aurora", "Gu Yuan", "Yun Yun", "Jia Nan", "Tian Lei", 
+
+    # BTTH
+    "Xiao Yan", "Xiao Xun'er", "Nalan Yanran", "Yao Lao", "Hun Tiandi", 
+    "Hai Po Dong", "Jia Xing Tian", "Zi Yan", "Fa Ma", "Mu Chen", 
+    "Dou Sheng", "Dou Zun", "Queen Medusa", "Han Feng", "Tian Lei", 
+
+    # Douglas (The Legendary Mechanic)
+    "Han Xiao", "Hila", "Aurora", "Herlous", "Aroshia", "Feidin", 
+    "Black Star", "EsGod", "Manison", "Reynold", "Hila Nanobot", 
+
+    # Trending Anime (Attack on Titan, Demon Slayer, Jujutsu Kaisen, etc.)
+    "Eren Yeager", "Mikasa Ackerman", "Armin Arlert", "Levi Ackerman", 
+    "Hange Zoe", "Jean Kirstein", "Reiner Braun", "Annie Leonhart", 
+    "Zeke Yeager", "Historia Reiss", "Tanjiro Kamado", "Nezuko Kamado", 
+    "Zenitsu Agatsuma", "Inosuke Hashibira", "Kyojuro Rengoku", 
+    "Satoru Gojo", "Yuji Itadori", "Megumi Fushiguro", "Ryomen Sukuna", 
+    "Yuta Okkotsu", "Jing Yuan", "Ichigo Kurosaki", "Byakuya Kuchiki", 
+    "Shunsui Kyoraku", "Rukia Kuchiki", "Seishiro Nagi", "Yoichi Isagi", 
+    "Takemichi Hanagaki", "Mikey", "Draken", "Hajime Nagumo", 
+    "Rudeus Greyrat", "Sylphy", "Kaori Shirasaki", "Rimuru Tempest", 
+    "Milim Nava", "Vash the Stampede", "Loid Forger", "Yor Forger", 
+    "Anya Forger", "Denji Chainsaw", "Makima", "Power", "Aki Hayakawa"
+
+
+    # Playable Characters
+    "Trailblazer", "Kafka", "Silver Wolf", "Dan Heng", "March 7th", 
+    "Himeko", "Welt", "Bronya", "Seele", "Clara", "Gepard", 
+    "Serval", "Sampo", "Natasha", "Hook", "Pela", "Arlan", 
+    "Asta", "Yanqing", "Bailu", "Jing Yuan", "Tingyun", 
+    "Luocha", "Sushang", "Fu Xuan", "Yukong", "Blade", "Topaz", 
+    "Guinaifen", "Hanabi", "Jingliu", "Imbibitor Lunae", "Lynx", 
+    "Herta", "Qingque", "Svarog",
+
+    # Antagonists & NPCs
+    "Cocolia", "Svarog", "Bronya Rand", "Stelle", "Caelus", 
+    "Elio", "Sampo Koski", "Hook Ingenuity", "Silvermane Guards", 
+    "Aurora", "Natasha Pupil", "Svarog Automaton",
+
+    # Organizations
+    "Astral Express", "Antimatter Legion", "Xianzhou Alliance", 
+    "Stellaron Hunters", "Ebon Deer", "Genius Society", 
+
+    # Planets & Factions
+    "Jarilo VI", "Herta Space Station", "Belobog", "Xianzhou Luofu", 
+    "The Abundance", "The Hunt", "The Preservation", "The Nihility", 
+    "The Destruction", "The Harmony", "The Elation",
+
+    # Others
+    "Kafka Stellaron", "Jing Yuan Arbiter", "Blade Mara", "Pela Tactician",
+    "Luocha Physician", "Yanqing Prodigy", "Tingyun Ambassador", 
+    "Fu Xuan Diviner", "Yukong Navigator", "Topaz Prospector", 
+    "Imbibitor Lunae", "Clara Engineering", "Bronya Supreme Guardian", 
+    "March Memory", "Dan Heng Vidyadhara", "Seele Butterfly",
+    "Himeko Navigator", "Welt Observer", "Hook Underworld", "Qingque Divination"
+
+    "Aether", "Lumine", "Venti", "Amber", "Kaeya", "Lisa", "Jean", 
+    "Diluc", "Razor", "Barbara", "Fischl", "Beidou", "Ningguang", 
+    "Xiangling", "Xingqiu", "Chongyun", "Keqing", "Sucrose", 
+    "Mona", "Diona", "Albedo", "Ganyu", "Hu Tao", "Rosaria", 
+    "Eula", "Kazuha", "Yoimiya", "Ayaka", "Sayu", "Kokomi", 
+    "Raiden", "Sara", "Gorou", "Itto", "Shenhe", "Yunjin", 
+    "Yae Miko", "Ayato", "Collei", "Tighnari", "Cyno", 
+    "Candace", "Nilou", "Nahida", "Layla", "Faruzan", "Wanderer", 
+    "Dehya", "Mika", "Baizhu", "Kaveh", "Alhaitham", "Lynette", 
+    "Lyney", "Neuvillette", "Furina", "Arlecchino", "Clorinde", 
+    "Chiori", "La Signora", "Pantalone", "Pierro", "Dottore", 
+    "Sandrone", "Pulcinella", "Tartaglia", "Scaramouche", 
+    "Kaedehara Kazuha", "Kamisato Ayaka", "Kamisato Ayato", 
+    "Sangonomiya Kokomi", "Raiden Shogun", "Arataki Itto", 
+    "Yae Miko", "Thoma", "Shikanoin Heizou", "Yun Jin", "Candace", 
+    "Dehya", "Tighnari", "Collei", "Cyno", "Alhaitham", 
+    "Kaveh", "Mika", "Baizhu", "Furina", "Lynette", "Lyney", 
+    "Neuvillette", "Dainsleif", "Zhongli", "Eula Lawrence", 
+    "Klee Gunnhildr", "Jean Gunnhildr", "Diluc Ragnvindr", 
+    "Kaeya Alberich", "Amber Burbank", "Bennett", "Xiangling", 
+    "Beidou", "Ningguang", "Razor", "Fischl von Luftschloss Narfidort", 
+    "Barbara Pegg", "Rosaria Deacon", "Sucrose Scholarly", "Xinyan", 
+    "Hu Tao", "Mona Megistus", "Chongyun", "Xingqiu", "Zhongli", 
+    "Qiqi", "Ganyu", "Keqing", "Diona", "Albedo", "Yelan", 
+    "Traveler"
+]
+
+
+
+
 
 active_scrabbles = {}
 MAX_ATTEMPTS = 3
@@ -14,7 +180,7 @@ WIN_LIMIT = 15
 COOLDOWN_TIME = 50
 cooldown_users = {}
 
-# Define allowed rarities
+# Define allowed rarities (not used in this version)
 ALLOWED_RARITIES = {
     "⚪️ Common",
     "🟣 Rare",
@@ -28,35 +194,15 @@ LIMITED_EDITION_RARITY = "🔮 Limited Edition"
 # Probability of getting a Limited Edition character (e.g., 5% chance)
 LIMITED_EDITION_CHANCE = 0.05
 
-async def get_limited_edition_character():
-    # Fetch a Limited Edition character
-    limited_character = await collection.find_one({
-        'rarity': LIMITED_EDITION_RARITY
-    })
-    if not limited_character:
-        raise ValueError("No Limited Edition character found in the database.")
-    return limited_character
-
 def is_new_day(last_win_time):
     ist = timezone('Asia/Kolkata')
     now_ist = datetime.now(ist)
     last_win_ist = last_win_time.astimezone(ist)
     return now_ist.date() != last_win_ist.date()
 
-async def get_random_character():
-    # Fetch characters with allowed rarities
-    all_characters = await collection.find({
-        'id': {'$gte': '01', '$lte': '1100'},
-        'rarity': {'$in': list(ALLOWED_RARITIES)}
-    }).to_list(length=None)
-    
-    if not all_characters:
-        raise ValueError("No characters found with the allowed rarities.")
-    
-    while True:
-        character = random.choice(all_characters)
-        if len(character['name'].split()[0]) > 5:  # Ensure word length > 5
-            return character
+def get_random_word():
+    # Select a random word from the predefined list
+    return random.choice(WORDS_LIST)
 
 def scramble_word(word):
     if len(word) <= 5:
@@ -65,13 +211,19 @@ def scramble_word(word):
     random.shuffle(word_list)
     return ''.join(word_list)
 
-def provide_hint(word, attempts):
+def scramble_phrase(phrase):
+    words = phrase.split()
+    scrambled_words = [scramble_word(word) for word in words]
+    return ' '.join(scrambled_words)
+
+def provide_hint(phrase, attempts):
+    words = phrase.split()
     if attempts == 1:
-        return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 2)}"
+        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 2) for word in words])}"
     elif attempts == 2:
-        return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 3)}{word[-1]}"
+        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 3) + word[-1] for word in words])}"
     else:
-        return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 3)}{word[-1]}"
+        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 3) + word[-1] for word in words])}"
 
 @app.on_message(filters.command("scramble"))
 @block_dec
@@ -92,23 +244,21 @@ async def scrabble(client, message: Message):
         await message.reply_text("🚨 You already have an active game. Finish it first! or use /xshuffle")
         return
 
-    character = await get_random_character()
-    first_word = character['name'].split()[0]
-    scrambled_word = scramble_word(first_word)
+    phrase = get_random_word()
+    scrambled_phrase = scramble_phrase(phrase)
 
     active_scrabbles[user_id] = {
-        'character': character,
-        'word': first_word,
-        'scrambled_word': scrambled_word,
+        'phrase': phrase,
+        'scrambled_phrase': scrambled_phrase,
         'start_time': datetime.now(),
         'attempts': 0
     }
 
     await message.reply_text(
         f"🎲 **Welcome to Word Resembled Game!** 🎲\n\n"
-        f"🔠 Unshuffle this word:\n\n"
-        f"✨ `{scrambled_word}` ✨\n\n"
-        f"⏳ You have *{MAX_ATTEMPTS} attempts* to guess the word.\n"
+        f"🔠 Unshuffle this phrase:\n\n"
+        f"✨ `{scrambled_phrase}` ✨\n\n"
+        f"⏳ You have *{MAX_ATTEMPTS} attempts* to guess the phrase.\n"
         f"❌ Use /xshuffle to end the game."
     )
 
@@ -138,7 +288,7 @@ async def check_answer(client, message: Message):
         if 'limited_edition_awarded' not in user_data:
             user_data['limited_edition_awarded'] = False
 
-    if answer.lower() == scrabble_data['word'].lower():
+    if answer.lower() == scrabble_data['phrase'].lower():
         now = datetime.now()
 
         user_data['wins'] += 1
@@ -146,24 +296,22 @@ async def check_answer(client, message: Message):
 
         # Check if the user gets a Limited Edition character (random chance)
         if not user_data['limited_edition_awarded'] and random.random() < LIMITED_EDITION_CHANCE:
-            limited_character = await get_limited_edition_character()
-            await message.reply_photo(
-                photo=limited_character['img_url'],
-                caption=f"🎉 *You won!* 🎉\n\n"
-                        f"🏆 {limited_character['name']} ({limited_character['rarity']}) has been added to your collection!"
+            await message.reply_text(
+                f"🎉 *You won!* 🎉\n\n"
+                f"🏆 You've unlocked a **🔮 Limited Edition** reward!\n\n"
+                f"💰 You've also won 100 coins!"
             )
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': limited_character}})
+            await user_collection.update_one({'id': user_id}, {'$inc': {'coins': 100}})
             user_data['limited_edition_awarded'] = True
 
-        # Award regular character on every 10th win
+        # Award regular reward on every 10th win
         elif user_data['wins'] % 10 == 0:
-            character = await get_random_character()
-            await message.reply_photo(
-                photo=character['img_url'],
-                caption=f"🎉 *You won!* 🎉\n\n"
-                        f"🏆 {character['name']} ({character['rarity']}) has been added to your collection!"
+            await message.reply_text(
+                f"🎉 *You won!* 🎉\n\n"
+                f"🏆 You've reached a milestone! Here's 50 coins!\n\n"
+                f"💰 Total Wins: {user_data['wins']}"
             )
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+            await user_collection.update_one({'id': user_id}, {'$inc': {'coins': 50}})
     
         else:
             gold = random.randint(20, 60)
@@ -182,14 +330,14 @@ async def check_answer(client, message: Message):
     elif scrabble_data['attempts'] >= MAX_ATTEMPTS:
         await message.reply_text(
             f"❌ *Out of attempts!* ❌\n\n"
-            f"🔠 The correct word was: `{scrabble_data['word']}`"
+            f"🔠 The correct phrase was: `{scrabble_data['phrase']}`"
         )
         del active_scrabbles[user_id]
     else:
-        hint = provide_hint(scrabble_data['word'], scrabble_data['attempts'])
+        hint = provide_hint(scrabble_data['phrase'], scrabble_data['attempts'])
         await message.reply_text(
             f"❌ *Incorrect!* ❌\n\n"
-            f"🔠 Scrambled Word: `{scrabble_data['scrambled_word']}`\n\n"
+            f"🔠 Scrambled Phrase: `{scrabble_data['scrambled_phrase']}`\n\n"
             f"{hint}\n\n"
             f"🔄 Try again!"
         )
