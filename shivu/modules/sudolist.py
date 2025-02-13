@@ -79,7 +79,7 @@ async def remove_dev(client, message: Message):
         except Exception:
             return await message.reply_text("Please reply to a user or provide a valid user ID.")
 
-    if tar == 7455169019:
+    if tar == 6769185674:
         return await message.reply_text("This developer cannot be removed.")
 
     if not await devb.find_one({'user_id': tar}):
