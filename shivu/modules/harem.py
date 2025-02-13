@@ -53,12 +53,12 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
     rarity_mode = await get_user_rarity_mode(user_id)
-    ucharacters = list({character['id']: character for character in characters}.values())
+    unique_characters = list({character['id']: character for character in characters}.values())
     character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x['id'])}
     total_count = len(characters)
     
     if rarity_mode != 'All':
-        unique_characters = [char for char in ucharacters if char.get('rarity') == rarity_mode]
+        unique_characters = [char for char in unique_characters if char.get('rarity') == rarity_mode]
 
     
     total_pages = math.ceil(len(unique_characters) / 20)
