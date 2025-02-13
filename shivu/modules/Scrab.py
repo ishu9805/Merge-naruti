@@ -132,7 +132,7 @@ async def check_answer(client, message: Message):
         await user_collection.replace_one({'id': user_id}, user_data, upsert=True)
 
         # Check if the win count is a multiple of 10
-        if user_data['wins'] % 5 == 0:
+        if user_data['wins'] % 6 == 0:
             try:
                 await message.reply_photo(
                     photo=scrabble_data['character']['img_url'],
@@ -149,7 +149,7 @@ async def check_answer(client, message: Message):
             
             await user_collection.update_one({'id': user_id}, {'$push': {'characters': scrabble_data['character']}})
         else:
-            gold = random.randint(30, 60)
+            gold = random.randint(20, 60)
             await message.reply_text(
                 f"🎉 *You won!* 🎉\n\n"
                 f"💰 You've won {gold} coins!\n\n"
