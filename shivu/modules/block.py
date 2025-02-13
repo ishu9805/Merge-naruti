@@ -12,7 +12,7 @@ bdb = db.block
 
 def temp_block(user_id):
     if user_id in t_block:
-        if int(time.time() - t_block[user_id]) > 600:
+        if int(time.time() - t_block[user_id]) > 300:
             t_block.pop(user_id)
     return user_id in t_block
 
@@ -36,7 +36,7 @@ async def block_cwf(_, m: Message):
             if dic2[user_id] >= 4:
                 t_block[user_id] = current_time
                 dic2[user_id] = 0
-                txt = "You've been temporarily blocked for 10 minutes due to spamming. Please take it easy!"
+                txt = "You've been temporarily blocked for 5 minutes due to spamming. Please take it easy!"
                 await m.reply(txt)
         else:
             dic2[user_id] = 0
