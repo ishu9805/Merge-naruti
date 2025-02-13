@@ -59,7 +59,7 @@ def provide_hint(word, attempts):
     else:
         return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 3)}{word[-1]}"
 
-@app.on_message(filters.command("shuffle"))
+@app.on_message(filters.command("scramble"))
 @block_dec
 @nopvt
 async def scrabble(client, message: Message):
