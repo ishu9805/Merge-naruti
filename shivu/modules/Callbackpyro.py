@@ -1,4 +1,4 @@
-import asyncio
+qqimport asyncio
 #from telethon import events, Button
 #from telethon.sync import TelegramClient and 
 from pymongo import MongoClient
@@ -47,8 +47,8 @@ async def callback_query_handler(client, callback_query):
                 [
                     InlineKeyboardButton("🎃", callback_data="rarity:🎃 Halloween"),
                     InlineKeyboardButton("🎄", callback_data="rarity:🎄 Christmas Special"),
-                    InlineKeyboardButton("🪐", callback_data="rarity:🪐 Omniuniversal"),
-                    InlineKeyboardButton("🎭", callback_data="rarity:🎭 Cosplay Master")
+                    InlineKeyboardButton("🪐", callback_data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"),
+                    InlineKeyboardButton("🎭", callback_data="rarity:🎭 Cosplay Master 🎭")
                 ],
                 [
                     InlineKeyboardButton("🎗️", callback_data="rarity:🎗️ AMV Edition")
