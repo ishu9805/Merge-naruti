@@ -23,6 +23,20 @@ ALLOWED_RARITIES = {
     "💮 Special Edition"
 }
 
+LIMITED_EDITION_RARITY = "🔮 Limited Edition"
+
+# Probability of getting a Limited Edition character (e.g., 5% chance)
+LIMITED_EDITION_CHANCE = 0.05
+
+async def get_limited_edition_character():
+    # Fetch a Limited Edition character
+    limited_character = await collection.find_one({
+        'rarity': LIMITED_EDITION_RARITY
+    })
+    if not limited_character:
+        raise ValueError("No Limited Edition character found in the database.")
+    return limited_character
+
 def is_new_day(last_win_time):
     ist = timezone('Asia/Kolkata')
     now_ist = datetime.now(ist)
@@ -116,12 +130,13 @@ async def check_answer(client, message: Message):
     scrabble_data['attempts'] += 1
 
     user_data = await user_collection.find_one({'id': user_id})
-
     if not user_data:
-        user_data = {'id': user_id, 'wins': 0, 'last_win_time': datetime.min}
+        user_data = {'id': user_id, 'wins': 0, 'last_win_time': datetime.min, 'limited_edition_awarded': False}
     else:
         if 'wins' not in user_data:
             user_data['wins'] = 0
+        if 'limited_edition_awarded' not in user_data:
+            user_data['limited_edition_awarded'] = False
 
     if answer.lower() == scrabble_data['word'].lower():
         now = datetime.now()
@@ -129,25 +144,27 @@ async def check_answer(client, message: Message):
         user_data['wins'] += 1
         user_data['last_win_time'] = now
 
-        await user_collection.replace_one({'id': user_id}, user_data, upsert=True)
+        # Check if the user gets a Limited Edition character (random chance)
+        if not user_data['limited_edition_awarded'] and random.random() < LIMITED_EDITION_CHANCE:
+            limited_character = await get_limited_edition_character()
+            await message.reply_photo(
+                photo=limited_character['img_url'],
+                caption=f"🎉 *You won!* 🎉\n\n"
+                        f"🏆 {limited_character['name']} ({limited_character['rarity']}) has been added to your collection!"
+            )
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': limited_character}})
+            user_data['limited_edition_awarded'] = True
 
-        # Check if the win count is a multiple of 10
-        if user_data['wins'] % 10 == 0:
-            try:
-                await message.reply_photo(
-                    photo=scrabble_data['character']['img_url'],
-                    caption=f"🎉 *You won!* 🎉\n\n"
-                            f"🏆 {scrabble_data['character']['name']} ({scrabble_data['character']['rarity']}) has been added to your collection!\n\n"
-                            f"🌟 *Milestone Reached!* You've won {user_data['wins']} games!"
-                )
-            except Exception:
-                await message.reply_text(
-                    f"🎉 *You won!* 🎉\n\n"
-                    f"🏆 {scrabble_data['character']['name']} ({scrabble_data['character']['rarity']}) has been added to your collection!\n\n"
-                    f"🌟 *Milestone Reached!* You've won {user_data['wins']} games!"
-                )
-            
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': scrabble_data['character']}})
+        # Award regular character on every 10th win
+        elif user_data['wins'] % 10 == 0:
+            character = await get_random_character()
+            await message.reply_photo(
+                photo=character['img_url'],
+                caption=f"🎉 *You won!* 🎉\n\n"
+                        f"🏆 {character['name']} ({character['rarity']}) has been added to your collection!"
+            )
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+    
         else:
             gold = random.randint(20, 60)
             await message.reply_text(
