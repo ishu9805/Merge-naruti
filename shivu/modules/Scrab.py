@@ -10,7 +10,14 @@ from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
 
 # Predefined list of words
+import json
 
+# Load the word list from the JSON file
+with open("words.json", "r") as f:
+    WORDS_LIST = json.load(f)
+
+def get_random_word():
+    return random.choice(WORDS_LIST)
 
 
 
@@ -42,9 +49,7 @@ def is_new_day(last_win_time):
     last_win_ist = last_win_time.astimezone(ist)
     return now_ist.date() != last_win_ist.date()
 
-def get_random_word():
-    # Select a random word from the predefined list
-    return random.choice(WORDS_LIST)
+\
 
 def scramble_word(word):
     if len(word) <= 5:
@@ -60,12 +65,16 @@ def scramble_phrase(phrase):
 
 def provide_hint(phrase, attempts):
     words = phrase.split()
-    if attempts == 1:
-        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 2) for word in words])}"
-    elif attempts == 2:
-        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 3) + word[-1] for word in words])}"
-    else:
-        return f"🔍 Hint: {' '.join([word[:2] + '_' * (len(word) - 3) + word[-1] for word in words])}"
+    hint = []
+    for word in words:
+        if len(word) <= 2:
+            hint.append(word)
+        else:
+            revealed = random.sample(range(len(word)), min(attempts, len(word) - 1))
+            hint_word = ''.join([word[i] if i in revealed else '_' for i in range(len(word))])
+            hint.append(hint_word)
+    return f"🔍 Hint: {' '.join(hint)}"
+
 
 @app.on_message(filters.command("scramble"))
 @block_dec
