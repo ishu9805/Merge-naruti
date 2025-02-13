@@ -1,4 +1,4 @@
-qqimport asyncio
+import asyncio
 #from telethon import events, Button
 #from telethon.sync import TelegramClient and 
 from pymongo import MongoClient
