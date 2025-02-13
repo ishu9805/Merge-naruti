@@ -132,9 +132,9 @@ async def check_answer(client, message: Message):
 
     user_data = await user_collection.find_one({'id': user_id})
     if not user_data:
-        user_data = {'id': user_id, 'wins': 0, 'last_win_time': datetime.min, 'limited_edition_awarded': False}
+        user_data = {'id': user_id, 'winss': 0, 'last_win_time': datetime.min, 'limited_edition_awarded': False}
     else:
-        if 'wins' not in user_data:
+        if 'winss' not in user_data:
             user_data['wins'] = 0
         if 'limited_edition_awarded' not in user_data:
             user_data['limited_edition_awarded'] = False
@@ -142,7 +142,7 @@ async def check_answer(client, message: Message):
     if answer.lower() == scrabble_data['phrase'].lower():
         now = datetime.now()
 
-        user_data['wins'] += 1
+        user_data['winss'] += 1
         user_data['last_win_time'] = now
 
         # Check if the user gets a Limited Edition character (random chance)
@@ -156,11 +156,11 @@ async def check_answer(client, message: Message):
             user_data['limited_edition_awarded'] = True
 
         # Award regular reward on every 10th win
-        elif user_data['wins'] % 10 == 0:
+        elif user_data['winss'] % 10 == 0:
             await message.reply_text(
                 f"🎉 *You won!* 🎉\n\n"
                 f"🏆 You've reached a milestone! Here's 50 coins!\n\n"
-                f"💰 Total Wins: {user_data['wins']}"
+                f"💰 Total Wins: {user_data['winss']}"
             )
             await user_collection.update_one({'id': user_id}, {'$inc': {'coins': 50}})
     
