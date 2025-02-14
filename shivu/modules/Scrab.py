@@ -143,6 +143,11 @@ async def check_answer(client, message: Message):
 
         user_data['winss'] += 1
         user_data['last_win_time'] = now
+        await user_collection.update_one(
+                {'id': user_id},
+                {'$set': {'winss': user_data['winss'], 'last_win_time': now}},
+                upsert=True
+        )
 
         # Check if the user gets a Limited Edition character (random chance)
         if not user_data['limited_edition_awarded'] and random.random() < LIMITED_EDITION_CHANCE:
