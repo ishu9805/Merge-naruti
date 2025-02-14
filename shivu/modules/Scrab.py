@@ -29,13 +29,18 @@ LIMITED_EDITION_RARITY = "🔮 Limited Edition"
 LIMITED_EDITION_CHANCE = 0.05
 
 async def get_limited_edition_character():
-    # Fetch a Limited Edition character
-    limited_character = await collection.find_one({
-        'rarity': LIMITED_EDITION_RARITY
-    })
-    if not limited_character:
-        raise ValueError("No Limited Edition character found in the database.")
-    return limited_character
+    try:
+        # Fetch all Limited Edition characters
+        limited_characters = await collection.find({'rarity': LIMITED_EDITION_RARITY}).to_list(length=None)
+        
+        if not limited_characters:
+            raise ValueError("No Limited Edition characters found in the database.")
+        
+        # Return a random Limited Edition character
+        return random.choice(limited_characters)
+    except Exception as e:
+        logger.error(f"Error fetching limited edition character: {e}")
+        raise
 
 def is_new_day(last_win_time):
     ist = timezone('Asia/Kolkata')
