@@ -51,7 +51,7 @@ def is_new_day(last_win_time):
 async def get_random_character():
     # Fetch characters with allowed rarities
     all_characters = await collection.find({
-        'id': {'$gte': '01', '$lte': '1100'},
+        'id': {'$gte': '01', '$lte': '4100'},
         'rarity': {'$in': list(ALLOWED_RARITIES)}
     }).to_list(length=None)
     
