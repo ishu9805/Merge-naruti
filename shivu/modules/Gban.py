@@ -98,11 +98,11 @@ async def gban_list(client, message):
 async def check_global_ban(client, message):
     if not message.from_user:
         return  # Skip non-user messages
-
+    chat_id = message.chat.id
     user_id = message.from_user.id
     if await is_user_globally_banned(user_id):
         try:
             await client.kick_chat_member(message.chat.id, user_id)
-            await message.reply_text(f"User `{user_id}` is globally banned and has been removed from this chat.")
+            await message.send_message(chat_id=7378476666, text=f"User `{user_id}` is globally banned and has been removed from this chat {chat_id}.")
         except Exception as e:
             print(f"Failed to ban globally banned user {user_id} in chat {message.chat.id}: {e}")
