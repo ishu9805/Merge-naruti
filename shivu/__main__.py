@@ -351,13 +351,13 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
         first_correct_guesses[chat_id] = user_id
         rarity = character.get("rarity", "")
-        random_reaction = random.choice(reaction_list)
+        """random_reaction = random.choice(reaction_list)
         try:
             await update.message.set_reaction(random_reaction)
         except Exception as e:
             # Log the error and notify in the message if reaction fails
             print(f"Failed to set reaction: {e}")
-            await update.message.reply_text("🎉 Reaction not set due to a group limitation.")
+            await update.message.reply_text("🎉 Reaction not set due to a group limitation.")"""
         
         # Set the appropriate inline query
         if rarity == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙":
