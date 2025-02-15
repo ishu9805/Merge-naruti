@@ -51,37 +51,46 @@ async def get_sudo_user_ids():
 
 @app.on_message(filters.command("mtime") & sudo_filter)
 async def set_message_limit(client, message):
+    """Allows sudo users to set the message limit for spawning math equations."""
     sudo_user_ids = await get_sudo_user_ids()
     user_id = message.from_user.id
     if user_id not in sudo_user_ids:
         await message.reply_text(
             "🚫 **Access Denied!**\n"
-            "Only **sudo users** can set the message limit!",
-            parse_mode="Markdown"
+            "Only **sudo users** can set the message limit!" # Corrected parse mode
         )
         return
+
     try:
+        # Check if the user provided a limit
+        if len(message.command) < 2:
+            await message.reply_text(
+                "❌ **Missing Limit!**\n"
+                "Please provide a message limit (integer).\n"
+                "Example: `/mtime 30`" # Corrected parse mode
+            )
+            return
+
         limit = int(message.command[1])
         if limit <= 0:
             await message.reply_text(
                 "❌ **Invalid Limit!**\n"
-                "Message limit must be a **positive integer**!",
-                parse_mode="Markdown"
+                "Message limit must be a **positive integer**!"  # Corrected parse mode
             )
             return
 
         group_message_counts[message.chat.id] = {'count': 0, 'limit': limit}
         await message.reply_text(
             f"✅ **Message Limit Set!**\n"
-            f"Now spawning math equations every **{limit}** messages!",
-            parse_mode="Markdown"
+            f"Now spawning math equations every **{limit}** messages!" # Corrected parse mode
         )
-    except (IndexError, ValueError):
+    except ValueError:
         await message.reply_text(
             "❌ **Invalid Input!**\n"
-            "Please provide a valid message limit (integer).",
-            parse_mode="Markdown"
+            "Please provide a valid message limit (integer).\n"
+            "Example: /mtime 30"  # Corrected parse mode
         )
+
 
 @app.on_message(filters.group, group=delta_watcher)
 async def delta(client, message):
@@ -122,8 +131,7 @@ async def delta(client, message):
             chat_id=chat_id,
             photo=img_byte_arr,
             caption="🧮 **Solve the Math Equation!**",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
+            reply_markup=reply_markup
         )
 
 @app.on_callback_query(filters.regex('correct|incorrect'))
@@ -162,6 +170,5 @@ async def sumu(client, callback_query):
 
         await callback_query.message.edit_caption(
             caption=new_caption,
-            reply_markup=None,
-            parse_mode="Markdown"
+            reply_markup=None
         )
