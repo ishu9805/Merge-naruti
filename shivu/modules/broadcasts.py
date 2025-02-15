@@ -1,8 +1,7 @@
-import random
 import asyncio
 from pyrogram import filters
 from pyrogram.errors import PeerIdInvalid, FloodWait
-from . import user_collection, app, dev_filter, group_user_totals_collection, top_global_groups_collection
+from . import user_collection, app, dev_filter, top_global_groups_collection
 
 @app.on_message(filters.command("broadcast") & dev_filter)
 async def broadcast(_, message):
@@ -11,77 +10,84 @@ async def broadcast(_, message):
         await message.reply_text("❌ Please reply to a message to broadcast it.")
         return
 
-    await message.reply_text("📢 Starting the broadcast. Sending the message to all users and groups...")
+    # Send initial progress message
+    progress_message = await message.reply_text("📢 Starting the broadcast. Sending the message to all users and groups...")
 
-    user_cursor = user_collection.find({})
     success_count = 0
     fail_count = 0
     message_count = 0
 
+    # Function to send the message
+    async def send_message(target_id):
+        nonlocal success_count, fail_count, message_count
+        try:
+            if replied_message.text:
+                await app.send_message(target_id, replied_message.text)
+            else:
+                media_caption = replied_message.caption if replied_message.caption else ""
+                if replied_message.document:
+                    await app.send_document(target_id, replied_message.document.file_id, caption=media_caption)
+                elif replied_message.photo:
+                    await app.send_photo(target_id, replied_message.photo.file_id, caption=media_caption)
+                elif replied_message.video:
+                    await app.send_video(target_id, replied_message.video.file_id, caption=media_caption)
+
+            success_count += 1
+            message_count += 1
+        except PeerIdInvalid:
+            fail_count += 1
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            await send_message(target_id)  # Retry after waiting
+        except Exception as e:
+            print(f"Error sending to {target_id}: {e}")
+            fail_count += 1
+
+        # Introduce a delay after every 7 messages
+        if message_count % 7 == 0:
+            await asyncio.sleep(2)
+
+    # Function to update progress
+    async def update_progress():
+        await progress_message.edit_text(
+            f"📢 Broadcast in progress...\n"
+            f"✅ Users sent: {user_success}\n"
+            f"✅ Groups sent: {group_success}\n"
+            f"❌ Failed attempts: {fail_count}"
+        )
+
+    # Send to users
+    user_cursor = user_collection.find({})
+    user_success = 0
     async for user in user_cursor:
         user_id = user.get('user_id')
-        if user_id is None:
-            fail_count += 1
-            continue
+        if user_id:
+            await send_message(user_id)
+            user_success += 1
 
-        try:
-            if replied_message.text:
-                await app.send_message(user_id, replied_message.text)
+            # Update progress every 100 users
+            if user_success % 100 == 0:
+                await update_progress()
 
-            media_caption = replied_message.caption if replied_message.caption else ""
+    # Send to groups
+    group_cursor = top_global_groups_collection.find({})
+    unique_group_ids = set()
+    group_success = 0
+    async for group in group_cursor:
+        group_id = group.get('group_id')
+        if group_id and group_id not in unique_group_ids:
+            unique_group_ids.add(group_id)
+            await send_message(group_id)
+            group_success += 1
 
-            if replied_message.document:
-                await app.send_document(user_id, replied_message.document.file_id, caption=media_caption)
-            elif replied_message.photo:
-                await app.send_photo(user_id, replied_message.photo.file_id, caption=media_caption)
-            elif replied_message.video:
-                await app.send_video(user_id, replied_message.video.file_id, caption=media_caption)
+            # Update progress every 100 groups
+            if group_success % 100 == 0:
+                await update_progress()
 
-            success_count += 1
-            message_count += 1
-        except PeerIdInvalid:
-            fail_count += 1
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            continue
-        except Exception:
-            fail_count += 1
-
-        if message_count % 7 == 0:
-            await asyncio.sleep(2)
-
-    all_groups = await top_global_groups_collection.find({}).to_list(length=None)
-    unique_group_ids = set(group["group_id"] for group in all_groups)
-
-    for group_id in unique_group_ids:
-        try:
-            if replied_message.text:
-                await app.send_message(group_id, replied_message.text)
-
-            media_caption = replied_message.caption if replied_message.caption else ""
-
-            if replied_message.document:
-                await app.send_document(group_id, replied_message.document.file_id, caption=media_caption)
-            elif replied_message.photo:
-                await app.send_photo(group_id, replied_message.photo.file_id, caption=media_caption)
-            elif replied_message.video:
-                await app.send_video(group_id, replied_message.video.file_id, caption=media_caption)
-
-            success_count += 1
-            message_count += 1
-        except PeerIdInvalid:
-            fail_count += 1
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            continue
-        except Exception:
-            fail_count += 1
-
-        if message_count % 7 == 0:
-            await asyncio.sleep(2)
-
-    await message.reply_text(
+    # Final report
+    await progress_message.edit_text(
         f"✅ Broadcast completed!\n"
-        f"Messages sent successfully: {success_count}\n"
-        f"Failed attempts: {fail_count}"
+        f"✅ Users sent: {user_success}\n"
+        f"✅ Groups sent: {group_success}\n"
+        f"❌ Failed attempts: {fail_count}"
     )
