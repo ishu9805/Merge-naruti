@@ -6,7 +6,7 @@ from telegram.ext import CommandHandler, CallbackContext
 
 from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT, OWNER_ID, user_collection
 from . import uploader_filter
-from shivu import shops_collection
+
 from telegraph import upload_file
 from pyrogram import filters
 from shivu import shivuu, collection
