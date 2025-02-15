@@ -2,7 +2,7 @@ aiofiles==23.2.1
 aiohttp==3.9.1
 aiogram
 APScheduler==3.10.4
-apscheduler==3.6.3
+
 asyncio==3.4.3
 cachetools==5.3.3
 dateparser==1.2.0
