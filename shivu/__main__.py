@@ -49,7 +49,7 @@ async def react_to_message(chat_id, message_id, emoji):
     try:
        await shivuu.send_reaction(chat_id, message_id, emoji)
     except:
-       pass
+       continue
 
 locks = {}
 message_counters = {}
@@ -351,7 +351,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
         first_correct_guesses[chat_id] = user_id
         rarity = character.get("rarity", "")
-        """random_reaction = random.choice(reaction_list)
+        random_reaction = random.choice(reaction_list)
         try:
             await update.message.set_reaction(random_reaction)
         except Exception as e:
