@@ -114,7 +114,7 @@ async def delta(client, message):
         ]
         random.shuffle(keyboard)
 
-        reply_markup = IKM([[keyboard[0][0], [keyboard[1][0]], [keyboard[2][0], [keyboard[3][0]]])
+        reply_markup = IKM([[keyboard[0][0], keyboard[1][0]], [keyboard[2][0], keyboard[3][0]]])
 
         img_byte_arr = io.BytesIO(image_bytes)
 
