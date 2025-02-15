@@ -5,7 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
 from .block import block_cbq
 
-from Grabber import user_collection, collection
+from shivu import user_collection, collection
 from . import add, deduct, show, abank, dbank, sbank, sudb, app, sudo_filter, group_user_totals_collection
 from .watchers import delta_watcher
 
