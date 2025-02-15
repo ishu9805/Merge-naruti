@@ -6,6 +6,17 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from resolve_peer import ResolvePeer
 
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
+    level=logging.INFO,
+)
+logging.getLogger("apscheduler").setLevel(logging.ERROR)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger("pyrate_limiter").setLevel(logging.ERROR)
+LOGGER = logging.getLogger(__name__)
+
+
 
 from .config import *
 
