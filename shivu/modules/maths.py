@@ -57,7 +57,7 @@ async def set_message_limit(client, message):
         await message.reply_text(
             "🚫 **Access Denied!**\n"
             "Only **sudo users** can set the message limit!",
-            parse_mode="markdown"
+            parse_mode="Markdown"
         )
         return
     try:
@@ -66,7 +66,7 @@ async def set_message_limit(client, message):
             await message.reply_text(
                 "❌ **Invalid Limit!**\n"
                 "Message limit must be a **positive integer**!",
-                parse_mode="markdown"
+                parse_mode="Markdown"
             )
             return
 
@@ -74,13 +74,13 @@ async def set_message_limit(client, message):
         await message.reply_text(
             f"✅ **Message Limit Set!**\n"
             f"Now spawning math equations every **{limit}** messages!",
-            parse_mode="markdown"
+            parse_mode="Markdown"
         )
     except (IndexError, ValueError):
         await message.reply_text(
             "❌ **Invalid Input!**\n"
             "Please provide a valid message limit (integer).",
-            parse_mode="markdown"
+            parse_mode="Markdown"
         )
 
 @app.on_message(filters.group, group=delta_watcher)
@@ -123,7 +123,7 @@ async def delta(client, message):
             photo=img_byte_arr,
             caption="🧮 **Solve the Math Equation!**",
             reply_markup=reply_markup,
-            parse_mode="markdown"
+            parse_mode="Markdown"
         )
 
 @app.on_callback_query(filters.regex('correct|incorrect'))
@@ -163,5 +163,5 @@ async def sumu(client, callback_query):
         await callback_query.message.edit_caption(
             caption=new_caption,
             reply_markup=None,
-            parse_mode="markdown"
+            parse_mode="Markdown"
         )
