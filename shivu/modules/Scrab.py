@@ -8,6 +8,19 @@ from . import collection, user_collection, app, nopvt
 from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
 
+from datetime import datetime
+
+from . import user_collection, sudo_filter
+
+@app.on_message(filters.command("cs") & sudo_filter)
+def reset_all_win_counts_command(client: Client, message: Message):
+    try:
+        user_collection.update_many({}, {'$set': {'wins': 0, 'last_win_time': datetime.min}})
+        message.reply_text("Win counts have been reset for all users.")
+    except Exception as e:
+        message.reply_text(f"An error occurred while resetting win counts: {e}")
+
+
 active_scrabbles = {}
 MAX_ATTEMPTS = 3
 WIN_LIMIT = 15
