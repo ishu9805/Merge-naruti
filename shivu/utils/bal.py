@@ -3,7 +3,7 @@ from shivu import user_collection
 async def smex(id):
     all_users = user_collection.find()
     all_users = await all_users.to_list(length=None)
-    user_balances = {user['id']: int(user.get('balance', 0)) for user in all_users}
+    user_balances = {user['id']: int(user.get('coins', 0)) for user in all_users}
 
 
     sorted_balances = sorted(user_balances.items(), key=lambda item: item[1], reverse=True)
@@ -17,14 +17,14 @@ async def smex(id):
 async def show(user_id):
     user = await user_collection.find_one({"id": user_id})
     if user:
-        return int(user.get("balance", 0))
+        return int(user.get("coins", 0))
     return 0
 
 async def add(user_id, balance):
     x = await user_collection.find_one({'id': user_id})
     if not x:
         return
-    x['balance'] = str(int(x.get('balance', 0)) + balance)
+    x['balance'] = str(int(x.get('coins', 0)) + balance)
     x.pop('_id')
     await user_collection.update_one({'id': user_id}, {'$set': x}, upsert=True)
 
@@ -32,7 +32,7 @@ async def deduct(user_id, balance):
     x = await user_collection.find_one({'id': user_id})
     if not x:
         return
-    x['balance'] = str(int(x.get('balance')) - balance)
+    x['balance'] = str(int(x.get('coins')) - balance)
     x.pop('_id')
     await user_collection.update_one({'id': user_id}, {'$set': x}, upsert=True)
 
