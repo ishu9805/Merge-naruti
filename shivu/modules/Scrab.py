@@ -12,7 +12,7 @@ from datetime import datetime
 
 from . import user_collection, sudo_filter
 
-@app.on_message(filters.command("cs") & sudo_filter)
+@app.on_message(filters.command("rstw") & sudo_filter)
 def reset_all_win_counts_command(client: Client, message: Message):
     try:
         user_collection.update_many({}, {'$set': {'wins': 0, 'last_win_time': datetime.min}})
