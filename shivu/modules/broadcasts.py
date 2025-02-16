@@ -60,7 +60,7 @@ async def broadcast(_, message):
     user_cursor = user_collection.find({})
     user_success = 0
     async for user in user_cursor:
-        user_id = user.get('user_id')
+        user_id = user.get('id')
         if user_id:
             await send_message(user_id)
             user_success += 1
