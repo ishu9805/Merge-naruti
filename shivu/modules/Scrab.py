@@ -39,7 +39,7 @@ ALLOWED_RARITIES = {
 LIMITED_EDITION_RARITY = "🔮 Limited Edition"
 
 # Probability of getting a Limited Edition character (e.g., 5% chance)
-LIMITED_EDITION_CHANCE = 0.05
+LIMITED_EDITION_CHANCE = 0.01
 
 async def get_limited_edition_character():
     try:
