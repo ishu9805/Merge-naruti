@@ -18,7 +18,7 @@ async def callback_query_handler(client, callback_query):
     try:
         data = callback_query.data
 
-        if data.startswith("sgift:") or data.startswith("cgift:"):
+        if data.startswith("sgift") or data.startswith("cgift"):
             await on_gift_callback_query(client, callback_query)
         elif data.startswith("confirm_trade_receiver:") or data.startswith("cancel_trade:"):
             await on_trade_callback_query(client, callback_query)
