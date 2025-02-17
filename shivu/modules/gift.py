@@ -87,8 +87,8 @@ async def gift(client, message):
         f"🎁 {message.from_user.mention}, do you confirm gifting this character?",
         reply_markup=InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("✅ Confirm Gift", callback_data=f"confirm_gift:{process_id}")],
-                [InlineKeyboardButton("❌ Cancel Gift", callback_data=f"cancel_gift:{process_id}")]
+                [InlineKeyboardButton("✅ Confirm Gift", callback_data=f"sgift:{process_id}")],
+                [InlineKeyboardButton("❌ Cancel Gift", callback_data=f"cgift:{process_id}")]
             ]
         ))
 
@@ -103,7 +103,7 @@ async def gift(client, message):
     active_buttons[(sender_id, process_id)] = True
 
 # Callback for Confirming or Cancelling Gift
-@shivuu.on_callback_query(filters.create(lambda _, __, query: query.data.startswith(("confirm_gift:", "cancel_gift:"))))
+@shivuu.on_callback_query(filters.create(lambda _, __, query: query.data.startswith(("sgift", "cgift"))))
 async def on_gift_callback_query(client, callback_query):
     sender_id = callback_query.from_user.id
     data, process_id = callback_query.data.split(":")
@@ -131,7 +131,7 @@ async def on_gift_callback_query(client, callback_query):
         return
 
     # Process confirmation or cancellation of gift
-    if data == "confirm_gift":
+    if data.startswith("sgift"):
         await callback_query.answer("✅ Gift successfully given!", show_alert=True)
         
         await callback_query.message.edit_text(
@@ -185,7 +185,7 @@ async def on_gift_callback_query(client, callback_query):
         locked_users.remove(sender_id)
         locked_characters.remove(gift['character']['id'])
 
-    elif data == "cancel_gift":
+    elif data.startswith("cgift"):
         # Remove the pending gift and unlock the user and character
         del pending_gifts[(sender_id, r_id)]
         locked_users.remove(sender_id)
