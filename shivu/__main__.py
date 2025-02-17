@@ -173,7 +173,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
         '❄️ Winter': 0,  # Stop spawning Winter characters
-        '💝 Valentine': 1,  # Start spawning Valentine characters
+        '💝 Valentine': 0,  # Start spawning Valentine characters
         '🎃 Halloween': 0,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 0,
@@ -213,9 +213,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     if character.get('rarity') == '🔮 Limited Edition':
         await context.bot.send_message(chat_id=7378476666, text=f"A limited character has spawned! Character id: {character['id']}")
-    if character.get('rarity') == '💝 Valentine':
-        await context.bot.send_message(chat_id=7378476666, text=f"A valentine character has spawned! Character id: {character['id']}")
-        
+    
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
