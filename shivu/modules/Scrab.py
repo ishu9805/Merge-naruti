@@ -99,8 +99,7 @@ async def scrabble(client, message: Message):
     if temp_block(user_id):
         return
     chat_id = message.chat.id
-    await asyncio.sleep(0)
-
+    
     if user_id in cooldown_users:
         remaining_time = COOLDOWN_TIME - (datetime.now() - cooldown_users[user_id]).total_seconds()
         remaining_time = max(remaining_time, 0)
@@ -135,7 +134,7 @@ async def scrabble(client, message: Message):
 async def check_answer(client, message: Message):
     if message.from_user is None:
         return
-    await asyncio.sleep(0)
+    
     user_id = message.from_user.id
 
     if user_id not in active_scrabbles:
