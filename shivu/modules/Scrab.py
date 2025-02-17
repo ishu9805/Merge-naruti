@@ -99,6 +99,7 @@ async def scrabble(client, message: Message):
     if temp_block(user_id):
         return
     chat_id = message.chat.id
+    await asyncio.sleep(0)
 
     if user_id in cooldown_users:
         remaining_time = COOLDOWN_TIME - (datetime.now() - cooldown_users[user_id]).total_seconds()
@@ -134,7 +135,7 @@ async def scrabble(client, message: Message):
 async def check_answer(client, message: Message):
     if message.from_user is None:
         return
-
+    await asyncio.sleep(0)
     user_id = message.from_user.id
 
     if user_id not in active_scrabbles:
@@ -158,7 +159,7 @@ async def check_answer(client, message: Message):
 
     if answer.lower() == scrabble_data['word'].lower():
         now = datetime.now()
-
+        del active_scrabbles[user_id]
         user_data['winss'] += 1
         user_data['last_win_time'] = now
         await user_collection.update_one(
@@ -197,7 +198,7 @@ async def check_answer(client, message: Message):
             )
             await user_collection.update_one({'id': user_id}, {'$inc': {'coins': gold}})
 
-        del active_scrabbles[user_id]
+        
 
         cooldown_users[user_id] = datetime.now()
         asyncio.create_task(remove_cooldown(user_id))
