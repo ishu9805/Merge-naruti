@@ -190,142 +190,191 @@ application.add_handler(CommandHandler("sips", search_character))
 application.add_handler(CallbackQueryHandler(handle_pagination, pattern="^(next|prev):"))
 
 
+import logging
+from pyrogram import Client, filters
+from pyrogram.errors import UserIsBlocked
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
+from . import collection, user_collection, sudo_filter, app, dev_filter
+from shivu import LOG_CHANNEL as LOG_CHAT_ID
 
+CHARACTERS_FIELD = "characters"
+ID_FIELD = "id"
 
-async def remove_character(update: Update, context: CallbackContext):
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    
-    if str(update.effective_user.id) not in PARTNER:
-        await update.message.reply_text('Ask My Owner...')
+async def give_character(receiver_id, character_id):
+    """
+    Give a character to a user.
+    """
+    try:
+        character = await collection.find_one({ID_FIELD: character_id})
+        if not character:
+            raise ValueError("Character not found.")
+
+        await user_collection.update_one(
+            {ID_FIELD: receiver_id},
+            {'$push': {CHARACTERS_FIELD: character}}
+        )
+
+        # Updated caption format
+        caption = (
+            f"Name: {character['name']}\n"
+            f"Anime: {character['anime']}\n"
+            f"ID: {character[ID_FIELD]}\n"
+            f"Rarity: {character.get('rarity', 'Unknown')}"
+        )
+
+        return character['img_url'], caption, character['name']
+    except PyMongoError as e:
+        logger.error(f"Database error in give_character: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in give_character: {e}")
+        raise
+
+@app.on_message(filters.command(["givec"]) & sudo_filter)
+async def give_character_command(client, message):
+    """
+    Command to give a character to a user.
+    """
+    if not message.reply_to_message:
+        await message.reply_text("You need to reply to a user's message to give a character!")
         return
 
     try:
-        # Check if the command format is correct
-        args = context.args
-        if len(args) != 2:
-            await update.message.reply_text('Incorrect format. Please use: /remove_character user_id character_id')
+        # Parse the command arguments
+        args = message.text.split(maxsplit=2)  # Split into 3 parts: /give, id, optional_message
+        if len(args) < 2:
+            await message.reply_text("Please provide a character ID.")
             return
 
-        user_id = int(args[0])
-        character_id = args[1]
+        character_id = str(args[1])
+        optional_message = args[2] if len(args) > 2 else None
 
-        # Check if the user exists
-        user = await user_collection.find_one({'id': user_id})
-        if not user:
-            await update.message.reply_text('User not found.')
-            return
+        receiver_id = message.reply_to_message.from_user.id
+        receiver_name = message.reply_to_message.from_user.first_name
+        giver_name = message.from_user.first_name
 
-        # Check if the character exists in the user's collection
-        character_index = None
-        for i, character in enumerate(user['characters']):
-            if character['id'] == character_id:
-                character_index = i
-                break
+        # Give the character
+        result = await give_character(receiver_id, character_id)
 
-        if character_index is None:
-            await update.message.reply_text('Character not found in user collection.')
-            return
+        if result:
+            img_url, caption, character_name = result
 
-        # Remove the character from the user's collection
-        del user['characters'][character_index]
-        await user_collection.update_one({'id': user_id}, {'$set': {'characters': user['characters']}})
-        rarity = user['characters'][character_index][rarity]
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {f'rarity_count.{rarity}': -1}},
-            upsert=True
-        )
-            
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {'ccount': -1}},
-            upsert=True
-        )
-        await update.message.reply_text(f'Character with ID {character_id} has been removed from user with ID {user_id}.')
+            # Prepare the final message
+            if optional_message:
+                final_message = (
+                    f"{optional_message}\n\n"
+                    f"Here's your Prize:\n"
+                    f"{character_id} - {character_name}"
+                )
+            else:
+                final_message = f"Successfully Given To {receiver_id}\n\n{caption}"
+
+            # Send the image and message
+            await message.reply_photo(photo=img_url, caption=final_message)
+
+            # Send a message to the receiver
+            if optional_message:
+                try:
+                    await client.send_message(receiver_id, final_message)
+                except UserIsBlocked:
+                    logger.warning(f"Bot is blocked by user {receiver_id}. Skipping message to receiver.")
+                    pass  # Skip sending the message if the bot is blocked
+
+            # Log the give action
+            log_message = f"{giver_name} gave character {character_id} ({character_name}) to {receiver_name}."
+            try:
+                await client.send_message(LOG_CHAT_ID, log_message)
+            except UserIsBlocked:
+                logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
+                pass  # Skip sending the log if the bot is blocked
+
+    except IndexError:
+        await message.reply_text("Please provide a character ID.")
+    except ValueError as e:
+        await message.reply_text(str(e))
     except Exception as e:
-        await update.message.reply_text(f'An error occurred: {str(e)}')
-
-async def search_character_users(update: Update, context: CallbackContext):
-    # Get the character ID to search for from the command arguments
-    if str(update.effective_user.id) not in PARTNER:
-        await update.message.reply_text('Ask My Owner...')
-        return
-        
-    character_id = " ".join(context.args).strip()
-
-    if not character_id:
-        await update.message.reply_text("Please provide a character ID to search for.")
-        return
-
-    # Search for users who have the character
-    users_cursor = user_collection.find({"characters.id": character_id})
-
-    found_users = []
-    async for user in users_cursor:
-        found_users.append(user)
-
-    if not found_users:
-        await update.message.reply_text("No users found with that character.")
-        return
-
-    # Prepare the response message with found users
-    response_message = "<b>Users with character ID {}:</b>\n".format(character_id)
-    for user in found_users:
-        response_message += f"@{user['username']}\n"
-
-    await update.message.reply_text(response_message, parse_mode='HTML')
+        logger.error(f"Error in give_character_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
 
 
-async def sync_user_characters(update: Update, context: CallbackContext) -> None:
-    if str(update.effective_user.id) not in PARTNER:
-        await update.message.reply_text('Ask My Owner...')
+async def kill_character(receiver_id, character_id):
+    """
+    Remove a character from a user's collection.
+    """
+    try:
+        character = await collection.find_one({ID_FIELD: character_id})
+        if not character:
+            raise ValueError("Character not found.")
+
+        await user_collection.update_one(
+            {ID_FIELD: receiver_id},
+            {'$pull': {CHARACTERS_FIELD: {ID_FIELD: character_id}}},
+            upsert=True
+        )
+        return f"Successfully removed character {character_id} from user {receiver_id}."
+    except PyMongoError as e:
+        logger.error(f"Database error in kill_character: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in kill_character: {e}")
+        raise
+
+@app.on_message(filters.command(["takec"]) & sudo_filter)
+async def remove_character_command(client, message):
+    """
+    Command to remove a character from a user.
+    """
+    if not message.reply_to_message:
+        await message.reply_text("You need to reply to a user's message to remove a character!")
         return
 
     try:
-        characters_cursor = collection.find({}, {"id": 1, "name": 1, "rarity": 1, "anime": 1, "img_url": 1})
-        character_dict = {character["id"]: {"name": character["name"], "rarity": character["rarity"], "anime": character["anime"], "img_url": character["img_url"]} async for character in characters_cursor}
+        # Parse the command arguments
+        args = message.text.split(maxsplit=2)  # Split into 3 parts: /takec, id, optional_message
+        if len(args) < 2:
+            await message.reply_text("Usage: /takec <character_id> [optional_message] (reply to a user)")
+            return
 
-        users_cursor = user_collection.find()
-        count = 0
-        async for user in users_cursor:
-            user_id = user["id"]
-            characters = user.get("characters", [])
+        character_id = str(args[1])
+        optional_message = args[2] if len(args) > 2 else None
 
-            for character in characters:
-                if character["id"] in character_dict:
-                    character["name"] = character_dict[character["id"]]["name"]
-                    character["rarity"] = character_dict[character["id"]]["rarity"]
-                    character["anime"] = character_dict[character["id"]]["anime"]
-                    character["img_url"] = character_dict[character["id"]]["img_url"]
+        receiver_id = message.reply_to_message.from_user.id
+        receiver_name = message.reply_to_message.from_user.first_name
+        remover_name = message.from_user.first_name
 
-            await user_collection.update_one({"id": user_id}, {"$set": {"characters": characters}})
-            count += 1
+        # Remove the character
+        result_message = await kill_character(receiver_id, character_id)
+        await message.reply_text(result_message)
 
-        await update.message.reply_text(f"User characters synced with collection. {count} users updated.")
+        # Prepare the final message for the receiver
+        if optional_message:
+            final_message = (
+                f"{optional_message}\n\n"
+                f"Your character has been removed:\n"
+                f"Character ID: {character_id}"
+            )
+            try:
+                await client.send_message(receiver_id, final_message)
+            except UserIsBlocked:
+                logger.warning(f"Bot is blocked by user {receiver_id}. Skipping message to receiver.")
+                pass  # Skip sending the message if the bot is blocked
+
+        # Log the remove action
+        log_message = f"{remover_name} removed character {character_id} from {receiver_name}."
+        try:
+            await client.send_message(LOG_CHAT_ID, log_message)
+        except UserIsBlocked:
+            logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
+            pass  # Skip sending the log if the bot is blocked
+
+    except (IndexError, ValueError) as e:
+        await message.reply_text(str(e))
     except Exception as e:
-        await update.message.reply_text(f"Error syncing user characters: {e}")
+        logger.error(f"Error in remove_character_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
 
-
-async def check_duplicate_ids(update: Update, context: CallbackContext) -> None:
-    if str(update.effective_user.id) not in PARTNER:
-        await update.message.reply_text('Ask My Owner...')
-        return
-
-    characters_cursor = collection.find({}, {"id": 1})
-    ids = [character["id"] async for character in characters_cursor]
-
-    duplicate_ids = [id for id, count in collections.Counter(ids).items() if count > 1]
-
-    if duplicate_ids:
-        await update.message.reply_text(f"Duplicate IDs found: {', '.join(duplicate_ids)}")
-    else:
-        await update.message.reply_text("No duplicate IDs found.")
-
-
-application.add_handler(CommandHandler("duplicate", check_duplicate_ids))
-application.add_handler(CommandHandler("sync", sync_user_characters))
-application.add_handler(CommandHandler("whi", search_character_users))
-application.add_handler(CommandHandler("takec", remove_character))
-
-GIVE_CHARACTER_REPLY_HANDLER = CommandHandler('givec', give_character_reply, block=False)
-application.add_handler(GIVE_CHARACTER_REPLY_HANDLER)
