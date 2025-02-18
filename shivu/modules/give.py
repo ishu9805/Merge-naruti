@@ -376,5 +376,152 @@ async def remove_character_command(client, message):
         await message.reply_text(str(e))
     except Exception as e:
         logger.error(f"Error in remove_character_command: {e}")
+
         await message.reply_text("An error occurred while processing the command.")
 
+
+
+
+import logging
+from pyrogram import Client, filters
+from pyrogram.errors import UserIsBlocked
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
+from . import collection, user_collection, sudo_filter, app, dev_filter
+from shivu import LOG_CHANNEL as LOG_CHAT_ID
+
+CHARACTERS_FIELD = "characters"
+ID_FIELD = "id"
+BALANCE_FIELD = "coins"
+
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def update_balance(receiver_id, amount):
+    """
+    Update a user's balance (berries).
+    """
+    try:
+        await user_collection.update_one(
+            {ID_FIELD: receiver_id},
+            {'$inc': {BALANCE_FIELD: amount}},
+            upsert=True
+        )
+        return f"Successfully updated balance by {amount} berries."
+    except PyMongoError as e:
+        logger.error(f"Database error in update_balance: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in update_balance: {e}")
+        raise
+
+
+@app.on_message(filters.command(["givecoins"]) & sudo_filter)
+async def give_balance_command(client, message):
+    """
+    Command to give berries/balance to a user.
+    """
+    if not message.reply_to_message:
+        await message.reply_text("You need to reply to a user's message to give berries!")
+        return
+
+    try:
+        # Parse the command arguments
+        args = message.text.split(maxsplit=2)  # Split into 3 parts: /giveb, amount, optional_message
+        if len(args) < 2:
+            await message.reply_text("Usage: /giveb <amount> [optional_message] (reply to a user)")
+            return
+
+        amount = int(args[1])
+        optional_message = args[2] if len(args) > 2 else None
+
+        receiver_id = message.reply_to_message.from_user.id
+        receiver_name = message.reply_to_message.from_user.first_name
+        giver_name = message.from_user.first_name
+
+        # Update the balance
+        result_message = await update_balance(receiver_id, amount)
+        await message.reply_text(result_message)
+
+        # Prepare the final message for the receiver
+        if optional_message:
+            final_message = (
+                f"{optional_message}\n\n"
+                f"You have received {amount} berries."
+            )
+            try:
+                await client.send_message(receiver_id, final_message)
+            except UserIsBlocked:
+                logger.warning(f"Bot is blocked by user {receiver_id}. Skipping message to receiver.")
+                pass  # Skip sending the message if the bot is blocked
+
+        # Log the give action
+        log_message = f"{giver_name} gave {amount} gives to {receiver_name}."
+        try:
+            await client.send_message(LOG_CHAT_ID, log_message)
+        except UserIsBlocked:
+            logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
+            pass  # Skip sending the log if the bot is blocked
+
+    except (IndexError, ValueError) as e:
+        await message.reply_text("Please provide a valid amount.")
+    except Exception as e:
+        logger.error(f"Error in give_balance_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
+
+
+
+@app.on_message(filters.command(["takecoins"]) & sudo_filter)
+async def take_balance_command(client, message):
+    """
+    Command to take berries/balance from a user.
+    """
+    if not message.reply_to_message:
+        await message.reply_text("You need to reply to a user's message to take berries!")
+        return
+
+    try:
+        # Parse the command arguments
+        args = message.text.split(maxsplit=2)  # Split into 3 parts: /takeb, amount, optional_message
+        if len(args) < 2:
+            await message.reply_text("Usage: /takeb <amount> [optional_message] (reply to a user)")
+            return
+
+        amount = int(args[1])
+        optional_message = args[2] if len(args) > 2 else None
+
+        receiver_id = message.reply_to_message.from_user.id
+        receiver_name = message.reply_to_message.from_user.first_name
+        remover_name = message.from_user.first_name
+
+        # Update the balance
+        result_message = await update_balance(receiver_id, -amount)
+        await message.reply_text(result_message)
+
+        # Prepare the final message for the receiver
+        if optional_message:
+            final_message = (
+                f"{optional_message}\n\n"
+                f"{amount} coins have been deducted from your account."
+            )
+            try:
+                await client.send_message(receiver_id, final_message)
+            except UserIsBlocked:
+                logger.warning(f"Bot is blocked by user {receiver_id}. Skipping message to receiver.")
+                pass  # Skip sending the message if the bot is blocked
+
+        # Log the take action
+        log_message = f"{remover_name} took {amount} coins from {receiver_name}."
+        try:
+            await client.send_message(LOG_CHAT_ID, log_message)
+        except UserIsBlocked:
+            logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
+            pass  # Skip sending the log if the bot is blocked
+
+    except (IndexError, ValueError) as e:
+        await message.reply_text("Please provide a valid amount.")
+    except Exception as e:
+        logger.error(f"Error in take_balance_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
