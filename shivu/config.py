@@ -4,6 +4,7 @@ OWNER_ID = 7378476666
 PARTNER =  "7378476666", "1744744841"
 sudo_users =  "7378476666", "1744744841"
 GROUP_ID = -1002198664660
+LOG_CHANNEL = -1002455650183
     #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-tI"
 TOKEN = "7107840748:AAHiKR-lF03Dh-P-GlODsTkYk-I0eBgNKW8"
 mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
