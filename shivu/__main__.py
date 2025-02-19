@@ -74,10 +74,7 @@ def escape_markdown(text):
 async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-
-    if is_banned:
-        return
+    
 
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
@@ -85,12 +82,12 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
     async with lock:
         # Initialize total message count and random threshold for Valentine spawn
-        if chat_id not in total_message_counts:
+        """if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
             valentine_spawn_thresholds[chat_id] = random.randint(3000, 4000)
 
         # Increment total message count for the chat
-        total_message_counts[chat_id] += 1
+        total_message_counts[chat_id] += 1"""
 
         # Existing logic for message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
@@ -117,10 +114,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             message_counts[chat_id] = 0
 
         # Check if total message count matches the random threshold
-        if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
+        """if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Reset the threshold for the next spawn
-            valentine_spawn_thresholds[chat_id] = random.randint(3000, 4000)
+            valentine_spawn_thresholds[chat_id] = random.randint(3000, 4000)"""
             
 
 async def send_image(update: Update, context: CallbackContext) -> None:
