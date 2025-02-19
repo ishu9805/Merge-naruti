@@ -5,6 +5,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from shivu import application, user_collection, PARTNER, ban_collection, collection, db, required_group_id
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ContextTypes
+from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 # MongoDB Collection for user shops
 user_shops_collection = db["dailyshop"]
 
@@ -230,15 +231,14 @@ last_usage_time = {}
 generated_codes = {}
 
 def generate_random_code():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
+@block_cbq_ptb
 async def daily_code(update: Update, _):
     user_id = update.effective_user.id
 
     # Check for banned user
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        return
+    
 
     # Check group membership
     if not await is_member(user_id):
@@ -310,14 +310,14 @@ async def gen(update, context):
         f"<b>Quantity:</b> {quantity}"
     )
     await context.bot.send_message(chat_id=PARTNER, text=log_text, parse_mode='HTML')
+
+@block_cbq_ptb
 async def redeem(update: Update, context):
     user_id = update.effective_user.id
     code = " ".join(context.args)
 
     # Check for banned user
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        return
+
 
     # Check group membership
     if not await is_member(user_id):
