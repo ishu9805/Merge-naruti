@@ -27,7 +27,7 @@ from shivu import user_count
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins, update_leaderboards
 from shivu.modules.leaderboard import create_indexes
-
+from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 all_characters = []
 valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
 
@@ -70,7 +70,7 @@ def escape_markdown(text):
     escape_chars = r'\*_`\\~>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
-
+@block_dec_ptb
 async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
@@ -316,17 +316,13 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     # Notify admin (optional)
     await context.bot.send_message(chat_id=7378476666, text=f"A Valentine character has spawned! Character id: {character['id']}")
 
-
+@block_dec_ptb
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     message_id = update.message.message_id
     is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
+    
     await asyncio.sleep(0)
     if chat_id not in last_characters:
         return
