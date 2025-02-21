@@ -502,16 +502,16 @@ def error_handler(update: Update, context: CallbackContext):
 
 def main() -> None:
     """Run bot."""
-    application.job_queue.run_once(preload_characters, when=0)
+    '''application.job_queue.run_once(preload_characters, when=0)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
     #application.add_handler(CommandHandler("fav", fav, block=False))
     application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
-    #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
+    #application.add_handler(CommandHandler("mecount", show_message_count, block=False))'''
     
     # Use asyncio.create_task to run the bot in the background
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
     application.add_error_handler(error_handler)
-    asyncio.gather(update_leaderboards(), create_indexes())
+    #asyncio.gather(update_leaderboards(), create_indexes())
     
 if __name__ == "__main__":
     shivuu.start()
