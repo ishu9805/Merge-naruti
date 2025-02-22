@@ -70,7 +70,7 @@ def escape_markdown(text):
     escape_chars = r'\*_`\\~>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
-@block_dec_ptb
+
 async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
@@ -163,9 +163,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     spawn_counts = {
         '⚪️ Common': 5,
-        '🟣 Rare': 5,
-        '🟢 Medium': 5,
-        '🟡 Legendary': 6,
+        '🟣 Rare': 7,
+        '🟢 Medium': 8,
+        '🟡 Legendary': 10,
         '💮 Special Edition': 2,
         '🔮 Limited Edition': 1,
         '💸 Premium Edition': 0,
