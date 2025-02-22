@@ -72,7 +72,7 @@ async def handle_confirmation(user_id, character_id):
     await app.send_message(user_id, f"✅ {character['name']} is now your favorite character!")
 
 
-@app.on_callback_query(filters.regex(r'^(confirm_|cancel_)'))
+@app.on_callback_query(filters.regex(r'^(fconfirm_|fcancel_)'))
 @block_cbq
 async def button(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
