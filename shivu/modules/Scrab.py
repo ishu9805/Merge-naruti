@@ -32,8 +32,7 @@ ALLOWED_RARITIES = {
     "⚪️ Common",
     "🟣 Rare",
     "🟡 Legendary",
-    "🟢 Medium",
-    "💮 Special Edition"
+    "🟢 Medium"
 }
 
 LIMITED_EDITION_RARITY = "🔮 Limited Edition"
