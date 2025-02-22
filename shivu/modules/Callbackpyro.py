@@ -5,12 +5,13 @@ from pymongo import MongoClient
 from shivu import shivuu as app
 from shivu import user_collection, ban_collection
 
+
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
-
+from shivu.modules.fav import button
 
 # Handler for callback queries
 @app.on_callback_query()
@@ -80,6 +81,8 @@ async def callback_query_handler(client, callback_query):
             )
             await callback_query.edit_message_caption("Your rarity mode is now set to All.")
 
+        elif data.startswith("fconfirm") or data.startswith("fcancel"):
+            await button(client, callback_query)
         # Schedule the deletion of the callback query message after 20 seconds
         await asyncio.sleep(20)
         await callback_query.message.delete()
