@@ -31,8 +31,8 @@ async def fav(client: Client, message: Message):
         [
             
             [
-                IKB("✔️ Confirm", callback_data=f'confirm_{user_id}_{character_id}'),
-                IKB("❌ Cancel", callback_data=f'cancel_{user_id}_{character_id}')
+                IKB("✔️ Confirm", callback_data=f'fconfirm_{user_id}_{character_id}'),
+                IKB("❌ Cancel", callback_data=f'fcancel_{user_id}_{character_id}')
             ]
         ]
     )
@@ -83,8 +83,8 @@ async def button(client: Client, callback_query: CallbackQuery):
         await callback_query.answer("❌ This action is not for you!", show_alert=True)
         return
 
-    if action == "confirm":
+    if data.startswith("fconfirm"):
         await handle_confirmation(user_id, character_id)
         await callback_query.message.edit_text("✅ Favorite character updated!")
-    elif action == "cancel":
+    elif data.startswith("fcancel")
         await callback_query.message.edit_text("❌ Operation canceled.")
