@@ -47,11 +47,23 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
         print(f"Error fetching unique characters: {e}")
         return []
 
+
+
+async def update_user_characters(user_id, characters):
+    await user_collection.update_one(
+        {'id': user_id},
+        {
+            '$push': {'characters': {'$each': characters}},
+            '$set': {'last_daily_reward': datetime.utcnow()}
+        }
+    )
+
+
 @bot.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
-    
+
     if message.forward_date:
         return
 
@@ -59,38 +71,33 @@ async def hclaim(_, message: t.Message):
         await message.reply_text("Your claim request is already being processed. Please wait.")
         return
 
-       # Set the lock
-    user = await user_collection.find_one({"id": user_id})
-    if not user:
-        await message.reply_text(f"please start the bot in dm first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
-        return
+    # Set the lock
+    claim_lock[user_id] = True
 
     try:
+        user = await user_collection.find_one({"id": user_id})
+        if not user:
+            await message.reply_text(f"Please start the bot in DM first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
+            return
+
         # Check if the user is banned
         is_banned = await ban_collection.find_one({"user_id": user_id})
         if is_banned:
-            claim_lock.pop(user_id, None)
             return
 
-    except Exception as e:
-         return
-        
-    if not await is_member(user_id):
-        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
-        messages = (
-            "You need to be a member of our exclusive group to use this command.\n"
-            "Join now and explore the amazing features awaiting you!\n\n"
-        )
-        reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
-        )
-        await message.reply_text(messages, reply_markup=reply_markup)
-        return
+        if not await is_member(user_id):
+            group_link = "https://t.me/blade_x_community"
+            messages = (
+                "You need to be a member of our exclusive group to use this command.\n"
+                "Join now and explore the amazing features awaiting you!\n\n"
+            )
+            reply_markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            )
+            await message.reply_text(messages, reply_markup=reply_markup)
+            return
 
-    claim_lock[user_id] = True 
-    
-    try:
-        user_data = await user_collection.find_one({'id': user_id}) or {
+        user_data = user or {
             'id': user_id,
             'username': message.from_user.username,
             'characters': [],
@@ -98,51 +105,30 @@ async def hclaim(_, message: t.Message):
         }
 
         last_claimed_date = user_data.get('last_daily_reward')
-
-        if last_claimed_date:
-            last_claimed_date = last_claimed_date.replace(tzinfo=None)
-            if last_claimed_date.date() == datetime.utcnow().date():
-                remaining_time = timedelta(days=1) - (datetime.utcnow() - last_claimed_date)
-                formatted_time = await format_time_delta(remaining_time)
-                await message.reply_text(f"⏳ You've already claimed today! Next reward in: `{formatted_time}`")
-                return
+        if last_claimed_date and last_claimed_date.date() == datetime.utcnow().date():
+            remaining_time = timedelta(days=1) - (datetime.utcnow() - last_claimed_date)
+            formatted_time = await format_time_delta(remaining_time)
+            await message.reply_text(f"⏳ You've already claimed today! Next reward in: `{formatted_time}`")
+            return
 
         unique_characters = await get_unique_characters(user_id)
-
         if not unique_characters:
             return await message.reply_text("🚫 No unique characters found.")
 
-        await user_collection.update_one(
-            {'id': user_id},
-            {
-                '$push': {'characters': {'$each': unique_characters}},
-                '$set': {'last_daily_reward': datetime.utcnow()}
-            }
-        )
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {'ccount': 1}},
-            upsert=True
-        )
-        
-        
-        
-        
-
+        await update_user_characters(user_id, unique_characters)
+      
         for character in unique_characters:
-            rarity = character['rarity']
-            await user_count.update_one(
-                {'user_id': user_id},
-                {'$inc': {f'rarity_count.{rarity}': 1}},
-                upsert=True
+            await message.reply_photo(
+                photo=character['img_url'],
+                caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*"
             )
-            await message.reply_photo(photo=character['img_url'], caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*")
 
     except Exception as e:
-        print(f"Error in hclaim for user {user_id}: {e}")
+        logging.error(f"Error in hclaim for user {user_id}: {e}")
         await message.reply_text("An error occurred while processing your claim. Please try again later.")
     finally:
         claim_lock.pop(user_id, None)
+
 
 
 @bot.on_message(filters.command(["check"]))
