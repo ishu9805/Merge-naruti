@@ -166,6 +166,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🟣 Rare': 7,
         '🟢 Medium': 8,
         '🟡 Legendary': 10,
+        '🟣 Rare': 7,
+        '🟡 Legendary': 10,
         '💮 Special Edition': 2,
         '🔮 Limited Edition': 1,
         '💸 Premium Edition': 0,
