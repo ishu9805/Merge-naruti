@@ -191,24 +191,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     character = random.choice(characters_to_spawn)
     
     
-
-    if character.get('rarity') == '💝 Valentine':
-        waifu_id = character['id']
-
-    # Check global ownership count of the Valentine character
-        user_ownership_data = await user_collection.aggregate([
-           {'$match': {'characters.id': waifu_id}},
-           {'$unwind': '$characters'},
-           {'$match': {'characters.id': waifu_id}},
-           {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
-           {'$sort': {'count': -1}}
-        ]).to_list(length=10)
-
-        global_count = sum(user['count'] for user in user_ownership_data)
-
-        if global_count >= 15:
-        # Skip spawning this character and choose another one
-           return await send_image(update, context)
+   
 
     if character.get('rarity') == '🔮 Limited Edition':
         await context.bot.send_message(chat_id=7378476666, text=f"A limited character has spawned! Character id: {character['id']}")
