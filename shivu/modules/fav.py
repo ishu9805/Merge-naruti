@@ -86,5 +86,5 @@ async def button(client: Client, callback_query: CallbackQuery):
     if data.startswith("fconfirm"):
         await handle_confirmation(user_id, character_id)
         await callback_query.message.edit_text("✅ Favorite character updated!")
-    elif data.startswith("fcancel")
+    elif data.startswith("fcancel"):
         await callback_query.message.edit_text("❌ Operation canceled.")
