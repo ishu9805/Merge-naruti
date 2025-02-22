@@ -60,6 +60,11 @@ async def startp(_, message):
                 {"id": id},
                 {"$set": {"created_at": datetime.now()}}
             )
+        if "characters" not in user_data:
+            user_collection.update_one(
+                {"id":id},
+                {"$set": {"characters": []}}
+            )
         user_collection.update_one(
             {"id": id},
             {
