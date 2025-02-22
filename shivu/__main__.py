@@ -75,6 +75,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
     
+    if user_id in t_block:
+        return
 
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
