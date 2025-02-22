@@ -51,7 +51,7 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
-
+    
     if message.forward_date:
         return
 
@@ -59,8 +59,10 @@ async def hclaim(_, message: t.Message):
         await message.reply_text("Your claim request is already being processed. Please wait.")
         return
 
-      # Set the lock
-    
+       # Set the lock
+    user = await user_collection.find_one({"id": user_id})
+        await message.reply_text(f"please start the bot in dm first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
+
     try:
         # Check if the user is banned
         is_banned = await ban_collection.find_one({"user_id": user_id})
