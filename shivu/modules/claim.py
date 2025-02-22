@@ -61,6 +61,7 @@ async def hclaim(_, message: t.Message):
 
        # Set the lock
     user = await user_collection.find_one({"id": user_id})
+    if not user:
         await message.reply_text(f"please start the bot in dm first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
 
     try:
