@@ -263,9 +263,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
+
 
     # Filter Valentine characters
-    valentine_characters = [c for c in all_characters if c.get('rarity') == '💝 Valentine']
+    valentine_characters = [c for c in all_characters if c.get('rarity') == '🎐 Celestial']
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
@@ -273,6 +278,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     # Select a random Valentine character
     character = random.choice(valentine_characters)
+    
 
     # Check global ownership count
     waifu_id = character['id']
@@ -284,11 +290,20 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         {'$sort': {'count': -1}}
     ]).to_list(length=10)
 
+
     global_count = sum(user['count'] for user in user_ownership_data)
 
     if global_count >= 15:
         print(f"Valentine character {waifu_id} has reached the global ownership limit.")
         return
+
+    sent_characters[chat_id].append(character.get('id'))
+    last_characters[chat_id] = character
+
+
+
+    if chat_id in first_correct_guesses:
+        del first_correct_guesses[chat_id]
 
     # Send the character to the chat
     caption = "💖 A *Valentine* character has arrived!\nGuess their name with /guess [Name] to win their heart! 💌"
@@ -309,11 +324,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         )
 
     
-    # Update sent characters and last character
-    if chat_id not in sent_characters:
-        sent_characters[chat_id] = []
-    sent_characters[chat_id].append(character.get('id'))
-    last_characters[chat_id] = character
+   
 
     # Notify admin (optional)
     await context.bot.send_message(chat_id=7378476666, text=f"A Valentine character has spawned! Character id: {character['id']}")
