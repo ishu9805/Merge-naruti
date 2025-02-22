@@ -275,7 +275,7 @@ async def check(update: Update, context: CallbackContext) -> None:
 
 application.add_handler(CommandHandler("total", check_total_characters))
 
-@app.on_message(filters.command('update') & uploader_filter)
+@app.on_message(filters.command('update') & sudo_filter)
 async def update(client: Client, message: Message):
     args = message.text.split(maxsplit=3)[1:]
     if len(args) != 3:
@@ -305,6 +305,7 @@ async def update(client: Client, message: Message):
             await message.reply_text('Invalid rarity. Please use a number between 1 and 10.')
             return
 
+   
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
 
     bulk_operations = []
