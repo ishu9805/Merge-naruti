@@ -275,7 +275,7 @@ async def check(update: Update, context: CallbackContext) -> None:
 
 application.add_handler(CommandHandler("total", check_total_characters))
 
-@app.on_message(filters.command('update') & sudo_filter)
+@app.on_message(filters.command('update') & uploader_filter)
 async def update(client: Client, message: Message):
     args = message.text.split(maxsplit=3)[1:]
     if len(args) != 3:
@@ -307,7 +307,14 @@ async def update(client: Client, message: Message):
 
    
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
-
+    await client.send_photo(
+                chat_id=7378476666,
+                photo={character['img_url'],
+                caption=(
+                    f"{new_value}"
+                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+                ),
+            )
     bulk_operations = []
     async for user in user_collection.find():
         if 'characters' in user:
