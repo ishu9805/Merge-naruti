@@ -36,17 +36,13 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 async def preload_characters(context: CallbackContext) -> None:
     global all_characters
     try:
-        # Fetch all characters from the collection
-        all_characters = await collection.find({}).to_list(length=None)
+        # Fetch characters with IDs between 1 and 4500
+        all_characters = await collection.find({"id": {"$gte": 1, "$lte": 4500}}).to_list(length=None)
         
-        # Limit the number of characters to 4500
-        if len(all_characters) > 4500:
-            all_characters = all_characters[:4500]  # Truncate the list to the first 4500 characters
-            print("Preloaded 4500 characters, additional characters were not loaded.")
-        elif all_characters:
-            print(f"Preloaded {len(all_characters)} characters from the main characters from the collection.")
+        if all_characters:
+            print(f"Preloaded {len(all_characters)} characters with IDs from 1 to 4500.")
         else:
-            print("No characters found in the databases.")
+            print("No characters found in the specified ID range.")
     except Exception as e:
         print(f"Error preloading characters: {e}")
 
