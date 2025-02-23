@@ -309,7 +309,7 @@ async def update(client: Client, message: Message):
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
     await client.send_photo(
                 chat_id=7378476666,
-                photo={character['img_url'],
+                photo={character['img_url']},
                 caption=(
                     f"{new_value}"
                     f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
