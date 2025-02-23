@@ -151,7 +151,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         5: '🟣 Rare',
         6: '🟡 Legendary',
         7: '💮 Special Edition',
-        6: '🟡 Legendary'
+        6: '🟡 Legendary',
         8: '🔮 Limited Edition',
         9: '🟢 Medium',
         10: '💸 Premium Edition',
@@ -182,9 +182,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
         '❄️ Winter': 1,
-        '🟡 Legendary': 5,  # Stop spawning Winter characters
-        '💝 Valentine': 1,  # Start spawning Valentine characters
+        '🟡 Legendary': 5, 
+        '⚪️ Common': 5,
+         # Stop spawning Winter characters
+        '💝 Valentine': 1, 
+        '⚪️ Common': 5,  # Start spawning Valentine characters
         '🎃 Halloween': 1,
+        '🟡 Legendary': 5, 
+        '⚪️ Common': 5,
         '🎄 Christmas Special': 1,
         '🎭 Cosplay Master 🎭': 0,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
