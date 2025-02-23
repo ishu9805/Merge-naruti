@@ -22,7 +22,9 @@ async def broadcast(_, message):
         nonlocal success_count, fail_count, message_count
         try:
             if replied_message.text:
-                await app.send_message(target_id, replied_message.text)
+                x = message.reply_to_message.id
+                y = message.chat.id
+                await app.forward_messages(target_id, y, x)
             else:
                 media_caption = replied_message.caption if replied_message.caption else ""
                 if replied_message.document:
@@ -66,7 +68,7 @@ async def broadcast(_, message):
             user_success += 1
 
             # Update progress every 100 users
-            if user_success % 100 == 0:
+            if user_success % 25 == 0:
                 await update_progress()
 
     # Send to groups
@@ -81,7 +83,7 @@ async def broadcast(_, message):
             group_success += 1
 
             # Update progress every 100 groups
-            if group_success % 100 == 0:
+            if group_success % 25 == 0:
                 await update_progress()
 
     # Final report
