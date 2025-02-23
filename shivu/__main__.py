@@ -37,7 +37,7 @@ async def preload_characters(context: CallbackContext) -> None:
     global all_characters
     try:
         # Fetch characters with IDs between 1 and 4500
-        all_characters = await collection.find({"id": {"$gte": 1, "$lte": 4500}}).to_list(length=None)
+        all_characters = await collection.find({ 'id': {'gte': '01', '$lte': '4500'}}).to_list(length=None)
         
         if all_characters:
             print(f"Preloaded {len(all_characters)} characters with IDs from 1 to 4500.")
