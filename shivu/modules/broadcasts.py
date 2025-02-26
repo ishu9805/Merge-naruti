@@ -1,7 +1,16 @@
 import asyncio
+import logging
 from pyrogram import filters
-from pyrogram.errors import PeerIdInvalid, FloodWait
+from pyrogram.errors import PeerIdInvalid, FloodWait, ChatWriteForbidden, UserIsBlocked
 from . import user_collection, app, dev_filter, top_global_groups_collection
+
+# Configurable settings
+MESSAGE_DELAY = 2  # Delay after every 7 messages
+PROGRESS_UPDATE_INTERVAL = 25  # Update progress every 25 users/groups
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @app.on_message(filters.command("broadcast") & dev_filter)
 async def broadcast(_, message):
@@ -16,6 +25,8 @@ async def broadcast(_, message):
     success_count = 0
     fail_count = 0
     message_count = 0
+    user_success = 0  # Define user_success here
+    group_success = 0  # Define group_success here
 
     # Function to send the message
     async def send_message(target_id):
@@ -36,21 +47,22 @@ async def broadcast(_, message):
 
             success_count += 1
             message_count += 1
-        except PeerIdInvalid:
+        except (PeerIdInvalid, ChatWriteForbidden, UserIsBlocked):
             fail_count += 1
         except FloodWait as e:
             await asyncio.sleep(e.value)
             await send_message(target_id)  # Retry after waiting
         except Exception as e:
-            print(f"Error sending to {target_id}: {e}")
+            logger.error(f"Error sending to {target_id}: {e}")
             fail_count += 1
 
         # Introduce a delay after every 7 messages
         if message_count % 7 == 0:
-            await asyncio.sleep(2)
+            await asyncio.sleep(MESSAGE_DELAY)
 
     # Function to update progress
     async def update_progress():
+        nonlocal user_success, group_success  # Access outer scope variables
         await progress_message.edit_text(
             f"📢 Broadcast in progress...\n"
             f"✅ Users sent: {user_success}\n"
@@ -60,21 +72,19 @@ async def broadcast(_, message):
 
     # Send to users
     user_cursor = user_collection.find({})
-    user_success = 0
     async for user in user_cursor:
         user_id = user.get('id')
         if user_id:
             await send_message(user_id)
             user_success += 1
 
-            # Update progress every 100 users
-            if user_success % 25 == 0:
+            # Update progress every PROGRESS_UPDATE_INTERVAL users
+            if user_success % PROGRESS_UPDATE_INTERVAL == 0:
                 await update_progress()
 
     # Send to groups
     group_cursor = top_global_groups_collection.find({})
     unique_group_ids = set()
-    group_success = 0
     async for group in group_cursor:
         group_id = group.get('group_id')
         if group_id and group_id not in unique_group_ids:
@@ -82,8 +92,8 @@ async def broadcast(_, message):
             await send_message(group_id)
             group_success += 1
 
-            # Update progress every 100 groups
-            if group_success % 25 == 0:
+            # Update progress every PROGRESS_UPDATE_INTERVAL groups
+            if group_success % PROGRESS_UPDATE_INTERVAL == 0:
                 await update_progress()
 
     # Final report
