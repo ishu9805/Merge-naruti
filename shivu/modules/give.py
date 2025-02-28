@@ -38,7 +38,8 @@ async def rarities(update: Update, context: CallbackContext):
         "🎄 Christmas Special": 0,
         "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
         "🎭 Cosplay Master 🎭": 0,
-        "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": 0
+        "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": 0,
+        "🧧 𝙀𝙫𝙚𝙣𝙩𝙨": 0
     }
 
     async for character in characters_cursor:  # Iterate over the cursor asynchronously
