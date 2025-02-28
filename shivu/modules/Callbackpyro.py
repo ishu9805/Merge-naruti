@@ -52,7 +52,8 @@ async def callback_query_handler(client, callback_query):
                     InlineKeyboardButton("🎭", callback_data="rarity:🎭 Cosplay Master 🎭")
                 ],
                 [
-                    InlineKeyboardButton("🎗️", callback_data="rarity:🎗️ AMV Edition")
+                    InlineKeyboardButton("🎗️", callback_data="rarity:🎗️ AMV Edition"),
+                    InlineKetboardButton("🧧", callback_data="rarity:🧧 𝙀𝙫𝙚𝙣𝙩𝙨")
                 ]
             ]
 
