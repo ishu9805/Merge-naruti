@@ -58,6 +58,29 @@ active_ids = set()
 id_lock = Lock()
 import requests
 
+
+def upload_to_catbox(file_path):
+    url = "https://catbox.moe/user/api.php"
+    # Set the payload to specify that the upload type is a file and choose the `fileupload` option
+    payload = {
+        'reqtype': 'fileupload',
+    }
+    # Open the file in binary mode and send it to Catbox
+    files = {
+        'fileToUpload': open(file_path, 'rb'),
+    }
+    # Send the POST request to Catbox with the file and payload
+    response = requests.post(url, files=files, data=payload)
+
+    # Check if the upload was successful
+    if response.status_code == 200:
+        return response.text.strip()  # Return the URL of the uploaded image
+    else:
+        raise Exception(f"Failed to upload to Catbox. Status Code: {response.status_code}")
+
+# Example usage:
+
+
 def upload_to_envs(file_path=None, file_url=None, expires=None, secret=None):
     url = "https://envs.sh"
     files = {}
@@ -162,7 +185,7 @@ async def ul(client, message):
             path = await reply.download()
 
             # Upload image to Catbox
-            catbox_url = upload_to_envs(path)
+            catbox_url = upload_to_catbox(path)
             character['img_url'] = catbox_url
             
             # Insert character into the database
