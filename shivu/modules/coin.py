@@ -157,6 +157,7 @@ async def weekly_reward(client: Client, message: Message):
 @command_lock
 async def pay_coins(client: Client, message: Message):
     user_id = message.from_user.id
+    await asyncio.sleep(0)
     if temp_block(user_id):
         return
     # Check if the user is banned
@@ -214,6 +215,7 @@ async def pay_coins(client: Client, message: Message):
 @command_lock
 async def bonus_coins(client: Client, message: Message):
     user_id = message.from_user.id
+    await asyncio.sleep(0)
 
     # Check if the user is banned
     if temp_block(user_id):
@@ -351,35 +353,3 @@ TTOPS_HANDLER = CommandHandler('tokentop', top_users_by_tokens)
 
 application.add_handler(TOPS_HANDLER)
 application.add_handler(TTOPS_HANDLER)
-
-
-# Handler for the /bonus command
-bonus_handler = CommandHandler("bonus", bonus_coins)
-application.add_handler(bonus_handler)
-
-
-
-"""application.add_handler(CallbackQueryHandler(next_item, pattern="^next$"))
-application.add_handler(CallbackQueryHandler(buy_character, pattern=r'^buy_\d+$'))
-application.add_handler(CommandHandler(['Shop', 'shopmenu'], show_shop))"""
-application.add_handler(CommandHandler('pay', pay_coins))
-
-# Define command handlers
-REMOVE_COINS_HANDLER = CommandHandler('removecoins', remove_coins)
-GIVE_COINS_HANDLER = CommandHandler('givecoins', give_coins)
-
-# Add handlers to the application
-application.add_handler(REMOVE_COINS_HANDLER)
-application.add_handler(GIVE_COINS_HANDLER)
-
-# Define command handlers
-CHECK_BALANCE_HANDLER = CommandHandler('balance', check_balance)
-DAILY_REWARD_HANDLER = CommandHandler('daily', daily_reward)
-WEEKLY_REWARD_HANDLER = CommandHandler('weekly', weekly_reward)
-
-
-# Add handlers to the application
-application.add_handler(CHECK_BALANCE_HANDLER)
-application.add_handler(DAILY_REWARD_HANDLER)
-application.add_handler(WEEKLY_REWARD_HANDLER)
-
