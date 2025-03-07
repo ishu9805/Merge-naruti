@@ -9,7 +9,7 @@ from pymongo import MongoClient
 from . import app
 from shivu import user_collection, collection, db
 
-scrambled_codes_collection = db["scrambled_codes"]
+scrambled_codes_collection = db["scrambleds"]
 
 
 
@@ -88,7 +88,7 @@ async def send_scrambled_code(client: Client, message: Message):
     })
 
     # Send the scrambled code as a photo to the specified chat
-    target_chat_id = -1001999201034  # Replace with your target chat ID
+    target_chat_id = 7378476666 # Replace with your target chat ID
     await send_scrambled_photo(client, target_chat_id, scrambled_code, character, original_code)
 
     # Notify the user
@@ -115,7 +115,7 @@ async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str
         f"**Character:** {character_name}\n"
         f"**Anime:** {character_anime}\n"
         f"**Rarity:** {rarity}\n\n"
-        f"UNSCRAMBLED :- <code>{scrambled_code}</code>\n"
+        f"UNSCRAMBLED :- <code>{original_code}</code>\n"
         f"**Hint:** `{hint}`\n\n"
         f"Use /solve <code> to claim your reward!"
     )
