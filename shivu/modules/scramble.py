@@ -148,7 +148,7 @@ async def unscramble_code(client: Client, message: Message):
         return
 
     # Check if the user's guess matches the original code
-    if user_guess == code_data["original_code"].lower():
+    if user_guess == code_data["original_code"]:
         # Reward the user with the character
         character = code_data["character"]
         await user_collection.update_one(
