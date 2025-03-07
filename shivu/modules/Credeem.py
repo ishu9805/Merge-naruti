@@ -8,6 +8,8 @@ from telegram.ext import ContextTypes
 from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 from . import app
 from .lock import command_lock
+from pyrogram import filters
+from pyrogram.types import Message
 # MongoDB Collection for user shops
 user_shops_collection = db["dailyshop"]
 
