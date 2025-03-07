@@ -6,6 +6,7 @@ from shivu import application, user_collection, PARTNER, ban_collection, collect
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ContextTypes
 from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
+from .lock import command_lock
 # MongoDB Collection for user shops
 user_shops_collection = db["dailyshop"]
 
@@ -234,6 +235,7 @@ def generate_random_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
 @app.on_message(filters.command("dailycode"))
+@command_lock
 async def daily_code(client: Client, message: Message):
     user_id = message.from_user.id
 
@@ -266,6 +268,7 @@ async def daily_code(client: Client, message: Message):
 
 
 @app.on_message(filters.command("credeem"))
+@command_lock
 async def redeem(client: Client, message: Message):
     user_id = message.from_user.id
     code = " ".join(message.command[1:])
@@ -298,6 +301,7 @@ async def redeem(client: Client, message: Message):
 
 
 @app.on_message(filters.command("gen"))
+@command_lock
 async def gen(client: Client, message: Message):
     user_id = message.from_user.id
     if str(user_id) not in PARTNER:
