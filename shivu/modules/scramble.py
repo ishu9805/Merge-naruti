@@ -116,7 +116,7 @@ async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str
         f"**Character:** {character_name}\n"
         f"**Anime:** {character_anime}\n"
         f"**Rarity:** {rarity}\n\n"
-        f"<code>{scrambled_code}</code>\n"
+        f"UNSCRAMBLED :- <code>{scrambled_code}</code>\n"
         f"**Hint:** `{hint}`\n\n"
         f"Use /solve <code> to claim your reward!"
     )
