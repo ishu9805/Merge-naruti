@@ -4,6 +4,7 @@ import uuid
 import requests
 import random
 import html
+from . import app
 import logging
 from pymongo import ReturnDocument
 from typing import List
