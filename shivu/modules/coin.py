@@ -42,11 +42,11 @@ import logging
 
 # MongoDB setup
 
-async def is_member(user_id: int) -> bool:
+async def is_member(user_id):
     """Check if a user is part of the required group."""
     try:
-        member = await app.get_chat_member(required_group_id, user_id)
-        return member.status in ["member", "administrator", "creator"]
+        member = await application.bot.get_chat_member(required_group_id, user_id)
+        return member.status in ['member', 'administrator', 'creator']
     except Exception:
         return False
 
