@@ -131,7 +131,7 @@ async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str
 @app.on_message(filters.command("solve"))
 async def unscramble_code(client: Client, message: Message):
     user_id = message.from_user.id
-    user_guess = " ".join(message.command[1:]).strip().upper()
+    user_guess = " ".join(message.command[1:]).strip().lower()
 
     if not user_guess:
         await message.reply_text("❌ Please provide a code to unscramble.")
