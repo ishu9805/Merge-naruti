@@ -33,6 +33,14 @@ LOGGER = logging.getLogger(__name__)
 OWNER_ID = "5856750053"
 
 
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from datetime import datetime, timedelta
+from pymongo import MongoClient
+import logging
+
+# MongoDB setup
+
 async def is_member(user_id):
     """Check if a user is part of the required group."""
     try:
@@ -46,6 +54,7 @@ async def is_member(user_id):
 @command_lock
 async def check_balance(client: Client, message: Message):
     user_id = message.from_user.id
+    await asyncio.sleep(0)
 
     # Check if the user is banned
     if temp_block(user_id):
@@ -80,491 +89,165 @@ async def add_coins(user_id: int, amount: int) -> None:
             await user_collection.insert_one({"id": user_id, "coins": amount})
     except Exception as e:
         LOGGER.error(f"Error adding coins: {e}")
-
-async def daily_reward(update: Update, context: CallbackContext) -> None:
-
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-
-    try:
-        user_id = int(update.effective_user.id)
-        user = await user_collection.find_one({"id": user_id})
-
-        if user:
-            last_claimed = user.get("last_daily_claimed")
-            if last_claimed and last_claimed.date() == datetime.now().date():
-                await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Aʟʀᴇᴀᴅʏ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Dᴀɪʟʏ Rᴇᴡᴀʀᴅ.")
-                return
-
-            await add_coins(user_id, 40)
-            await user_collection.update_one(
-                {"id": user_id},
-                {"$set": {"last_daily_claimed": datetime.now()}},
-            )
-            await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Dᴀɪʟʏ ʀᴇᴡᴀʀᴅ. Yᴏᴜ Eᴀʀɴᴇᴅ 𝟺𝟶 Cᴏɪɴs")
-        else:
-            await user_collection.insert_one({"id": user_id, "coins": 40, "last_daily_claimed": datetime.now()})
-            await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Dᴀɪʟʏ ʀᴇᴡᴀʀᴅ. Yᴏᴜ Eᴀʀɴᴇᴅ 𝟺𝟶 Cᴏɪɴs.")
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text(f"Error occurred: {e}")
-
-
-
-async def weekly_reward(update: Update, context: CallbackContext) -> None:
-
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-    try:
-        user_id = int(update.effective_user.id)
-        user = await user_collection.find_one({"id": user_id})
-
-        if user:
-            last_claimed = user.get("last_weekly_claimed")
-            start_of_week = datetime.now().date() - timedelta(days=datetime.now().weekday())
-            if last_claimed and last_claimed.date() >= start_of_week:
-                await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Aʟʀᴇᴀᴅʏ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Wᴇᴇᴋʟʏ Rᴇᴡᴀʀᴅ.")
-                return
-
-            await add_coins(user_id, 250)
-            await user_collection.update_one(
-                {"id": user_id},
-                {"$set": {"last_weekly_claimed": datetime.now()}},
-            )
-            await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Wᴇᴇᴋʟʏ Rᴇᴡᴀʀᴅ. Yᴏᴜ Eᴀʀɴᴇᴅ 𝟸𝟻𝟶 Cᴏɪɴs.")
-        else:
-            await user_collection.insert_one({"id": user_id, "coins": 250, "last_weekly_claimed": datetime.now()})
-            await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Wᴇᴇᴋʟʏ Rᴇᴡᴀʀᴅ. Yᴏᴜ Eᴀʀɴᴇᴅ 𝟸𝟻𝟶 Cᴏɪɴs.")
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text(f"Error occurred: {e}")
-        
-
-
-
-async def remove_coins(update: Update, context: CallbackContext) -> None:
-    try:
-        if str(update.effective_user.id) not in PARTNER:
-            return
-
-        # Parse user_id and coins from the command arguments
-        args = context.args
-        if len(args) != 2:
-            await update.message.reply_text("Invalid format. Use: /removecoins <user_id> <amount>")
-            return
-
-        user_id = int(args[0])
-        try:
-            amount = int(args[1])
-        except ValueError:
-            await update.message.reply_text("Invalid amount. Please provide a valid number.")
-            return
-
-        # Retrieve user's wallet
-        user = await user_collection.find_one({"id": user_id})
-
-        if not user:
-            await update.message.reply_text("User not found.")
-            return
-
-        current_balance = user.get("coins", 0)
-        new_balance = max(0, current_balance - amount)
-
-        # Update user's balance
-        await user_collection.update_one({"id": user_id}, {"$set": {"coins": new_balance}})
-
-        user_mention = f"[{user.get('first_name', 'User')}](tg://user?id={user_id})"
-
-        await update.message.reply_text(f"Successfully removed {amount} coins from user {user_mention}. New balance: {new_balance}")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text("An error occurred while removing coins. Please try again later.")
-
-
-async def give_coins(update: Update, context: CallbackContext) -> None:
-    try:
-        if str(update.effective_user.id) not in PARTNER:
-            return
-
-        # Parse user_id and coins from the command arguments
-        args = context.args
-        if len(args) != 2:
-            await update.message.reply_text("Invalid format. Use: /givecoins <user_id> <amount>")
-            return
-
-        user_id = int(args[0])
-        try:
-            amount = int(args[1])
-        except ValueError:
-            await update.message.reply_text("Invalid amount. Please provide a valid number.")
-            return
-
-        # Retrieve user's wallet
-        user = await user_collection.find_one({"id": user_id})
-
-        if not user:
-            # Initialize user's wallet if it doesn't exist
-            await user_collection.insert_one({"id": user_id, "coins": amount})
-            await update.message.reply_text(f"User {user_id} didn't have a wallet. Initialized with {amount} coins.")
-            return
-
-        current_balance = user.get("coins", 0)
-        new_balance = current_balance + amount
-
-        # Update user's balance
-        await user_collection.update_one({"id": user_id}, {"$set": {"coins": new_balance}})
-        user_mention = f"[{user.get('first_name', 'User')}](tg://user?id={user_id})"
-
-        await update.message.reply_text(f"Successfully gave {amount} coins to user {user_mention}. New balance: {new_balance}")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text("An error occurred while giving coins. Please try again later.")
-
-
-
-async def pay_coins(update: Update, context: CallbackContext) -> None:
-
-
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-    try:
-        # Parse the amount from the command arguments
-        args = context.args
-        if len(args) != 1:
-            await update.message.reply_text("Invalid format. Use: /pay <amount>")
-            return
-
-        try:
-            amount = int(args[0])
-            if amount <= 0:
-                await update.message.reply_text("Amount must be a positive number.")
-                return
-        except ValueError:
-            await update.message.reply_text("Invalid amount. Please provide a valid number.")
-            return
-
-        # Check if the command is a reply to a message
-        if not update.message.reply_to_message:
-            await update.message.reply_text("Please reply to the message of the user you want to pay.")
-            return
-
-        # Extract the recipient's user ID from the replied message
-        recipient_id = int(update.message.reply_to_message.from_user.id)
-        recipient_first_name = update.message.reply_to_message.from_user.first_name
-        recipient_mention = f"[{recipient_first_name}](tg://user?id={recipient_id})"
-        
-        # Get the sender's user ID
-        sender_id = int(update.effective_user.id)
-
-        # Check if sender is trying to pay themselves
-        if sender_id == recipient_id:
-            await update.message.reply_text("You cannot pay yourself.")
-            return
-
-        # Retrieve sender's wallet
-        sender_wallet = await user_collection.find_one({"id": sender_id})
-        if not sender_wallet:
-            await update.message.reply_text("Sender's wallet not found.")
-            return
-
-        # Check sender's balance
-        sender_balance = sender_wallet.get("coins", 0)
-        if sender_balance < amount:
-            await update.message.reply_text("Insufficient balance to make the payment.")
-            return
-
-        # Retrieve recipient's wallet
-        recipient_wallet = await user_collection.find_one({"id": recipient_id})
-        if not recipient_wallet:
-            await update.message.reply_text("Recipient's wallet not found.")
-            return
-
-        # Update sender's balance
-        new_sender_balance = sender_balance - amount
-        await user_collection.update_one({"id": sender_id}, {"$set": {"coins": new_sender_balance}})
-
-        # Update recipient's balance
-        recipient_balance = recipient_wallet.get("coins", 0)
-        new_recipient_balance = recipient_balance + amount
-        await user_collection.update_one({"id": recipient_id}, {"$set": {"coins": new_recipient_balance}})
-
-        await update.message.reply_text(f"Successfully transferred {amount} coins to user {recipient_mention}.")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text("An error occurred while processing the payment. Please try again later.")
-
       
 
-"""async def show_shop(update: Update, context: CallbackContext) -> None:
 
 
-    user_id = update.effective_user.id
 
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
+@app.on_message(filters.command("daily"))
+@block_dec
+@command_lock
+async def daily_reward(client: Client, message: Message):
+    user_id = message.from_user.id
+    await asyncio.sleep(0)
+    if temp_block(user_id):
         return
-    else:
-        pass
 
-    try:
-        # Store the user ID in context.user_data
-        context.user_data["shop_user_id"] = update.effective_user.id
-        
-        # Retrieve characters/items from the database
-        characters_cursor = shops_collection.find()
-        characters = await characters_cursor.to_list(length=None)
-
-        if not characters:
-            await update.message.reply_text("🚨 **No characters found in the shop!** 🚨")
+    user = await user_collection.find_one({"id": user_id})
+    if user:
+        last_claimed = user.get("last_daily_claimed")
+        if last_claimed and last_claimed.date() == datetime.now().date():
+            await message.reply_text("You Have Already Claimed Your Daily Reward.")
             return
 
-        # Get the current character index from context.user_data
-        current_index = context.user_data.get("current_index", 0)
+        await add_coins(user_id, 40)
+        await user_collection.update_one(
+            {"id": user_id},
+            {"$set": {"last_daily_claimed": datetime.now()}},
+        )
+        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.")
+    else:
+        await user_collection.insert_one({"id": user_id, "coins": 40, "last_daily_claimed": datetime.now()})
+        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.")
+ 
 
-        # Display the current character
-        character = characters[current_index]
-        
-        caption_message = f"🛍️ **Welcome to the Luxury Shop!** 🛍️\n\n" \
-                         f"🔹 **Character:** {character['name']}\n" \
-                         f"🔺 **Anime:** {character['anime']}\n" \
-                         f"💡 **Rarity:** {character['rarity']}\n" \
-                         f"💸 **Price:** {character['price']} tokens\n" \
-                         f"🔢 **ID:** {character['id']}\n" \
-                         f"📝 **About:** {character['about']}\n\n" \
-                         f"**Unleash Your Inner Otaku and Buy Now! 🎊**"
-        keyboard = [
-            [InlineKeyboardButton("Buy", callback_data=f"buy_{str(current_index)}")],
-            [InlineKeyboardButton("Next", callback_data="next")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_photo(photo=character['img_url'], caption=caption_message, reply_markup=reply_markup, parse_mode='HTML')
+@app.on_message(filters.command("weekly"))
+@block_dec
+@command_lock
+async def weekly_reward(client: Client, message: Message):
+    user_id = message.from_user.id
+    await asyncio.sleep(0)
+    # Check if the user is banned
+    if temp_block(user_id):
+        return
+      
+    user = await user_collection.find_one({"id": user_id})
+    if user:
+        last_claimed = user.get("last_weekly_claimed")
+        start_of_week = datetime.now().date() - timedelta(days=datetime.now().weekday())
+        if last_claimed and last_claimed.date() >= start_of_week:
+            await message.reply_text("You Have Already Claimed Your Weekly Reward.")
+            return
 
-        # Update the user's data to store the current index
-        context.user_data["current_index"] = (current_index + 1) % len(characters)
+        await add_coins(user_id, 500)
+        await user_collection.update_one(
+            {"id": user_id},
+            {"$set": {"last_weekly_claimed": datetime.now()}},
+        )
+        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.")
+    else:
+        await user_collection.insert_one({"id": user_id, "coins": 250, "last_weekly_claimed": datetime.now()})
+        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.")
 
-        LOGGER.info("Character displayed in the shop.")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.message.reply_text("An error occurred while displaying the shop. Please try again later.")
 
 
-async def buy_character(update: Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
-    user_id = query.from_user.id
+@app.on_message(filters.command("pay"))
+@block_dec
+@command_lock
+async def pay_coins(client: Client, message: Message):
+    user_id = message.from_user.id
+    if temp_block(user_id):
+        return
+    # Check if the user is banned
     
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-    # Check if the user is the one who initiated the shop command
-    if user_id != context.user_data.get("shop_user_id"):
-        await query.answer("You are not authorized to perform this action.")
+    args = message.text.split()
+    if len(args) != 2:
+        await message.reply_text("Invalid format. Use: /pay <amount>")
         return
 
     try:
-        # Extract character index from callback query
-        character_index = int(query.data.split("_")[1])
+        amount = int(args[1])
+        if amount <= 0:
+            await message.reply_text("Amount must be a positive number.")
+            return
+    except ValueError:
+        await message.reply_text("Invalid amount. Please provide a valid number.")
+        return
 
-        # Retrieve character data from the database
-        characters_cursor = shops_collection.find()
-        characters = await characters_cursor.to_list(length=None)
+    if not message.reply_to_message:
+        await message.reply_text("Please reply to the message of the user you want to pay.")
+        return
 
-        if character_index >= len(characters):
-            await query.answer("Character not found.")
+    recipient_id = message.reply_to_message.from_user.id
+    if user_id == recipient_id:
+        await message.reply_text("You cannot pay yourself.")
+        return
+
+    sender_wallet = await user_collection.find_one({"id": user_id})
+    if not sender_wallet:
+        await message.reply_text("Sender's wallet not found.")
+        return
+
+    sender_balance = sender_wallet.get("coins", 0)
+    if sender_balance < amount:
+        await message.reply_text("Insufficient balance to make the payment.")
+        return
+
+    recipient_wallet = await user_collection.find_one({"id": recipient_id})
+    if not recipient_wallet:
+        await message.reply_text("Recipient's wallet not found.")
+        return
+
+    new_sender_balance = sender_balance - amount
+    await user_collection.update_one({"id": user_id}, {"$set": {"coins": new_sender_balance}})
+
+    recipient_balance = recipient_wallet.get("coins", 0)
+    new_recipient_balance = recipient_balance + amount
+    await user_collection.update_one({"id": recipient_id}, {"$set": {"coins": new_recipient_balance}})
+
+    await message.reply_text(f"Successfully transferred {amount} coins to user {recipient_id}.")
+
+
+@app.on_message(filters.command("bonus"))
+@block_dec
+@command_lock
+async def bonus_coins(client: Client, message: Message):
+    user_id = message.from_user.id
+
+    # Check if the user is banned
+    if temp_block(user_id):
+        return
+
+    # Check if the user is a member of the required group
+    try:
+        member = await client.get_chat_member("YOUR_GROUP_ID", user_id)
+        if member.status not in ["member", "administrator", "creator"]:
+            await message.reply_text("You need to join our group to claim bonus coins.")
+            return
+    except Exception:
+        await message.reply_text("Error checking group membership.")
+        return
+
+    user = await user_collection.find_one({"id": user_id})
+    if user:
+        last_claimed = user.get("last_bonus_claimed")
+        if last_claimed and last_claimed.date() == datetime.now().date():
+            await message.reply_text("You have already claimed your bonus coins today.")
             return
 
-        character = characters[character_index]
-
-        # Retrieve user data including wallet balance
-        user = await user_collection.find_one({"id": user_id})
-        if not user:
-            await query.answer("User not found.")
-            return
-
-        # Check affordability
-        price = character["price"]
-        current_balance = user.get("tokens", 0)
-        if current_balance < price:
-            await query.answer(f"Insufficient funds. You need {price - current_balance} more tokens to buy this character.", show_alert=True)
-            return
-
-        # Deduct coins from user's wallet
-        new_tokens = current_balance - price
-
-        # Add character to user's collection
-        character_id = str(character["_id"])
-        character_data = {
-            "_id": ObjectId(),  # Generate a new ObjectId for the character entry
-            "img_url": character["img_url"],
-            "name": character["name"],
-            "anime": character["anime"],
-            "rarity": character["rarity"],
-            "id": character["id"],
-            "message_id": character.get("message_id")  # Optional, if message_id is available
-        }
-
-        if "characters" not in user:
-            user["characters"] = []
-
-        user["characters"].append(character_data)
-
-        # Update user data in the database
+        await add_coins(user_id, 100)
         await user_collection.update_one(
             {"id": user_id},
-            {"$set": {"tokens": new_tokens, "characters": user["characters"]}}
+            {"$set": {"last_bonus_claimed": datetime.now()}},
         )
-
-        # Confirmation message
-        await query.answer("Character purchased successfully.")
-
-    except Exception as e:
-        LOGGER.error(f"Error buying character: {e}")
-        await query.answer("An error occurred while processing the purchase. Please try again later.", show_alert=True)
-
-
-async def next_item(update: Update, context: CallbackContext) -> None:
-
-    user_id = update.callback_query.from_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
+        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!")
     else:
-        pass
+        await user_collection.insert_one({"id": user_id, "coins": 100, "last_bonus_claimed": datetime.now()})
+        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!")
 
-    try:
-        # Check if the user is the one who initiated the shop command
-        if update.callback_query.from_user.id != context.user_data.get("shop_user_id"):
-            await update.callback_query.answer("You are not authorized to perform this action.")
-            return
-        
-        # Retrieve characters/items from the database
-        characters_cursor = shops_collection.find()
-        characters = await characters_cursor.to_list(length=None)
+            
 
-        if not characters:
-            await update.callback_query.answer("No characters found in the shop.")
-            return
-
-        # Get the current character index from context.user_data
-        current_index = context.user_data.get("current_index", 0)
-
-        # Calculate the index of the next character
-        next_index = (current_index + 1) % len(characters)
-
-        # Display the next character
-        character = characters[next_index]
-        caption_message = f"🛍️ **Welcome to the Luxury Shop!** 🛍️\n\n" \
-                         f"🔹 **Character:** {character['name']}\n" \
-                         f"🔺 **Anime:** {character['anime']}\n" \
-                         f"💡 **Rarity:** {character['rarity']}\n" \
-                         f"💸 **Price:** {character['price']} tokens\n" \
-                         f"🔢 **ID:** {character['id']}\n" \
-                         f"📝 **About:** {character['about']}\n\n" \
-                         f"**Unleash Your Inner Otaku and Buy Now! 🎊**"
-        keyboard = [
-            [InlineKeyboardButton("Buy", callback_data=f"buy_{str(next_index)}")],
-            [InlineKeyboardButton("Next", callback_data="next")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        # Update the user's data to store the current index
-        context.user_data["current_index"] = next_index
-
-        await update.callback_query.message.edit_media(
-            media=InputMediaPhoto(media=character['img_url'], caption=caption_message),
-            reply_markup=reply_markup
-        )
-
-        await update.callback_query.answer()  # Acknowledge the callback
-
-        LOGGER.info("Next item displayed in the shop.")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred: {e}")
-        await update.callback_query.answer("An error occurred while displaying the next item. Please try again later.")"""
-
-
-async def bonus_coins(update: Update, context: CallbackContext) -> None:
-
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-    if not await is_member(user_id):
-        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
-        message = (
-            "You need to be a member of our exclusive group to use this command.\n"
-            "Join now and explore the amazing features awaiting you!\n\n"
-        )
-        reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
-        )
-        await update.message.reply_text(message, reply_markup=reply_markup)
-        return
-          
-    try:
-
-        # Retrieve user ID
-        user_id = update.effective_user.id
-        
-        # Check if user has claimed bonus today
-        last_bonus_time = await user_collection.find_one({"id": user_id}, projection={"last_bonus_time": 1})
-        if last_bonus_time and (datetime.now() - last_bonus_time.get("last_bonus_time", datetime.min)) < timedelta(days=1):
-            await update.message.reply_text("Yᴏᴜ Hᴀᴠᴇ Aʟʀᴇᴀᴅʏ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Dᴀɪʟʏ Rᴇᴡᴀʀᴅ")
-            return
-
-        # Add bonus coins to the user's account
-        await add_coins(user_id, 1000)
-
-        # Update last bonus time for the user
-        await user_collection.update_one(
-            {"id": user_id},
-            {"$set": {"last_bonus_time": datetime.now()}},
-            upsert=True
-        )
-
-        # Send a message confirming the bonus coins were added
-        await update.message.reply_text("🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! 🎉\n\nYᴏᴜ'ᴠᴇ Cʟᴀɪᴍᴇᴅ Yᴏᴜʀ Dᴀɪʟʏ Bᴏɴᴜs Oғ 1000 Cᴏɪɴs! EɴJᴏʏ")
-
-    except Exception as e:
-        await update.message.reply_text(f"Error occurred: {e}")
 
 
 import asyncio
