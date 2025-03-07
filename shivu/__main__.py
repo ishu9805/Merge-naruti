@@ -25,7 +25,7 @@ from shivu import (
 )
 from shivu import user_count
 from shivu.modules import ALL_MODULES
-from shivu.modules.coin import add_coins, update_leaderboards
+from shivu.modules.coin import add_coins
 from shivu.modules.leaderboard import create_indexes
 from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 all_characters = []
