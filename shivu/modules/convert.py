@@ -4,126 +4,125 @@ import random
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, Application
 from shivu import collection, user_collection, shivuu
-
+from . import app
+from . import lock
 from shivu import application, ban_collection
 
 
 
-async def convert_coins_to_tokens(update: Update, context: CallbackContext) -> None:
-    """
-    Convert coins to tokens.
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from shivu import user_collection, ban_collection, shivuu as app
 
-    :param update: The update object
-    :param context: The context object
-    :return: None
-    """
-    user_id = update.effective_user.id
-    coins_to_convert = int(context.args[0]) if context.args else 0
-    
+# Conversion rate
+COIN_TO_TOKEN_RATE = 100  # 100 coins = 1 token
+TOKEN_TO_COIN_RATE = 100  # 1 token = 100 coins
+
+# Convert coins to tokens
+@app.on_message(filters.command("convert")
+@command_lock
+async def convert_coins_to_tokens(client: Client, message: Message):
+    user_id = message.from_user.id
+
+    # Check if the user is banned
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-    if coins_to_convert <= 0:
-        await update.message.reply_text("Invalid amount of coins to convert.")
+        await message.reply("🚫 **You are banned and cannot use this command.**")
         return
 
-    # Get the user's current coin balance
-    user_doc = await user_collection.find_one({"id": user_id})
-    if user_doc is None:
-        await update.message.reply_text("You don't have any coins to convert.")
+    # Check if the user provided a valid amount
+    if len(message.command) < 2:
+        await message.reply("❌ **Usage:** `/convert <amount_of_coins>`")
         return
-    current_coins = user_doc.get("coins", 0)
 
-    # Check if the user has enough coins to convert
+    try:
+        coins_to_convert = int(message.command[1])
+        if coins_to_convert <= 0:
+            await message.reply("❌ **Please enter a valid amount of coins to convert.**")
+            return
+    except ValueError:
+        await message.reply("❌ **Invalid input. Please enter a number.**")
+        return
+
+    # Fetch the user's data
+    user = await user_collection.find_one({"id": user_id})
+    if not user:
+        await message.reply("❌ **You don't have any coins to convert.**")
+        return
+
+    current_coins = user.get("coins", 0)
+
+    # Check if the user has enough coins
     if coins_to_convert > current_coins:
-        await update.message.reply_text("You don't have enough coins to convert.")
+        await message.reply(f"❌ **You don't have enough coins. You only have {current_coins} coins.**")
         return
 
-    # Define the conversion rate (e.g. 100 coins = 1 token)
-    conversion_rate = 100
+    # Calculate tokens and remaining coins
+    tokens = coins_to_convert // COIN_TO_TOKEN_RATE
+    remaining_coins = coins_to_convert % COIN_TO_TOKEN_RATE
 
-    # Calculate the number of tokens to give
-    tokens = coins_to_convert // conversion_rate
-
-    # Calculate the remaining coins that will be returned to the user
-    remaining_coins = coins_to_convert % conversion_rate
-
-    # Update the user's token balance
+    # Update the user's tokens and coins
     await user_collection.update_one(
         {"id": user_id},
-        {"$inc": {"tokens": tokens}},
-        upsert=True
+        {
+            "$inc": {"tokens": tokens, "coins": -coins_to_convert + remaining_coins}
+        }
     )
 
-    # Update the user's coin balance
-    await user_collection.update_one(
-        {"id": user_id},
-        {"$inc": {"coins": -coins_to_convert + remaining_coins}},
-        upsert=True
+    await message.reply(
+        f"✅ **Converted {coins_to_convert - remaining_coins} coins to {tokens} tokens!**\n"
+        f"🪙 **Remaining coins:** {remaining_coins}"
     )
 
-    await update.message.reply_text(f"Converted {coins_to_convert - remaining_coins} coins to {tokens} tokens! You have {remaining_coins} coins remaining.")
 
-application.add_handler(CommandHandler('convert', convert_coins_to_tokens))
+# Convert tokens to coins
+@app.on_message(filters.command("tconvert"))
+@command_lock
+async def convert_tokens_to_coins(client: Client, message: Message):
+    user_id = message.from_user.id
 
-
-async def convert_tokens_to_coins(update: Update, context: CallbackContext) -> None:
-    """
-    Convert tokens to coins.
-
-    :param update: The update object
-    :param context: The context object
-    :return: None
-    """
-    user_id = update.effective_user.id
-    tokens_to_convert = int(context.args[0]) if context.args else 0
-
-    # Check if user is banned
+    # Check if the user is banned
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
+        await message.reply("🚫 **You are banned and cannot use this command.**")
         return
 
-    if tokens_to_convert <= 0:
-        await update.message.reply_text("Invalid amount of tokens to convert.")
+    # Check if the user provided a valid amount
+    if len(message.command) < 2:
+        await message.reply("❌ **Usage:** `/tconvert <amount_of_tokens>`")
         return
 
-    # Get the user's current token balance
-    user_doc = await user_collection.find_one({"id": user_id})
-    if user_doc is None:
-        await update.message.reply_text("You don't have any tokens to convert.")
+    try:
+        tokens_to_convert = int(message.command[1])
+        if tokens_to_convert <= 0:
+            await message.reply("❌ **Please enter a valid amount of tokens to convert.**")
+            return
+    except ValueError:
+        await message.reply("❌ **Invalid input. Please enter a number.**")
         return
-    current_tokens = user_doc.get("tokens", 0)
 
-    # Check if the user has enough tokens to convert
+    # Fetch the user's data
+    user = await user_collection.find_one({"id": user_id})
+    if not user:
+        await message.reply("❌ **You don't have any tokens to convert.**")
+        return
+
+    current_tokens = user.get("tokens", 0)
+
+    # Check if the user has enough tokens
     if tokens_to_convert > current_tokens:
-        await update.message.reply_text("You don't have enough tokens to convert.")
+        await message.reply(f"❌ **You don't have enough tokens. You only have {current_tokens} tokens.**")
         return
 
-    # Define the conversion rate (e.g. 1 token = 100 coins)
-    conversion_rate = 100
+    # Calculate coins
+    coins = tokens_to_convert * TOKEN_TO_COIN_RATE
 
-    # Calculate the number of coins to give
-    coins = tokens_to_convert * conversion_rate
-
-    # Update the user's coin balance
+    # Update the user's coins and tokens
     await user_collection.update_one(
         {"id": user_id},
-        {"$inc": {"coins": coins}},
-        upsert=True
+        {
+            "$inc": {"coins": coins, "tokens": -tokens_to_convert}
+        }
     )
 
-    # Update the user's token balance
-    await user_collection.update_one(
-        {"id": user_id},
-        {"$inc": {"tokens": -tokens_to_convert}},
-        upsert=True
-    )
-
-    await update.message.reply_text(f"Converted {tokens_to_convert} tokens to {coins} coins!")
-
-#application.add_handler(CommandHandler('tconvert', convert_tokens_to_coins))
-
+    await message.reply(f"✅ **Converted {tokens_to_convert} tokens to {coins} coins!**")
