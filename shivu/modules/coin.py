@@ -20,7 +20,8 @@ from shivu import (application, PHOTO_URL, OWNER_ID,
                     group_user_totals_collection)
 
 from shivu import PARTNER
-
+from .block import block_dec, temp_block
+from .lock import command_lock
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
@@ -40,31 +41,26 @@ async def is_member(user_id):
     except Exception:
         return False
 
-async def check_balance(update: Update, context: CallbackContext) -> None:
+@app.on_message(filters.command("balance"))
+@block_dec
+@command_lock
+async def check_balance(client: Client, message: Message):
+    user_id = message.from_user.id
 
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
+    # Check if the user is banned
+    if temp_block(user_id):
         return
+
+    user = await user_collection.find_one({"id": user_id})
+    if user:
+        coins = user.get("coins", 0)
+        tokens = user.get("tokens", 0)
+        await message.reply_text(f"**Behold, Your Current Balance Shines** ➻💸 {coins} Coins And ➻⚡ {tokens} Tokens.")
     else:
-        pass
-
-    try:
-        user_id = int(update.effective_user.id)
-        user = await user_collection.find_one({"id": user_id})
+        await message.reply_text("You Don't Have Any Coins Yet.")
 
 
 
-        if user:
-            coins = user.get("coins", 0)
-            tokens = user.get("tokens",0)
-            await update.message.reply_text(f" **Bᴇʜᴏʟᴅ, Yᴏᴜʀ Cᴜʀʀᴇɴᴛ Bᴀʟᴀɴᴄᴇ Sʜɪɴᴇs** ➻💸 {coins} Cᴏɪɴs Aɴᴅ ➻⚡ {tokens} Tᴏᴋᴇɴs.")
-        else:
-            await update.message.reply_text("Yᴏᴜ Dᴏɴ'ᴛ Hᴀᴠᴇ Aɴʏ Cᴏɪɴs Yᴇᴛ.")
-    except Exception as e:
-        await update.message.reply_text(f"Error occurred: {e}")
 
 async def add_coins(user_id: int, amount: int) -> None:
     try:
