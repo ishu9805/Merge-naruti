@@ -1,3 +1,4 @@
+import asyncio
 import os
 import random
 import string
@@ -20,6 +21,7 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger(__name__)
 
+
 def generate_random_code(length: int = 6) -> str:
     """Generate a random code of specified length."""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -29,6 +31,23 @@ def scramble_code(code: str) -> str:
     code_list = list(code)
     random.shuffle(code_list)
     return ''.join(code_list)
+
+def generate_hint(code: str) -> str:
+    """Generate a hint for the code in the format a_ _ b_ _ or c_d _ _ _."""
+    hint = list(code)
+    length = len(hint)
+    
+    # Decide how many characters to reveal based on code length
+    if length <= 4:
+        reveal_indices = [0, -1]  # Reveal first and last characters
+    else:
+        reveal_indices = [0, 2, -1]  # Reveal first, third, and last characters
+    
+    for i in range(length):
+        if i not in reveal_indices:
+            hint[i] = '_'
+    
+    return ' '.join(hint)
 
 
 
@@ -89,13 +108,16 @@ async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str
     rarity = character.get('rarity', '❓')
     image_url = character.get('img_url', '')
 
+    hint = generate_hint(scrambled_code)
+
     # Caption with instructions
     caption = (
         f"🔍 Unscramble the code to claim your character:\n\n"
         f"**Character:** {character_name}\n"
         f"**Anime:** {character_anime}\n"
         f"**Rarity:** {rarity}\n\n"
-        f"<code>{scrambled_code}</code>\n\n"
+        f"<code>{scrambled_code}</code>\n"
+        f"**Hint:** `{hint}`\n\n"
         f"Use /solve <code> to claim your reward!"
     )
 
