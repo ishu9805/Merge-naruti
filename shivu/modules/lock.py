@@ -1,4 +1,13 @@
 from functools import wraps
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from datetime import datetime, timedelta
+from pymongo import MongoClient
+import logging
+
+# MongoDB setup
+# Global command lock dictionary
+command_locks = {}
 
 def command_lock(func):
     @wraps(func)
