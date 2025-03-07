@@ -20,6 +20,16 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger(__name__)
 
+def generate_random_code(length: int = 6) -> str:
+    """Generate a random code of specified length."""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+def scramble_code(code: str) -> str:
+    """Scramble a code by shuffling its characters."""
+    code_list = list(code)
+    random.shuffle(code_list)
+    return ''.join(code_list)
+
 
 
 
