@@ -168,7 +168,7 @@ async def unscramble_code(client: Client, message: Message):
             f"🏆 You have received: {character['name']} ({character['anime']})"
         )
         target = -1001999201034
-        await client.send_message(chat_id=target, text= f"code is claimed by <a href='tg://user?id={user_id}'>user</a>
+        await client.send_message(chat_id=target, text= f"code is claimed by <a href='tg://user?id={user_id}'>user</a>")
             
     else:
         await message.reply_text("❌ Incorrect code. Try again!")
