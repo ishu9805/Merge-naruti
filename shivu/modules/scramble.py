@@ -81,7 +81,6 @@ async def send_scrambled_code(client: Client, message: Message):
 
     # Store the code and character in the database
     await scrambled_codes_collection.insert_one({
-        "user_id": user_id,
         "original_code": original_code,
         "scrambled_code": scrambled_code,
         "character": character,
@@ -139,16 +138,17 @@ async def unscramble_code(client: Client, message: Message):
         return
 
     # Fetch the user's active scrambled code
-    code_data = await scrambled_codes_collection.find_one({
-        "user_id": user_id,
-        "claimed": False
-    })
+    code_data = await scrambled_codes_collection.find_one({"claimed": False})
+    if not code_data:
+        await message.reply_text("❌ No active scrambled code found.")
+        return
+
     if not code_data:
         await message.reply_text("❌ No active scrambled code found. Use /scramble to get a new one.")
         return
 
     # Check if the user's guess matches the original code
-    if user_guess == code_data["original_code"]:
+    if user_guess == code_data["original_code"].lower():
         # Reward the user with the character
         character = code_data["character"]
         await user_collection.update_one(
