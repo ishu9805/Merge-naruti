@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, Application
 from shivu import collection, user_collection, shivuu
 from . import app
-from . import lock
+from .lock import command_lock
 from shivu import application, ban_collection
 
 
