@@ -218,13 +218,7 @@ async def bonus_coins(client: Client, message: Message):
         return
 
     # Check if the user is a member of the required group
-    try:
-        member = await client.get_chat_member("YOUR_GROUP_ID", user_id)
-        if member.status not in ["member", "administrator", "creator"]:
-            await message.reply_text("You need to join our group to claim bonus coins.")
-            return
-    except Exception:
-        await message.reply_text("Error checking group membership.")
+    if not is_member(user_id):
         return
 
     user = await user_collection.find_one({"id": user_id})
