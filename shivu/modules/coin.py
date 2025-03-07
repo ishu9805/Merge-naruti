@@ -275,8 +275,8 @@ async def top_users_by_coins(client: Client, message: Message):
             leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {coins} coins\n"
 
         # Send the leaderboard with a random photo
-        photo_url = random.choice(PHOTO_URLS)
-        await message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode="HTML")
+        photo_url = random.choice(PHOTO_URL)
+        await message.reply_video(video=photo_url, caption=leaderboard_message, parse_mode="HTML")
 
     except Exception as e:
         LOGGER.error(f"Error in /cointop: {e}")
@@ -310,8 +310,8 @@ async def top_users_by_tokens(client: Client, message: Message):
             leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {tokens} tokens\n"
 
         # Send the leaderboard with a random photo
-        photo_url = random.choice(PHOTO_URLS)
-        await message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode="HTML")
+        photo_url = random.choice(PHOTO_URL)
+        await message.reply_video(video=photo_url, caption=leaderboard_message, parse_mode="HTML")
 
     except Exception as e:
         LOGGER.error(f"Error in /tokentop: {e}")
