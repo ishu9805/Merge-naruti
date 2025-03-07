@@ -19,7 +19,7 @@ COIN_TO_TOKEN_RATE = 100  # 100 coins = 1 token
 TOKEN_TO_COIN_RATE = 100  # 1 token = 100 coins
 
 # Convert coins to tokens
-@app.on_message(filters.command("convert")
+@app.on_message(filters.command("convert"))
 @command_lock
 async def convert_coins_to_tokens(client: Client, message: Message):
     user_id = message.from_user.id
