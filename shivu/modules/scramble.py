@@ -90,7 +90,7 @@ async def send_scrambled_code(client: Client, message: Message):
 
     # Send the scrambled code as a photo to the specified chat
     target_chat_id = -1001999201034  # Replace with your target chat ID
-    await send_scrambled_photo(client, target_chat_id, scrambled_code, character)
+    await send_scrambled_photo(client, target_chat_id, scrambled_code, character, original_code)
 
     # Notify the user
     await message.reply_text(
@@ -100,7 +100,7 @@ async def send_scrambled_code(client: Client, message: Message):
 
 
 
-async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str, character: dict):
+async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str, character: dict, original_code: dict):
     """Send the scrambled code as a photo with a caption."""
     # Extract character details
     character_name = character.get('name', '❓')
@@ -108,7 +108,7 @@ async def send_scrambled_photo(client: Client, chat_id: int, scrambled_code: str
     rarity = character.get('rarity', '❓')
     image_url = character.get('img_url', '')
 
-    hint = generate_hint(scrambled_code)
+    hint = generate_hint(original_code)
 
     # Caption with instructions
     caption = (
