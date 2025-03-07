@@ -218,8 +218,18 @@ async def bonus_coins(client: Client, message: Message):
         return
 
     # Check if the user is a member of the required group
-    if not is_member(user_id):
+    if not await is_member(user_id):
+        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        messages = (
+            "You need to be a member of our exclusive group to use this command.\n"
+            "Join now and explore the amazing features awaiting you!\n\n"
+        )
+        reply_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+        )
+        await message.reply_text(messages, reply_markup=reply_markup)
         return
+       
 
     user = await user_collection.find_one({"id": user_id})
     if user:
