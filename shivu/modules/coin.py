@@ -42,13 +42,31 @@ import logging
 
 # MongoDB setup
 
-async def is_member(user_id):
+async def is_member(user_id: int) -> bool:
     """Check if a user is part of the required group."""
     try:
-        member = await application.bot.get_chat_member(required_group_id, user_id)
-        return member.status in ['member', 'administrator', 'creator']
+        member = await app.get_chat_member(REQUIRED_GROUP_ID, user_id)
+        return member.status in ["member", "administrator", "creator"]
     except Exception:
         return False
+
+async def add_coins(user_id: int, amount: int) -> None:
+    """Add coins to a user's balance."""
+    if amount <= 0:
+        LOGGER.warning("Attempted to add non-positive amount of coins.")
+        return
+
+    user = await user_collection.find_one({"id": user_id})
+    if user:
+        current_coins = user.get("coins", 0)
+        await user_collection.update_one(
+            {"id": user_id},
+            {"$set": {"coins": current_coins + amount}},
+        )
+    else:
+        await user_collection.insert_one({"id": user_id, "coins": amount})
+
+
 
 @app.on_message(filters.command("balance"))
 @block_dec
@@ -68,29 +86,6 @@ async def check_balance(client: Client, message: Message):
         await message.reply_text(f"**Behold, Your Current Balance Shines** ➻💸 {coins} Coins And ➻⚡ {tokens} Tokens.")
     else:
         await message.reply_text("You Don't Have Any Coins Yet.")
-
-
-
-
-async def add_coins(user_id: int, amount: int) -> None:
-    try:
-        if amount <= 0:
-            LOGGER.warning("Attempted to add non-positive amount of coins.")
-            return
-        
-        user = await user_collection.find_one({"id": user_id})
-
-        if user:
-            current_coins = user.get("coins", 0)
-            await user_collection.update_one(
-                {"id": user_id},
-                {"$set": {"coins": current_coins + amount}},
-            )
-        else:
-            await user_collection.insert_one({"id": user_id, "coins": amount})
-    except Exception as e:
-        LOGGER.error(f"Error adding coins: {e}")
-      
 
 
 
