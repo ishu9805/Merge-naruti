@@ -125,5 +125,5 @@ async def convert_tokens_to_coins(update: Update, context: CallbackContext) -> N
 
     await update.message.reply_text(f"Converted {tokens_to_convert} tokens to {coins} coins!")
 
-application.add_handler(CommandHandler('tconvert', convert_tokens_to_coins))
+#application.add_handler(CommandHandler('tconvert', convert_tokens_to_coins))
 
