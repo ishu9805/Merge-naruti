@@ -26,7 +26,7 @@ def command_lock(func):
             # Execute the command
             await func(client, message, *args, **kwargs)
         except Exception as e:
-            LOGGER.error(f"Error in {func.__name__}: {e}")
+            print(f"Error in {func.__name__}: {e}")
             await message.reply_text("An error occurred. Please try again later.")
         finally:
             # Unlock the command for this user
