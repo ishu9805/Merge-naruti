@@ -9,7 +9,7 @@ from functools import wraps
 from telegram import Update
 from shivu.utils import * 
 from .watchers import *
-
+from .lock import *
 
 
 StartTime = time.time()
