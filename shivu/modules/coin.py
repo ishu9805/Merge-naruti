@@ -249,107 +249,70 @@ async def bonus_coins(client: Client, message: Message):
         await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!")
 
             
+@app.on_message(filters.command("cointop"))
+@block_dec
+@command_lock
+async def top_users_by_coins(client: Client, message: Message):
+    try:
+        # Fetch top 10 users by coins
+        top_users = await user_collection.aggregate([
+            {"$project": {"id": 1, "coins": 1, "username": 1}},
+            {"$sort": {"coins": -1}},
+            {"$limit": 10}
+        ]).to_list(length=10)
+
+        if not top_users:
+            await message.reply_text("No users found in the leaderboard.")
+            return
+
+        # Build the leaderboard message
+        leaderboard_message = "<b>Top 10 Users by Coins:</b>\n\n"
+        for i, user in enumerate(top_users, start=1):
+            user_id = user.get("id")
+            coins = user.get("coins", 0)
+            username = user.get("username", "Unknown")
+            leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {coins} coins\n"
+
+        # Send the leaderboard with a random photo
+        photo_url = random.choice(PHOTO_URLS)
+        await message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode="HTML")
+
+    except Exception as e:
+        LOGGER.error(f"Error in /cointop: {e}")
+        await message.reply_text("An error occurred while fetching the leaderboard.")
 
 
+@app.on_message(filters.command("tokentop"))
+@block_dec
+@command_lock
+async def top_users_by_tokens(client: Client, message: Message):
+    
+      
+    try:
+        # Fetch top 10 users by tokens
+        top_users = await user_collection.aggregate([
+            {"$project": {"id": 1, "tokens": 1, "username": 1}},
+            {"$sort": {"tokens": -1}},
+            {"$limit": 10}
+        ]).to_list(length=10)
 
-import asyncio
-import random
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext
-from datetime import datetime, timedelta
+        if not top_users:
+            await message.reply_text("No users found in the leaderboard.")
+            return
 
-# Assuming these are defined elsewhere in your code
-from shivu import application, PHOTO_URL, user_collection
+        # Build the leaderboard message
+        leaderboard_message = "<b>Top 10 Users by Tokens:</b>\n\n"
+        for i, user in enumerate(top_users, start=1):
+            user_id = user.get("id")
+            tokens = user.get("tokens", 0)
+            username = user.get("username", "Unknown")
+            leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {tokens} tokens\n"
 
-# Global Variables
-global_coin_leaderboard = []
-global_token_leaderboard = []
-last_updated = datetime.min
+        # Send the leaderboard with a random photo
+        photo_url = random.choice(PHOTO_URLS)
+        await message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode="HTML")
 
-async def update_leaderboards():
-    global global_coin_leaderboard, global_token_leaderboard, last_updated
+    except Exception as e:
+        LOGGER.error(f"Error in /tokentop: {e}")
+        await message.reply_text("An error occurred while fetching the leaderboard.")
 
-    # Fetch the top 10 users by coins
-    coin_cursor = user_collection.aggregate([
-        {"$project": {"id": 1, "coins": 1}},
-        {"$sort": {"coins": -1}},
-        {"$limit": 10}
-    ])
-    global_coin_leaderboard = await coin_cursor.to_list(length=10)
-
-    # Fetch the top 10 users by tokens
-    token_cursor = user_collection.aggregate([
-        {"$project": {"id": 1, "tokens": 1}},
-        {"$sort": {"tokens": -1}},
-        {"$limit": 10}
-    ])
-    global_token_leaderboard = await token_cursor.to_list(length=10)
-
-    last_updated = datetime.now()
-
-async def top_users_by_coins(update: Update, context: CallbackContext) -> None:
-
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-
-    if datetime.now() - last_updated > timedelta(hours=4):
-        await update_leaderboards()
-
-    leaderboard_message = "<b>Dɪsᴄᴏᴠᴇʀ Tʜᴇ Eʟɪᴛᴇ Tᴏᴘ 𝟷𝟶 Usᴇʀs Rᴇᴡᴀʀᴅᴇᴅ Wɪᴛʜ Tʜᴇ Mᴏsᴛ Cᴏɪɴs:-</b>\n\n"
-    for i, user_data in enumerate(global_coin_leaderboard, start=1):
-        user_id = user_data.get('id', 'Unknown')
-        coins = user_data.get('coins', 0)
-        try:
-            user = await context.bot.get_chat(user_id)
-            username = user.username if user.username else user.first_name
-            display_name = user.title if user.title else user.first_name
-            leaderboard_message += f"{i}. <a href=\"https://t.me/{username}\">{display_name}</a>,\nBᴀʟᴀɴᴄᴇ➻💸{coins} coins.\n\n"
-        except Exception as e:
-            continue
-
-    photo_url = random.choice(PHOTO_URL)
-    await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
-
-async def top_users_by_tokens(update: Update, context: CallbackContext) -> None:
-    user_id = update.effective_user.id
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
-        return
-    else:
-        pass
-
-
-    if datetime.now() - last_updated > timedelta(hours=4):
-        await update_leaderboards()
-
-    leaderboard_message = "<b>Dɪsᴄᴏᴠᴇʀ Tʜᴇ Eʟɪᴛᴇ Tᴏᴘ 𝟷𝟶 Usᴇʀs Rᴇᴡᴀʀᴅᴇᴅ Wɪᴛʜ Tʜᴇ Mᴏsᴛ Tokens:-</b>\n\n"
-    for i, user_data in enumerate(global_token_leaderboard, start=1):
-        user_id = user_data.get('id', 'Unknown')
-        tokens = user_data.get('tokens', 0)
-        try:
-            user = await context.bot.get_chat(user_id)
-            username = user.username if user.username else user.first_name
-            display_name = user.title if user.title else user.first_name
-            leaderboard_message += f"{i}. <a href=\"https://t.me/{username}\">{display_name}</a>,\nBᴀʟᴀɴᴄᴇ➻☣️{tokens} tokens.\n\n"
-        except Exception as e:
-            continue
-
-    photo_url = random.choice(PHOTO_URL)
-    await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
-
-
-
-# Handlers
-TOPS_HANDLER = CommandHandler('cointop', top_users_by_coins)
-TTOPS_HANDLER = CommandHandler('tokentop', top_users_by_tokens)
-
-application.add_handler(TOPS_HANDLER)
-application.add_handler(TTOPS_HANDLER)
