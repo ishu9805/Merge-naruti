@@ -45,7 +45,7 @@ import logging
 async def is_member(user_id: int) -> bool:
     """Check if a user is part of the required group."""
     try:
-        member = await app.get_chat_member(REQUIRED_GROUP_ID, user_id)
+        member = await app.get_chat_member(required_group_id, user_id)
         return member.status in ["member", "administrator", "creator"]
     except Exception:
         return False
