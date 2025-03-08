@@ -1,8 +1,8 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from shivu import user_collection, collection
-from .lock import command_lock
 from . import app
+from .lock import command_lock
 import random
 
 # Global variables to store giveaway data
@@ -11,7 +11,6 @@ participants = []
 
 # Start a giveaway
 @app.on_message(filters.command("rgiveaway"))
-
 async def start_giveaway(client: Client, message: Message):
     global giveaway_character, participants
 
@@ -78,6 +77,12 @@ async def participate_giveaway(client: Client, message: Message):
     # Add the user to the participants list
     participants.append(user_id)
     await message.reply("✅ **You have successfully joined the giveaway!**")
+        await client.send_message(
+        chat_id=-1002338924488,
+        text=(
+            f"[{message.from_user.first_name}](tg://user?id={message.from_user.id}) participated\n"
+        )
+    )
 
 
 # End the giveaway and select a winner
@@ -89,17 +94,17 @@ async def end_giveaway(client: Client, message: Message):
     # Check if the user is an admin (replace ADMIN_ID with your ID)
     ADMIN_ID = 7378476666
     if message.from_user.id != ADMIN_ID:
-        
+        await message.reply("🚫 **You are not authorized to end the giveaway.**")
         return
 
     # Check if a giveaway is active
     if not giveaway_character:
-        
+        await message.reply("❌ **No active giveaway to end.**")
         return
 
     # Check if there are enough participants
     if len(participants) <= 10:
-        await message.reply("❌ **Giveaway canceled. Not enough participants (minimum 3 required).**")
+        await message.reply("❌ **Giveaway canceled. Not enough participants (minimum 11 required).**")
         giveaway_character = None
         participants = []
         return
@@ -123,7 +128,7 @@ async def end_giveaway(client: Client, message: Message):
     try:
         await client.send_photo(
             chat_id=winner_id,
-            photo=giveaway_character.get("ima_url"),
+            photo=giveaway_character.get("img_url"),
             caption=(
                 f"🎉 **Congratulations! You won the giveaway!**\n"
                 f"🏆 **Character:** {giveaway_character.get('name', 'Unknown')}\n"
@@ -135,12 +140,13 @@ async def end_giveaway(client: Client, message: Message):
         print(f"Error sending DM to winner: {e}")
 
     # Announce the winner in the group
-    await message.send_message(
+    await client.send_message(
         chat_id=-1001999201034,
-        text=
-        f"🎉 **Giveaway ended!**\n"
-        f"🏆 **Winner:** [{winner.get('first_name', 'GRABBER')}](tg://user?id={winner_id})\n"
-        f"🌟 **Character:** {giveaway_character.get('name', 'Unknown')}, {giveaway_character.get('rarity')}"
+        text=(
+            f"🎉 **Giveaway ended!**\n"
+            f"🏆 **Winner:** [{winner.get('first_name', 'GRABBER')}](tg://user?id={winner_id})\n"
+            f"🌟 **Character:** {giveaway_character.get('name', 'Unknown')}, {giveaway_character.get('rarity')}"
+        )
     )
 
     # Reset the giveaway
