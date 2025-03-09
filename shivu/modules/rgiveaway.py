@@ -57,98 +57,74 @@ async def start_giveaway(client: Client, message: Message):
 
 
 # Participate in the giveaway
+# Participate in the giveaway
 @app.on_message(filters.command("participate"))
 @command_lock
 async def participate_giveaway(client: Client, message: Message):
-    global participants
-
-    # Check if a giveaway is active
-    if not giveaway_character:
+    if not giveaway.character:
         await message.reply("❌ **No active giveaway.**")
         return
 
     user_id = message.from_user.id
-
-    # Check if the user is already participating
-    if user_id in participants:
+    if user_id in giveaway.participants:
         await message.reply("ℹ️ **You are already participating in the giveaway.**")
         return
 
-    # Add the user to the participants list
-    participants.append(user_id)
-    await message.reply("✅ **You have successfully joined the giveaway!**")
+    giveaway.participants.append(user_id)
+    await message.reply(f"✅ **You have successfully joined the giveaway!**\n👥 **Total Participants:** {len(giveaway.participants)}")
     await client.send_message(
         chat_id=-1002338924488,
         text=(
-            f"[{message.from_user.first_name}](tg://user?id={message.from_user.id}) participated\n"
+            f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
+            f"👥 **Total Participants:** {len(giveaway.participants)}"
         )
     )
 
-
 # End the giveaway and select a winner
+# End the giveaway
 @app.on_message(filters.command("endgiveaway"))
 @command_lock
 async def end_giveaway(client: Client, message: Message):
-    global giveaway_character, participants
-
-    # Check if the user is an admin (replace ADMIN_ID with your ID)
-    ADMIN_ID = 7378476666
     if message.from_user.id != ADMIN_ID:
         await message.reply("🚫 **You are not authorized to end the giveaway.**")
         return
 
-    # Check if a giveaway is active
-    if not giveaway_character:
+    if not giveaway.character:
         await message.reply("❌ **No active giveaway to end.**")
         return
 
-    # Check if there are enough participants
-    if len(participants) <= 10:
-        await message.reply("❌ **Giveaway canceled. Not enough participants (minimum 11 required).**")
-        giveaway_character = None
-        participants = []
+    if len(giveaway.participants) < 1:
+        await message.reply("❌ **No participants in the giveaway.**")
         return
 
-    # Select a random winner
-    winner_id = random.choice(participants)
-
-    # Fetch the winner's data
+    winner_id = random.choice(giveaway.participants)
     winner = await user_collection.find_one({"id": winner_id})
     if not winner:
         await message.reply("❌ **Winner not found in the database.**")
         return
 
-    # Add the character to the winner's collection
     await user_collection.update_one(
         {"id": winner_id},
-        {"$push": {"characters": giveaway_character}}
+        {"$push": {"characters": giveaway.character}}
     )
 
-    # Send a DM to the winner
-    try:
-        await client.send_photo(
-            chat_id=winner_id,
-            photo=giveaway_character.get("img_url"),
-            caption=(
-                f"🎉 **Congratulations! You won the giveaway!**\n"
-                f"🏆 **Character:** {giveaway_character.get('name', 'Unknown')}\n"
-                f"🌟 **Rarity:** {giveaway_character.get('rarity', 'Unknown')}\n"
-                f"💬 **Check your collection to see your new character!**"
-            )
-        )
-    except Exception as e:
-        print(f"Error sending DM to winner: {e}")
+    caption = (
+        f"🎉 **Congratulations! You won the giveaway!**\n"
+        f"🏆 **Character:** {giveaway.character.get('name', 'Unknown')}\n"
+        f"🌟 **Rarity:** {giveaway.character.get('rarity', 'Unknown')}\n"
+        f"💬 **Check your collection to see your new character!**"
+    )
+    await send_photo_with_caption(client, winner_id, giveaway.character.get("img_url"), caption)
 
-    # Announce the winner in the group
     await client.send_message(
-        chat_id=-1001999201034,
+        chat_id=CHAT_ID,
         text=(
             f"🎉 **Giveaway ended!**\n"
             f"🏆 **Winner:** [{winner.get('first_name', 'GRABBER')}](tg://user?id={winner_id})\n"
-            f"🌟 **Character:** {giveaway_character.get('name', 'Unknown')}, {giveaway_character.get('rarity')}"
+            f"🌟 **Character:** {giveaway.character.get('name', 'Unknown')}, {giveaway.character.get('rarity')}\n"
+            f"👥 **Total Participants:** {len(giveaway.participants)}"
         )
     )
 
-    # Reset the giveaway
-    giveaway_character = None
-    participants = []
+    giveaway.character = None
+    giveaway.participants = []
