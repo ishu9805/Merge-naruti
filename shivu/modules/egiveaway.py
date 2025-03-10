@@ -200,7 +200,7 @@ async def elimination_process(client: Client):
             client,
             winner1_id,
             media,
-            f"🎉 **Congratulations! You won first place!**\n\n🏆 **Prize:** {giveaway.character1.get('name', 'Unknown')\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}"
+            f"🎉 **Congratulations! You won first place!**\n🏆 **Prize:** {giveaway.character1.get('name', 'Unknown')\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}"
         )
         await send_media_group_with_caption(
             client,
