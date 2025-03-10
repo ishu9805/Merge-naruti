@@ -42,7 +42,7 @@ async def start_elimination_giveaway(client: Client, message: Message):
         return
 
     if len(message.command) < 3:
-        await message.reply("❌ **Usage:** `/egiveaway <character_id> <character_id2>`")
+        await message.reply(f"❌ **Usage:** `/egiveaway <character_id> <character_id2>`")
         return
 
     character_id1 = message.command[1]
@@ -53,7 +53,7 @@ async def start_elimination_giveaway(client: Client, message: Message):
     character2 = await collection.find_one({"id": character_id2})
 
     if not character1 or not character2:
-        await message.reply("❌ **One or both characters not found in the database.**")
+        await message.reply(f"❌ **One or both characters not found in the database.**")
         return
 
     giveaway.character1 = character1
@@ -76,23 +76,23 @@ async def start_elimination_giveaway(client: Client, message: Message):
 
     # Send media group and caption
     await send_media_group_with_caption(client, CHAT_ID, media, caption)
-    await message.reply("✅ **Elimination giveaway started successfully!**")
+    await message.reply(f"✅ **Elimination giveaway started successfully!**")
 
 # Join the elimination giveaway
 @app.on_message(filters.command("join"))
 @command_lock
 async def join_giveaway(client: Client, message: Message):
     if not giveaway.character1 or not giveaway.character2:
-        await message.reply("❌ **No active elimination giveaway.**")
+        await message.reply(f"❌ **No active elimination giveaway.**")
         return
 
     if giveaway.elimination_active:
-        await message.reply("❌ **The elimination process has started. You can no longer join.**")
+        await message.reply(f"❌ **The elimination process has started. You can no longer join.**")
         return
 
     user_id = message.from_user.id
     if user_id in giveaway.participants:
-        await message.reply("ℹ️ **You are already participating in the giveaway.**")
+        await message.reply(f"ℹ️ **You are already participating in the giveaway.**")
         return
 
     giveaway.participants.append(user_id)
@@ -109,15 +109,15 @@ async def join_giveaway(client: Client, message: Message):
 @app.on_message(filters.command("startelimination"))
 async def start_elimination(client: Client, message: Message):
     if message.from_user.id != ADMIN_ID:
-        await message.reply("🚫 **You are not authorized to start the elimination process.**")
+        await message.reply(f"🚫 **You are not authorized to start the elimination process.**")
         return
 
     if not giveaway.character1 or not giveaway.character2:
-        await message.reply("❌ **No active elimination giveaway to start.**")
+        await message.reply(f"❌ **No active elimination giveaway to start.**")
         return
 
     if len(giveaway.participants) < 2:
-        await message.reply("❌ **Not enough participants to start elimination.**")
+        await message.reply(f"❌ **Not enough participants to start elimination.**")
         return
 
     # Set elimination as active
@@ -126,7 +126,7 @@ async def start_elimination(client: Client, message: Message):
     # Start the elimination task
     giveaway.elimination_task = asyncio.create_task(elimination_process(client))
 
-    await message.reply("✅ **Elimination process started! No new participants can join.**")
+    await message.reply(f"✅ **Elimination process started! No new participants can join.**")
 
 # Elimination process
 async def elimination_process(client: Client):
