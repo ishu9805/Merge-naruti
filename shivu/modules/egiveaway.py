@@ -63,8 +63,8 @@ async def start_elimination_giveaway(client: Client, message: Message):
 
     # Prepare media group
     media = [
-        InputMediaPhoto(character1.get("img_url"), caption=f"🏆 **Prize 1:** {character1.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}"),
-        InputMediaPhoto(character2.get("img_url"), caption=f"🏆 **Prize 2:** {character2.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}")
+        InputMediaPhoto(character1.get("img_url"), caption=f"🏆 **Prize 1:** {character1.get('name', 'Unknown')}\n**ID:** {character1.get('id')}\n**Rarity:** {character1.get('rarity')}"),
+        InputMediaPhoto(character2.get("img_url"), caption=f"🏆 **Prize 2:** {character2.get('name', 'Unknown')}\n**ID:** {character2.get('id')}\n**Rarity:** {character2.get('rarity')}")
     ]
 
     # Prepare caption
@@ -104,15 +104,16 @@ async def join_giveaway(client: Client, message: Message):
             f"👥 **Total Participants:** {len(giveaway.participants)}"
         )
     )
+
 # Start the elimination process
 @app.on_message(filters.command("startelimination"))
 async def start_elimination(client: Client, message: Message):
     if message.from_user.id != ADMIN_ID:
-        #await message.reply("🚫 **You are not authorized to start the elimination process.**")
+        await message.reply("🚫 **You are not authorized to start the elimination process.**")
         return
 
     if not giveaway.character1 or not giveaway.character2:
-        #await message.reply("❌ **No active elimination giveaway to start.**")
+        await message.reply("❌ **No active elimination giveaway to start.**")
         return
 
     if len(giveaway.participants) < 2:
@@ -171,8 +172,8 @@ async def elimination_process(client: Client):
 
         # Prepare media group for winners
         media = [
-            InputMediaPhoto(giveaway.character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway.character1.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}"),
-            InputMediaPhoto(giveaway.character2.get("img_url"), caption=f"🏆 **Prize 2:** {giveaway.character2.get('name', 'Unknown')}\n**ID:** {giveaway.character2.get('id')}\n**Rarity:**{giveaway.character2.get('rarity')}")
+            InputMediaPhoto(giveaway.character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway.character1.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:** {giveaway.character1.get('rarity')}"),
+            InputMediaPhoto(giveaway.character2.get("img_url"), caption=f"🏆 **Prize 2:** {giveaway.character2.get('name', 'Unknown')}\n**ID:** {giveaway.character2.get('id')}\n**Rarity:** {giveaway.character2.get('rarity')}")
         ]
 
         # Prepare caption for winners
@@ -200,13 +201,13 @@ async def elimination_process(client: Client):
             client,
             winner1_id,
             media,
-            f"🎉 **Congratulations! You won first place!**\n🏆 **Prize:** {giveaway.character1.get('name', 'Unknown')\n**ID:** {giveaway.character1.get('id')}\n**Rarity:**{giveaway.character1.get('rarity')}"
+            f"🎉 **Congratulations! You won first place!**\n🏆 **Prize:** {giveaway.character1.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:** {giveaway.character1.get('rarity')}"
         )
         await send_media_group_with_caption(
             client,
             winner2_id,
             media,
-            f"🎉 **Congratulations! You won second place!**\n🏆 **Prize:** {giveaway.character2.get('name', 'Unknown')\n**ID:** {giveaway.character2.get('id')}\n**Rarity:**{giveaway.character2.get('rarity')}"
+            f"🎉 **Congratulations! You won second place!**\n🏆 **Prize:** {giveaway.character2.get('name', 'Unknown')}\n**ID:** {giveaway.character2.get('id')}\n**Rarity:** {giveaway.character2.get('rarity')}"
         )
 
     # Reset giveaway data
