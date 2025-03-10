@@ -206,7 +206,7 @@ async def elimination_process(client: Client):
             client,
             winner2_id,
             media,
-            f"🎉 **Congratulations! You won second place!**\n🏆 **Prize:** {giveaway.character2.get('name', 'Unknown')\n**ID:** {giveaway.character2.get('id')}\n**Rarity:**{giveaway.character2.get('rarity')}}"
+            f"🎉 **Congratulations! You won second place!**\n🏆 **Prize:** {giveaway.character2.get('name', 'Unknown')\n**ID:** {giveaway.character2.get('id')}\n**Rarity:**{giveaway.character2.get('rarity')}"
         )
 
     # Reset giveaway data
