@@ -16,16 +16,11 @@ CHAT_ID = int(os.getenv("CHAT_ID", -1001999201034))  # Replace with your chat ID
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Giveaway data
-class EliminationGiveaway:
-    def __init__(self):
-        self.character1 = None  # Prize for the first winner
-        self.character2 = None  # Prize for the second winner
-        self.participants = []  # List of participant user IDs
-        self.elimination_task = None  # Background task for elimination
-        self.elimination_active = False  # Flag to indicate if elimination is active
-
-giveaway = EliminationGiveaway()
+# Global variables for giveaway data
+giveaway_character1 = None  # Prize for the first winner
+giveaway_character2 = None  # Prize for the second winner
+giveaway_participants = []  # List of participant user IDs
+giveaway_elimination_active = False  # Flag to indicate if elimination is active
 
 # Helper function to send media group
 async def send_media_group_with_caption(client, chat_id, media, caption):
@@ -39,6 +34,8 @@ async def send_media_group_with_caption(client, chat_id, media, caption):
 @app.on_message(filters.command("egiveaway"))
 async def start_elimination_giveaway(client: Client, message: Message):
     try:
+        global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
+
         if message.from_user.id != ADMIN_ID:
             return
 
@@ -57,10 +54,10 @@ async def start_elimination_giveaway(client: Client, message: Message):
             await message.reply("❌ **One or both characters not found in the database.**")
             return
 
-        giveaway.character1 = character1
-        giveaway.character2 = character2
-        giveaway.participants = []
-        giveaway.elimination_active = False  # Reset elimination flag
+        giveaway_character1 = character1
+        giveaway_character2 = character2
+        giveaway_participants = []
+        giveaway_elimination_active = False  # Reset elimination flag
 
         # Prepare media group
         media = [
@@ -72,7 +69,7 @@ async def start_elimination_giveaway(client: Client, message: Message):
         caption = (
             f"🎉 **Elimination Giveaway Started!**\n"
             f"💬 **Use /join to participate!**\n"
-            f"👥 **Participants:** {len(giveaway.participants)}"
+            f"👥 **Participants:** {len(giveaway_participants)}"
         )
 
         # Send media group and caption
@@ -86,26 +83,28 @@ async def start_elimination_giveaway(client: Client, message: Message):
 @command_lock
 async def join_giveaway(client: Client, message: Message):
     try:
-        if not giveaway.character1 or not giveaway.character2:
+        global giveaway_participants, giveaway_elimination_active
+
+        if not giveaway_character1 or not giveaway_character2:
             await message.reply("❌ **No active elimination giveaway.**")
             return
 
-        if giveaway.elimination_active:
+        if giveaway_elimination_active:
             await message.reply("❌ **The elimination process has started. You can no longer join.**")
             return
 
         user_id = message.from_user.id
-        if user_id in giveaway.participants:
+        if user_id in giveaway_participants:
             await message.reply("ℹ️ **You are already participating in the giveaway.**")
             return
 
-        giveaway.participants.append(user_id)
-        await message.reply(f"✅ **You have successfully joined the elimination giveaway!**\n👥 **Total Participants:** {len(giveaway.participants)}")
+        giveaway_participants.append(user_id)
+        await message.reply(f"✅ **You have successfully joined the elimination giveaway!**\n👥 **Total Participants:** {len(giveaway_participants)}")
         await client.send_message(
             chat_id=-1002338924488,
             text=(
                 f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
-                f"👥 **Total Participants:** {len(giveaway.participants)}"
+                f"👥 **Total Participants:** {len(giveaway_participants)}"
             )
         )
     except Exception as e:
@@ -115,23 +114,25 @@ async def join_giveaway(client: Client, message: Message):
 @app.on_message(filters.command("startelimination"))
 async def start_elimination(client: Client, message: Message):
     try:
+        global giveaway_elimination_active
+
         if message.from_user.id != ADMIN_ID:
             await message.reply("🚫 **You are not authorized to start the elimination process.**")
             return
 
-        if not giveaway.character1 or not giveaway.character2:
+        if not giveaway_character1 or not giveaway_character2:
             await message.reply("❌ **No active elimination giveaway to start.**")
             return
 
-        if len(giveaway.participants) < 2:
+        if len(giveaway_participants) < 2:
             await message.reply("❌ **Not enough participants to start elimination.**")
             return
 
         # Set elimination as active
-        giveaway.elimination_active = True
+        giveaway_elimination_active = True
 
         # Start the elimination task
-        giveaway.elimination_task = asyncio.create_task(elimination_process(client))
+        asyncio.create_task(elimination_process(client))
 
         await message.reply("✅ **Elimination process started! No new participants can join.**")
     except Exception as e:
@@ -140,19 +141,21 @@ async def start_elimination(client: Client, message: Message):
 # Elimination process
 async def elimination_process(client: Client):
     try:
-        while len(giveaway.participants) > 1:
-            if len(giveaway.participants) > 40:
+        global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
+
+        while len(giveaway_participants) > 1:
+            if len(giveaway_participants) > 40:
                 eliminate_count = 3
-            elif len(giveaway.participants) > 20:
+            elif len(giveaway_participants) > 20:
                 eliminate_count = 2
-            elif len(giveaway.participants) > 5:
+            elif len(giveaway_participants) > 5:
                 eliminate_count = 1
             else:
                 eliminate_count = 1  # Last 2 users: eliminate 1 to determine the winner
 
             # Eliminate users
-            eliminated = random.sample(giveaway.participants, eliminate_count)
-            giveaway.participants = [user for user in giveaway.participants if user not in eliminated]
+            eliminated = random.sample(giveaway_participants, eliminate_count)
+            giveaway_participants = [user for user in giveaway_participants if user not in eliminated]
 
             # Announce eliminated users
             eliminated_names = []
@@ -164,13 +167,13 @@ async def elimination_process(client: Client):
                 chat_id=-1002338924488,
                 text=(
                     f"🚫 **Eliminated Users:** {', '.join(eliminated_names)}\n"
-                    f"👥 **Remaining Participants:** {len(giveaway.participants)}"
+                    f"👥 **Remaining Participants:** {len(giveaway_participants)}"
                 )
             )
 
             # Send IDs of the last 5 participants to the group
-            if len(giveaway.participants) == 5:
-                last_five_ids = "\n".join([f"[{await client.get_users(user_id).first_name}](tg://user?id={user_id})" for user_id in giveaway.participants])
+            if len(giveaway_participants) == 5:
+                last_five_ids = "\n".join([f"[{await client.get_users(user_id).first_name}](tg://user?id={user_id})" for user_id in giveaway_participants])
                 await client.send_message(
                     chat_id=-1002338924488,
                     text=(
@@ -183,16 +186,16 @@ async def elimination_process(client: Client):
             await asyncio.sleep(45)
 
         # Determine the winners
-        if len(giveaway.participants) == 2:
-            winner1_id = giveaway.participants[0]
-            winner2_id = giveaway.participants[1]
+        if len(giveaway_participants) == 2:
+            winner1_id = giveaway_participants[0]
+            winner2_id = giveaway_participants[1]
 
             # Fetch winner data
             winner1 = await client.get_users(winner1_id)
             winner2 = await client.get_users(winner2_id)
 
             # Prepare media for the first winner
-            media = InputMediaPhoto(giveaway.character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway.character1.get('name', 'Unknown')}\n**ID:** {giveaway.character1.get('id')}\n**Rarity:** {giveaway.character1.get('rarity')}")
+            media = InputMediaPhoto(giveaway_character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway_character1.get('name', 'Unknown')}\n**ID:** {giveaway_character1.get('id')}\n**Rarity:** {giveaway_character1.get('rarity')}")
 
             # Prepare caption for winners
             caption = (
@@ -202,45 +205,44 @@ async def elimination_process(client: Client):
             )
 
             # Send media and caption
-            await client.send_photo(chat_id=CHAT_ID, photo=giveaway.character1.get("img_url"), caption=caption)
+            await client.send_photo(chat_id=CHAT_ID, photo=giveaway_character1.get("img_url"), caption=caption)
 
             # Assign prizes
             await user_collection.update_one(
                 {"id": winner1_id},
-                {"$push": {"characters": giveaway.character1}}
+                {"$push": {"characters": giveaway_character1}}
             )
             await user_collection.update_one(
                 {"id": winner2_id},
-                {"$push": {"characters": giveaway.character2}}
+                {"$push": {"characters": giveaway_character2}}
             )
 
             # Send DMs to winners
             await client.send_photo(
                 chat_id=winner1_id,
-                photo=giveaway.character1.get("img_url"),
+                photo=giveaway_character1.get("img_url"),
                 caption=(
                     f"🎉 **Congratulations! You won first place!**\n"
-                    f"🏆 **Prize:** {giveaway.character1.get('name', 'Unknown')}\n"
-                    f"**ID:** {giveaway.character1.get('id')}\n"
-                    f"**Rarity:** {giveaway.character1.get('rarity')}"
+                    f"🏆 **Prize:** {giveaway_character1.get('name', 'Unknown')}\n"
+                    f"**ID:** {giveaway_character1.get('id')}\n"
+                    f"**Rarity:** {giveaway_character1.get('rarity')}"
                 )
             )
             await client.send_photo(
                 chat_id=winner2_id,
-                photo=giveaway.character2.get("img_url"),
+                photo=giveaway_character2.get("img_url"),
                 caption=(
                     f"🎉 **Congratulations! You won second place!**\n"
-                    f"🏆 **Prize:** {giveaway.character2.get('name', 'Unknown')}\n"
-                    f"**ID:** {giveaway.character2.get('id')}\n"
-                    f"**Rarity:** {giveaway.character2.get('rarity')}"
+                    f"🏆 **Prize:** {giveaway_character2.get('name', 'Unknown')}\n"
+                    f"**ID:** {giveaway_character2.get('id')}\n"
+                    f"**Rarity:** {giveaway_character2.get('rarity')}"
                 )
             )
 
         # Reset giveaway data
-        giveaway.character1 = None
-        giveaway.character2 = None
-        giveaway.participants = []
-        giveaway.elimination_task = None
-        giveaway.elimination_active = False
+        giveaway_character1 = None
+        giveaway_character2 = None
+        giveaway_participants = []
+        giveaway_elimination_active = False
     except Exception as e:
         logger.error(f"Error in elimination_process: {e}")
