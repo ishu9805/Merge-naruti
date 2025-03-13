@@ -88,7 +88,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize total message count and random threshold for Valentine spawn
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            valentine_spawn_thresholds[chat_id] = random.randint(8000, 15000)
+            valentine_spawn_thresholds[chat_id] = random.randint(600, 1500)
 
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
@@ -121,7 +121,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Reset the threshold for the next spawn
-            valentine_spawn_thresholds[chat_id] = random.randint(8000, 15000)
+            valentine_spawn_thresholds[chat_id] = random.randint(600, 1500)
             
 
 async def send_image(update: Update, context: CallbackContext) -> None:
@@ -278,7 +278,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
 
     # Filter Valentine characters
-    valentine_characters = [c for c in all_characters if c.get('rarity') == '🎐 Celestial']
+    valentine_characters = [c for c in all_characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨']
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
@@ -301,7 +301,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     global_count = sum(user['count'] for user in user_ownership_data)
 
-    if global_count >= 15:
+    if global_count >= 10:
         print(f"Valentine character {waifu_id} has reached the global ownership limit.")
         return
 
@@ -314,7 +314,8 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         del first_correct_guesses[chat_id]
 
     # Send the character to the chat
-    caption = "💖 A *Valentine* character has arrived!\nGuess their name with /guess [Name] to win their heart! 💌"
+    caption = "**🎨 A __Holi__ character has arrived! 🌈**\n\nGuess their name with /guess `[Name]` to add this **🧧 𝙀𝙫𝙚𝙣𝙩𝙨** character to your collection! 🎭✨"  
+
     if character.get('img_url'):
         await context.bot.send_photo(
             chat_id=chat_id,
@@ -335,7 +336,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
    
 
     # Notify admin (optional)
-    await context.bot.send_message(chat_id=7378476666, text=f"A Valentine character has spawned! Character id: {character['id']}")
+    await context.bot.send_message(chat_id=7378476666, text=f"A holi character has spawned! Character id: {character['id']}")
 
 @block_dec_ptb
 async def guess(update: Update, context: CallbackContext) -> None:
