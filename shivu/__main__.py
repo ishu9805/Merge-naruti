@@ -277,12 +277,11 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    cursor = collection.aggregate(pipeline)
-    characters = await cursor.to_list(length=None)
+    
 
 
     # Filter Valentine characters
-    valentine_characters = [c for c in characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨']
+    valentine_characters = await collection.find({'rarity': '🧧 𝙀𝙫𝙚𝙣𝙩𝙨'}).to_list(length=None)
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
