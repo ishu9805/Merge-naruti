@@ -138,7 +138,7 @@ async def start_elimination(client: Client, message: Message):
     except Exception as e:
         logger.error(f"Error in start_elimination: {e}")
 
-# Elimination process
+
 async def elimination_process(client: Client):
     try:
         global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
@@ -176,7 +176,16 @@ async def elimination_process(client: Client):
 
             # Send IDs of the last 5 participants to the group
             if len(giveaway_participants) <= 5:  # Changed condition to <= 5
-                last_five_ids = "\n".join([f"[{await client.get_users(user_id).first_name}](tg://user?id={user_id})" for user_id in giveaway_participants])
+                # Fetch user data for the last 5 participants
+                last_five_users = []
+                for user_id in giveaway_participants:
+                    user = await client.get_users(user_id)  # Fetch user data
+                    last_five_users.append(f"[{user.first_name}](tg://user?id={user_id})")
+
+                # Construct the message
+                last_five_ids = "\n".join(last_five_users)
+
+                # Send the message
                 await client.send_message(
                     chat_id=-1002338924488,
                     text=(
