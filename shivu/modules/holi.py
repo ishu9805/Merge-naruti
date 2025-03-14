@@ -37,8 +37,8 @@ async def grab_holi_character(client: Client, message: Message):
             return
 
         # Fetch the user's collection
-        if not user or len(user.get("characters", [])) < 10:
-            await message.reply("❌ **You need at least 10 characters in your collection to claim a Holi character!**")
+        if not user or len(user.get("characters", [])) < 15:
+            await message.reply("❌ **nigga u can't i!**")
             return
 
         # Fetch Holi characters with rarity "🧧 Events" and exclude restricted IDs
