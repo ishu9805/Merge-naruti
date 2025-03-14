@@ -145,11 +145,11 @@ async def elimination_process(client: Client):
 
         while len(giveaway_participants) > 1:
             if len(giveaway_participants) > 40:
-                eliminate_count = 3
+                eliminate_count = 5
             elif len(giveaway_participants) > 20:
-                eliminate_count = 2
+                eliminate_count = 3
             elif len(giveaway_participants) > 5:
-                eliminate_count = 1
+                eliminate_count = 2
             else:
                 eliminate_count = 1  # Last 2 users: eliminate 1 to determine the winner
 
@@ -205,7 +205,7 @@ async def elimination_process(client: Client):
             )
 
             # Send media and caption
-            await client.send_photo(chat_id=CHAT_ID, photo=giveaway_character1.get("img_url"), caption=caption)
+            await client.send_message(chat_id=CHAT_ID, text=caption)
 
             # Assign prizes
             await user_collection.update_one(
