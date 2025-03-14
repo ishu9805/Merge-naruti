@@ -43,7 +43,7 @@ async def grab_holi_character(client: Client, message: Message):
 
         # Fetch Holi characters with rarity "🧧 Events" and exclude restricted IDs
         holi_characters = await collection.find({
-            "rarity": "🧧 Events",
+            "rarity": "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
             "id": {"$nin": RESTRICTED_CHARACTER_IDS}  # Exclude restricted IDs
         }).to_list(length=100)  # Adjust length as needed
 
