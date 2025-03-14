@@ -153,6 +153,9 @@ async def elimination_process(client: Client):
             else:
                 eliminate_count = 1  # Last 2 users: eliminate 1 to determine the winner
 
+            # Ensure eliminate_count does not exceed participants
+            eliminate_count = min(eliminate_count, len(giveaway_participants) - 1)
+
             # Eliminate users
             eliminated = random.sample(giveaway_participants, eliminate_count)
             giveaway_participants = [user for user in giveaway_participants if user not in eliminated]
@@ -172,12 +175,12 @@ async def elimination_process(client: Client):
             )
 
             # Send IDs of the last 5 participants to the group
-            if len(giveaway_participants) == 5:
+            if len(giveaway_participants) <= 5:  # Changed condition to <= 5
                 last_five_ids = "\n".join([f"[{await client.get_users(user_id).first_name}](tg://user?id={user_id})" for user_id in giveaway_participants])
                 await client.send_message(
                     chat_id=-1002338924488,
                     text=(
-                        f"🎉 **Last 5 Participants:**\n"
+                        f"🎉 **Last {len(giveaway_participants)} Participants:**\n"
                         f"{last_five_ids}"
                     )
                 )
@@ -210,11 +213,13 @@ async def elimination_process(client: Client):
             # Assign prizes
             await user_collection.update_one(
                 {"id": winner1_id},
-                {"$push": {"characters": giveaway_character1}}
+                {"$push": {"characters": giveaway_character1}},
+                upsert=True  # Create a new entry if the user does not exist
             )
             await user_collection.update_one(
                 {"id": winner2_id},
-                {"$push": {"characters": giveaway_character2}}
+                {"$push": {"characters": giveaway_character2}},
+                upsert=True  # Create a new entry if the user does not exist
             )
 
             # Send DMs to winners
