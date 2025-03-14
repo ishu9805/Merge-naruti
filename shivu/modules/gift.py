@@ -21,7 +21,7 @@ active_buttons = {}         # Track active buttons
 lock = set()                # Set to track active callback processes
 
 # Gift Command
-@shivuu.on_message(filters.command("gift"))
+#@shivuu.on_message(filters.command("gift"))
 async def gift(client, message):
     sender_id = message.from_user.id
 
