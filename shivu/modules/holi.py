@@ -5,6 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from shivu import user_collection, collection
 from .lock import command_lock
+from . import app
 
 # Logging
 logging.basicConfig(level=logging.INFO)
