@@ -15,7 +15,7 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", 7378476666))  # Replace with your admin ID
 CHAT_ID = int(os.getenv("CHAT_ID", -1001999201034))  # Replace with your chat ID
 
 # List of restricted character IDs (add the IDs you want to exclude)
-RESTRICTED_CHARACTER_IDS = ["restricted_id1", "restricted_id2", "restricted_id3"]  # Replace with actual IDs
+RESTRICTED_CHARACTER_IDS = ["6591", "6586", "6588"]  # Replace with actual IDs
 
 # Command to grab a Holi character
 @command_lock
