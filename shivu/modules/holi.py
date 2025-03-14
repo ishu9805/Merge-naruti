@@ -5,6 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from shivu import user_collection, collection
 from .lock import command_lock
+
 # Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,21 +14,24 @@ logger = logging.getLogger(__name__)
 ADMIN_ID = int(os.getenv("ADMIN_ID", 7378476666))  # Replace with your admin ID
 CHAT_ID = int(os.getenv("CHAT_ID", -1001999201034))  # Replace with your chat ID
 
+# List of restricted character IDs (add the IDs you want to exclude)
+RESTRICTED_CHARACTER_IDS = ["restricted_id1", "restricted_id2", "restricted_id3"]  # Replace with actual IDs
+
 # Command to grab a Holi character
 @command_lock
 @app.on_message(filters.command("grabholi"))
 async def grab_holi_character(client: Client, message: Message):
     try:
-        
+        # Restrict command to a specific chat
         if message.chat.id != -1002338924488:
-            await client.send_message(f"u can use this command here only @naruto_support_chat")
+            await message.reply("❌ **You can only use this command in @naruto_support_chat.**")
             return
 
         user_id = message.from_user.id
 
         # Check if the user has already claimed a Holi character
         user = await user_collection.find_one({"id": user_id})
-        if user and "holi_claimed" in user and user["holi_claimed"]:
+        if user and user.get("holi_claimed", False):
             await message.reply("❌ **You have already claimed your Holi character!**")
             return
 
@@ -36,8 +40,12 @@ async def grab_holi_character(client: Client, message: Message):
             await message.reply("❌ **You need at least 10 characters in your collection to claim a Holi character!**")
             return
 
-        # Fetch a random Holi character with rarity "🧧 Events" from the database
-        holi_characters = await collection.find({"rarity": "🧧 Events"}).to_list(length=100)  # Adjust length as needed
+        # Fetch Holi characters with rarity "🧧 Events" and exclude restricted IDs
+        holi_characters = await collection.find({
+            "rarity": "🧧 Events",
+            "id": {"$nin": RESTRICTED_CHARACTER_IDS}  # Exclude restricted IDs
+        }).to_list(length=100)  # Adjust length as needed
+
         if not holi_characters:
             await message.reply("❌ **No Holi characters available at the moment.**")
             return
