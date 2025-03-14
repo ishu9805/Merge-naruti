@@ -143,7 +143,7 @@ async def elimination_process(client: Client):
     try:
         global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
 
-        while len(giveaway_participants) > 1:
+        while len(giveaway_participants) > 2:  # Stop when 2 participants are left
             if len(giveaway_participants) > 40:
                 eliminate_count = 5
             elif len(giveaway_participants) > 20:
@@ -151,10 +151,10 @@ async def elimination_process(client: Client):
             elif len(giveaway_participants) > 5:
                 eliminate_count = 2
             else:
-                eliminate_count = 1  # Last 2 users: eliminate 1 to determine the winner
+                eliminate_count = 1  # Last few users: eliminate 1 at a time
 
             # Ensure eliminate_count does not exceed participants
-            eliminate_count = min(eliminate_count, len(giveaway_participants) - 1)
+            eliminate_count = min(eliminate_count, len(giveaway_participants) - 2)  # Leave at least 2 participants
 
             # Eliminate users
             eliminated = random.sample(giveaway_participants, eliminate_count)
@@ -197,7 +197,7 @@ async def elimination_process(client: Client):
             # Wait for 45 seconds before the next elimination
             await asyncio.sleep(45)
 
-        # Determine the winners
+        # Determine the winners (when 2 participants are left)
         if len(giveaway_participants) == 2:
             winner1_id = giveaway_participants[0]
             winner2_id = giveaway_participants[1]
