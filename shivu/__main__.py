@@ -323,8 +323,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         await context.bot.send_photo(
             chat_id=chat_id,
             photo=character['img_url'],
-            caption=caption,
-            parse_mode='Markdown'
+            caption=caption
         )
     elif character.get('vid_url'):
         await context.bot.send_video(
