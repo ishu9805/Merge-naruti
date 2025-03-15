@@ -88,7 +88,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize total message count and random threshold for Valentine spawn
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            valentine_spawn_thresholds[chat_id] = random.randint(400, 1400)
+            valentine_spawn_thresholds[chat_id] = random.randint(100, 300)
 
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
@@ -121,7 +121,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Reset the threshold for the next spawn
-            valentine_spawn_thresholds[chat_id] = random.randint(800, 1500)
+            valentine_spawn_thresholds[chat_id] = random.randint(300, 600)
             
 
 async def send_image(update: Update, context: CallbackContext) -> None:
