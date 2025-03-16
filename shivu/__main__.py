@@ -357,6 +357,8 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     # Notify admin (optional)
     await context.bot.send_message(chat_id=7378476666, text=f"A holi character has spawned! Character id: {character['id']}")
 
+
+
 @block_dec_ptb
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -419,19 +421,19 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=keyboard
         )
         await add_coins(int(user_id), 40)
+        
+        await user_collection.update_one(
+            {"id": user_id},
+            {"$inc": {"total_characters": 1}}
+        )
                 
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {f'rarity_count.{rarity}': 1}},
-            upsert=True
+        await chat_data.update_one(
+            {'chat_id': chat_id, 'user_id': user_id},
+            {'$inc': {'total_characters': 1}, '$set': {'last_updated': datetime.now()}},
+            upsert=True  # Create a new document if it doesn't exist
         )
         
         
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {'ccount': 1}},
-            upsert=True
-        )
         
         user = await user_collection.find_one({'id': user_id})
         if user:
