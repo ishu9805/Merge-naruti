@@ -534,7 +534,7 @@ def main() -> None:
     #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
     # Use asyncio.create_task to run the bot in the background
-    await create_indexes()
+    create_indexes()
     application.add_error_handler(error_handler)
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
    
