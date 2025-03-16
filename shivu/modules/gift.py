@@ -3,7 +3,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from shivu import user_collection, ban_collection
 from shivu import shivuu, user_count
-
+from .lock import command_lock as cl
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -21,7 +21,8 @@ active_buttons = {}         # Track active buttons
 lock = set()                # Set to track active callback processes
 
 # Gift Command
-#@shivuu.on_message(filters.command("gift"))
+@shivuu.on_message(filters.command("gift"))
+@cl
 async def gift(client, message):
     sender_id = message.from_user.id
 
@@ -202,6 +203,7 @@ async def on_gift_callback_query(client, callback_query):
 
  # Trade Command
 @shivuu.on_message(filters.command("trade"))
+@cl
 async def trade(client, message):
     sender_id = message.from_user.id
 
