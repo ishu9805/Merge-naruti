@@ -121,16 +121,16 @@ async def xprofile(client, message):
 
             # Send profile picture if available
             if profile_media:
-                temp_file_path = "temp_profile_image.jpg"
-                await download_image(profile_media, temp_file_path)
+                #temp_file_path = "temp_profile_image.jpg"
+                #await download_image(profile_media, temp_file_path)
 
                 await message.reply_photo(
-                    photo=temp_file_path,
+                    photo=profile_media,
                     caption=balance_message
                     #parse_mode="markdown"  # Enable Markdown formatting
                 )
 
-                os.remove(temp_file_path)
+                #os.remove(temp_file_path)
             else:
                 await message.reply_text(
                     balance_message
