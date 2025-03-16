@@ -47,15 +47,7 @@ def create_progress_bar(percentage, bar_length=10):
     empty_length = bar_length - filled_length
     return '█' * filled_length + '░' * empty_length
 
-async def update_chat_data(chat_id, user_id, characters_collected):
-    """
-    Update the total_characters for a user in a specific chat.
-    """
-    await chat_data.update_one(
-        {'chat_id': chat_id, 'user_id': user_id},
-        {'$inc': {'total_characters': characters_collected}, '$set': {'last_updated': datetime.now()}},
-        upsert=True  # Create a new document if it doesn't exist
-    )
+
 
 async def get_chat_rank(chat_id, user_id):
     """
@@ -73,29 +65,50 @@ async def get_chat_rank(chat_id, user_id):
 
 async def upgrade_chat_data():
     """
-    Upgrade the chat_data collection by adding all users to their respective chat groups.
+    Upgrade the chat_data collection by adding all users (excluding bots) to their respective chat groups.
+    Uses pagination to handle large datasets.
     """
-    # Fetch all users from user_collection
-    users = await user_collection.find({}).to_list(None)
+    print("🚀 Starting chat_data upgrade process...")
 
-    # Fetch all chat groups where the bot is a member
-    async for dialog in app.get_dialogs():
-        if dialog.chat.type in ["group", "supergroup"]:
-            chat_id = dialog.chat.id
+    # Pagination settings
+    batch_size = 1000  # Number of users to process per batch
+    skip = 0
+    total_users_processed = 0
 
-            # Update chat_data for each user in the chat
-            for user in users:
-                user_id = user['id']
-                total_characters = user.get('total_characters', 0)
+    # Fetch all chat groups from bot_chats collection
+    chat_ids = await bot_chats.distinct('chat_id')
+    print(f"🔍 Found {len(chat_ids)} chat groups in bot_chats collection.")
 
-                # Update or insert the user's data in chat_data
+    # Process users in batches
+    while True:
+        # Fetch a batch of users
+        users = await user_collection.find({}).skip(skip).limit(batch_size).to_list(None)
+        if not users:
+            break  # No more users to process
+
+        print(f"🔄 Processing batch {skip // batch_size + 1} ({len(users)} users)...")
+
+        # Update chat_data for each user in the batch (excluding bots)
+        for user in users:
+            if user.get('is_bot', False):  # Skip bots
+                continue
+
+            user_id = user['id']
+            total_characters = user.get('total_characters', 0)
+
+            # Update or insert the user's data in chat_data for each chat group
+            for chat_id in chat_ids:
                 await chat_data.update_one(
                     {'chat_id': chat_id, 'user_id': user_id},
                     {'$set': {'total_characters': total_characters, 'last_updated': datetime.now()}},
                     upsert=True  # Create a new document if it doesn't exist
                 )
 
-    print("✅ chat_data collection upgraded successfully!")
+        total_users_processed += len(users)
+        skip += batch_size
+
+    print(f"✅ chat_data collection upgraded successfully! Processed {total_users_processed} users (bots excluded).")
+
 
 
 @app.on_message(filters.command('hprofile'))
