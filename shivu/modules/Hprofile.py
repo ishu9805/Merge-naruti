@@ -126,19 +126,19 @@ async def xprofile(client, message):
 
                 await message.reply_photo(
                     photo=temp_file_path,
-                    caption=balance_message,
-                    parse_mode="markdown"  # Enable Markdown formatting
+                    caption=balance_message
+                    #parse_mode="markdown"  # Enable Markdown formatting
                 )
 
                 os.remove(temp_file_path)
             else:
                 await message.reply_text(
-                    balance_message,
-                    parse_mode="markdown"  # Enable Markdown formatting
+                    balance_message
+                    #parse_mode="markdown"  # Enable Markdown formatting
                 )
 
         else:
-            await message.reply_text("🚫 Claim your bonus first using /xbonus")
+            await message.reply_text("start the bot in dm first :-https://t.me/Fancy_Waifu_Husbando_Bot?start=start ")
 
     except Exception as e:
         await message.reply_text(f"❌ An error occurred: {e}")
