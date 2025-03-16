@@ -47,6 +47,21 @@ async def preload_characters(context: CallbackContext) -> None:
         print(f"Error preloading characters: {e}")
 
 
+async def update_total_characters_for_all_users():
+    try:
+        print("Updating total_characters for all users...")
+        cursor = user_collection.find({})
+        async for user in cursor:
+            total_characters = len(user.get('characters', []))
+            await user_collection.update_one(
+                {"id": user["id"]},
+                {"$set": {"total_characters": total_characters}}
+            )
+        print("Successfully updated total_characters for all users.")
+    except Exception as e:
+        print(f"Error updating total_characters: {e}")
+
+
 async def react_to_message(chat_id, message_id, emoji):
     try:
        await shivuu.send_reaction(chat_id, message_id, emoji)
@@ -534,6 +549,7 @@ def main() -> None:
     #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
     # Use asyncio.create_task to run the bot in the background
+    update_total_characters_for_all_users()
     create_indexes()
     application.add_error_handler(error_handler)
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
