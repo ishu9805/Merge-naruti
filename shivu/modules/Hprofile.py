@@ -183,21 +183,21 @@ async def xprofile(client, message):
                 f"📜 **Characters**: `{total_characters}/{total_database_characters}`\n"
                 f"📊 **Progress**: `{progress_bar}` `{progress_percentage:.2f}%`\n"
                 f"📅 **Days Old**: `{days_old}`\n\n"
-                f"🏆 **Chat Group Rank**: `#{chat_user_rank}` / `{chat_members_count}` members\n"
-                f"🌍 **Global Rank**: `#{global_user_rank}` / `{total_users}` users\n"
+                f"🏆 **Position here**: `#{chat_user_rank}`  on `{chat_members_count}` members\n"
+                f"🌍 **Global Position**: `#{global_user_rank}` on `{total_users}` users\n"
             )
 
             # Send profile picture if available
             if profile_media:
                 await message.reply_photo(
                     photo=profile_media,
-                    caption=balance_message,
-                    parse_mode="markdown"  # Enable Markdown formatting
+                    caption=balance_message
+                    #parse_mode="markdown"  # Enable Markdown formatting
                 )
             else:
                 await message.reply_text(
-                    balance_message,
-                    parse_mode="markdown"  # Enable Markdown formatting
+                    balance_message
+                    #parse_mode="markdown"  # Enable Markdown formatting
                 )
 
         else:
