@@ -70,6 +70,8 @@ async def get_block_reason(user_id):
     )
     return result.get('reason') if result else None
 
+
+
 @app.on_message(filters.command("block") & sudo_filter)
 async def block_command(client, message: Message):
     if message.reply_to_message:
@@ -86,14 +88,25 @@ async def block_command(client, message: Message):
         reason = message.text[reason_start_index:].strip()
 
     if await is_blocked(target_id):
-        return await message.reply("This user is already blocked.")
+        block_reason = await get_block_reason(target_id)
+        return await message.reply(
+            f"ℹ️ *User Already Blocked!*\n"
+            f"This user is already on the block list.\n"
+            f"- **Reason:** `{block_reason if block_reason else 'Not specified'}`",
+            parse_mode="Markdown"
+        )
 
     await block(target_id)
 
     if reason:
         await save_block_reason(target_id, reason)
 
-    await message.reply(f"User has been blocked permanently. {'Reason: ' + reason if reason else ''}")
+    await message.reply(
+        f"✅ *User Blocked Successfully!*\n"
+        f"The user has been blocked permanently.\n"
+        f"- **Reason:** `{reason if reason else 'Not specified'}`",
+        parse_mode="Markdown"
+    )
 
 @app.on_message(filters.command("unblock") & sudo_filter)
 async def unblock_command(client, message: Message):
@@ -106,10 +119,47 @@ async def unblock_command(client, message: Message):
             return await message.reply("Please either reply to a user's message or provide their user ID.")
 
     if not await is_blocked(target_id):
-        return await message.reply("This user isn't blocked.")
+        return await message.reply(
+            "ℹ️ *User Not Blocked!*\n"
+            "This user is not currently on the block list.",
+            parse_mode="Markdown"
+        )
 
     await unblock(target_id)
-    await message.reply("User has been unblocked successfully.")
+    await message.reply(
+        "✅ *User Unblocked Successfully!*\n"
+        "The user has been removed from the block list and can now interact with the bot again.",
+        parse_mode="Markdown"
+    )
+
+@app.on_message(filters.command("nbanlist") & sudo_filter)
+async def blocklist_command(client: Client, message: Message):
+    blocked_users = await db.block.find().to_list(None)
+    if not blocked_users:
+        return await message.reply(
+            "📜 *Blocked Users List*\n"
+            "There are no users currently blocked. Great job keeping things clean! 🎉",
+            parse_mode="Markdown"
+        )
+
+    user_list = "\n".join(
+        [
+            f"User ID: {user['user_id']} (Reason: {user.get('reason', 'Not specified')})"
+            for user in blocked_users
+        ]
+    )
+    text = (
+        "📜 *Blocked Users List*\n"
+        "Here are the users currently blocked:\n"
+        f"```\n{user_list}\n```"
+    )
+    await message.reply(
+        text,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Close", callback_data="close_blocklist")]]
+        ),
+        parse_mode="Markdown"
+    )
 
 block_dic = {}
 
@@ -141,25 +191,6 @@ async def get_all_blocked_users():
     blocked_users = await db.block.find().to_list(None)
     return [user['user_id'] for user in blocked_users]
 
-@app.on_message(filters.command("nbanlist") & sudo_filter)
-async def blocklist_command(client: Client, message: Message):
-    blocked_users = await db.block.find().to_list(None)
-    if not blocked_users:
-        return await message.reply("T📜 __Blocked Users List__/n There are no users currently blocked. Great job keeping things clean! 🎉")
-
-    user_list = "\n".join(
-        [
-            f"User ID: {user['user_id']} (Reason: {user.get('reason', 'Not specified')})"
-            for user in blocked_users
-        ]
-    )
-    text = f"Blocked Users:\n{user_list}"
-    await message.reply(
-        text,
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Close", callback_data="close_blocklist")]]
-        )
-    )
 
 @app.on_callback_query(filters.regex("close_blocklist") & sudo_filter)
 async def close_callback(client: Client, callback_query: CallbackQuery):
