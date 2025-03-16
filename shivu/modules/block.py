@@ -37,7 +37,7 @@ async def block_cwf(_, m: Message):
                 t_block[user_id] = current_time
                 dic2[user_id] = 0
                 #txt = "."
-                txt = "You've been temporarily blocked for 5 minutes due to spamming. Please take it easy!"
+                txt = "🚫 __You've been temporarily blocked!__\nYou're sending too many messages too quickly. Please slow down and try again in **5 minutes**."
                 await m.reply(txt)
         else:
             dic2[user_id] = 0
@@ -145,7 +145,7 @@ async def get_all_blocked_users():
 async def blocklist_command(client: Client, message: Message):
     blocked_users = await db.block.find().to_list(None)
     if not blocked_users:
-        return await message.reply("There are no blocked users at the moment.")
+        return await message.reply("T📜 __Blocked Users List__/n There are no users currently blocked. Great job keeping things clean! 🎉")
 
     user_list = "\n".join(
         [
