@@ -1,4 +1,3 @@
-
 import math
 import os
 import aiohttp
@@ -6,7 +5,8 @@ import aiofiles
 from pyrogram import Client, filters
 from datetime import datetime
 import pytz
-from . import user_collection, collection, app
+import asyncio
+from . import user_collection, collection, app, chat_data
 from .block import block_dec, temp_block
 
 def custom_format_number(num):
@@ -47,6 +47,64 @@ def create_progress_bar(percentage, bar_length=10):
     empty_length = bar_length - filled_length
     return '█' * filled_length + '░' * empty_length
 
+async def update_chat_data(chat_id, user_id, characters_collected):
+    """
+    Update the total_characters for a user in a specific chat.
+    """
+    await chat_data.update_one(
+        {'chat_id': chat_id, 'user_id': user_id},
+        {'$inc': {'total_characters': characters_collected}, '$set': {'last_updated': datetime.now()}},
+        upsert=True  # Create a new document if it doesn't exist
+    )
+
+async def get_chat_rank(chat_id, user_id):
+    """
+    Get the user's rank in the chat based on total_characters.
+    """
+    # Fetch all users in the chat sorted by total_characters in descending order
+    chat_users = await chat_data.find({'chat_id': chat_id}).sort('total_characters', -1).to_list(None)
+
+    # Find the user's rank
+    for index, user in enumerate(chat_users):
+        if user['user_id'] == user_id:
+            return index + 1  # Rank is 1-based
+
+    return None  # User not found in the chat data
+
+async def upgrade_chat_data():
+    """
+    Upgrade the chat_data collection by adding all users to their respective chat groups.
+    """
+    # Fetch all users from user_collection
+    users = await user_collection.find({}).to_list(None)
+
+    # Fetch all chat groups where the bot is a member
+    async for dialog in app.get_dialogs():
+        if dialog.chat.type in ["group", "supergroup"]:
+            chat_id = dialog.chat.id
+
+            # Update chat_data for each user in the chat
+            for user in users:
+                user_id = user['id']
+                total_characters = user.get('total_characters', 0)
+
+                # Update or insert the user's data in chat_data
+                await chat_data.update_one(
+                    {'chat_id': chat_id, 'user_id': user_id},
+                    {'$set': {'total_characters': total_characters, 'last_updated': datetime.now()}},
+                    upsert=True  # Create a new document if it doesn't exist
+                )
+
+    print("✅ chat_data collection upgraded successfully!")
+
+@app.on_start()
+async def on_start(client):
+    """
+    Run the chat_data upgrade process when the bot starts.
+    """
+    print("🚀 Bot is starting...")
+    await upgrade_chat_data()
+
 @app.on_message(filters.command('hprofile'))
 @block_dec
 async def xprofile(client, message):
@@ -55,6 +113,12 @@ async def xprofile(client, message):
         return
 
     try:
+        # Send loading animation
+        loading_message = await message.reply_text("⏳ Loading your profile...")
+
+        # Simulate a 3-second delay
+        await asyncio.sleep(3)
+
         # Fetch user data
         user_data = await user_collection.find_one(
             {'id': user_id},
@@ -89,13 +153,10 @@ async def xprofile(client, message):
 
             gender_icon = '👦🏻' if gender == 'male' else '👧🏻' if gender == 'female' else '👶🏻'
 
-            # Calculate user's rank in the chat group
+            # Fetch chat-specific data
             chat_id = message.chat.id
-            chat_members = await app.get_chat_members_count(chat_id)
-            chat_user_rank = await user_collection.count_documents({
-                'chat_id': chat_id,
-                'total_characters': {'$gt': characters}
-            }) + 1
+            chat_user_rank = await get_chat_rank(chat_id, user_id)
+            chat_members_count = await chat_data.count_documents({'chat_id': chat_id})
 
             # Calculate user's global rank
             global_user_rank = await user_collection.count_documents({
@@ -115,30 +176,28 @@ async def xprofile(client, message):
                 f"📜 **Characters**: `{total_characters}/{total_database_characters}`\n"
                 f"📊 **Progress**: `{progress_bar}` `{progress_percentage:.2f}%`\n"
                 f"📅 **Days Old**: `{days_old}`\n\n"
-                f"🏆 **Chat Group Rank**: `#{chat_user_rank}` / `{chat_members}` members\n"
+                f"🏆 **Chat Group Rank**: `#{chat_user_rank}` / `{chat_members_count}` members\n"
                 f"🌍 **Global Rank**: `#{global_user_rank}` / `{total_users}` users\n"
             )
 
             # Send profile picture if available
             if profile_media:
-                #temp_file_path = "temp_profile_image.jpg"
-                #await download_image(profile_media, temp_file_path)
-
                 await message.reply_photo(
                     photo=profile_media,
-                    caption=balance_message
-                    #parse_mode="markdown"  # Enable Markdown formatting
+                    caption=balance_message,
+                    parse_mode="markdown"  # Enable Markdown formatting
                 )
-
-                #os.remove(temp_file_path)
             else:
                 await message.reply_text(
-                    balance_message
-                    #parse_mode="markdown"  # Enable Markdown formatting
+                    balance_message,
+                    parse_mode="markdown"  # Enable Markdown formatting
                 )
 
         else:
-            await message.reply_text("start the bot in dm first :-https://t.me/Fancy_Waifu_Husbando_Bot?start=start ")
+            await message.reply_text("Start the bot in DM first: [Fancy Waifu Husbando Bot](https://t.me/Fancy_Waifu_Husbando_Bot?start=start)")
+
+        # Delete the loading message
+        await loading_message.delete()
 
     except Exception as e:
         await message.reply_text(f"❌ An error occurred: {e}")
