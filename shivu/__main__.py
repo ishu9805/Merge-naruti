@@ -424,7 +424,8 @@ async def guess(update: Update, context: CallbackContext) -> None:
         
         await user_collection.update_one(
             {"id": user_id},
-            {"$inc": {"total_characters": 1}}
+            {"$inc": {"total_characters": 1}},
+            upsert=True
         )
                 
         await chat_data.update_one(
