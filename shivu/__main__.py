@@ -272,16 +272,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
-    if chat_id != -1002338924488:
-        return
+
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
     
 
 
-    # Filter Valentine characters
-    valentine_characters = await collection.find({'rarity': '🧧 𝙀𝙫𝙚𝙣𝙩𝙨'}).to_list(length=None)
+    valentine_characters = [c for c in all_characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨']
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
