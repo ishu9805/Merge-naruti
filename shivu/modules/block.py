@@ -102,7 +102,7 @@ async def block_command(client, message: Message):
         await save_block_reason(target_id, reason)
 
     await message.reply(
-        f"✅ *User Blocked Successfully!*\n"
+        f"✅ __User Blocked Successfully!__\n"
         f"The user has been blocked permanently.\n"
         f"- **Reason:** `{reason if reason else 'Not specified'}`",
         parse_mode="Markdown"
@@ -120,14 +120,14 @@ async def unblock_command(client, message: Message):
 
     if not await is_blocked(target_id):
         return await message.reply(
-            "ℹ️ *User Not Blocked!*\n"
+            "ℹ️ __User Not Blocked!__\n"
             "This user is not currently on the block list.",
             parse_mode="Markdown"
         )
 
     await unblock(target_id)
     await message.reply(
-        "✅ *User Unblocked Successfully!*\n"
+        "✅ __User Unblocked Successfully!__\n"
         "The user has been removed from the block list and can now interact with the bot again.",
         parse_mode="Markdown"
     )
@@ -137,7 +137,7 @@ async def blocklist_command(client: Client, message: Message):
     blocked_users = await db.block.find().to_list(None)
     if not blocked_users:
         return await message.reply(
-            "📜 *Blocked Users List*\n"
+            "📜 __Blocked Users List__\n"
             "There are no users currently blocked. Great job keeping things clean! 🎉",
             parse_mode="Markdown"
         )
@@ -149,7 +149,7 @@ async def blocklist_command(client: Client, message: Message):
         ]
     )
     text = (
-        "📜 *Blocked Users List*\n"
+        "📜 __Blocked Users List__\n"
         "Here are the users currently blocked:\n"
         f"```\n{user_list}\n```"
     )
