@@ -12,7 +12,7 @@ bdb = db.block
 
 def temp_block(user_id):
     if user_id in t_block:
-        if int(time.time() - t_block[user_id]) > 120:
+        if int(time.time() - t_block[user_id]) > 270:
             t_block.pop(user_id)
     return user_id in t_block
 
@@ -24,7 +24,7 @@ async def block_cwf(_, m: Message):
     user_id = m.from_user.id
 
     if user_id in t_block:
-        if time.time() - t_block[user_id] < 120:
+        if time.time() - t_block[user_id] < 270:
             return
         t_block.pop(user_id)
 
