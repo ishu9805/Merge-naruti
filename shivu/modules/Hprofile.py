@@ -97,13 +97,6 @@ async def upgrade_chat_data():
 
     print("✅ chat_data collection upgraded successfully!")
 
-@app.on_start()
-async def on_start(client):
-    """
-    Run the chat_data upgrade process when the bot starts.
-    """
-    print("🚀 Bot is starting...")
-    await upgrade_chat_data()
 
 @app.on_message(filters.command('hprofile'))
 @block_dec
