@@ -65,6 +65,21 @@ async def handle_remove_chat(client, message):
         await message.reply_text("Invalid chat ID. Please provide a valid integer.")
 
 @app.on_message(filters.new_chat_members, group=2)
+async def on_new_chat_members(client, message):
+    """
+    Add the chat ID to the bot_chats collection when the bot is added to a new chat.
+    """
+    if client.me.id in [user.id for user in message.new_chat_members]:
+        chat_id = message.chat.id
+        await bot_chats.update_one(
+            {'chat_id': chat_id},
+            {'$set': {'last_updated': datetime.now()}},
+            upsert=True
+        )
+        
+        await client.send_message(chat_id=-1002338924488, text= f"✅ Added chat {chat_id} to bot_chats collection.")
+        
+#@app.on_message(filters.new_chat_members, group=2)
 async def welcome_new_member(client, message):
     try:
         chat = message.chat
