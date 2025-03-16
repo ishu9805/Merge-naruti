@@ -8,6 +8,7 @@ import pytz
 import asyncio
 from . import user_collection, collection, app, chat_data
 from .block import block_dec, temp_block
+from . import top_global_groups_collection as bot_chats
 
 def custom_format_number(num):
     if int(num) >= 10**6:
