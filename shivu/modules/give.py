@@ -236,7 +236,7 @@ async def give_character(receiver_id, character_id):
         logger.error(f"Unexpected error in give_character: {e}")
         raise
 
-@app.on_message(filters.command(["givec"]) & sudo_filter)
+@app.on_message(filters.command(["givec"]) & dev_filter)
 async def give_character_command(client, message):
     """
     Command to give a character to a user.
@@ -325,7 +325,7 @@ async def kill_character(receiver_id, character_id):
         logger.error(f"Unexpected error in kill_character: {e}")
         raise
 
-@app.on_message(filters.command(["takec"]) & sudo_filter)
+@app.on_message(filters.command(["takec"]) & dev_filter)
 async def remove_character_command(client, message):
     """
     Command to remove a character from a user.
