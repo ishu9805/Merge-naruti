@@ -26,7 +26,7 @@ from shivu import (
 from shivu import user_count
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins
-from shivu.modules.leaderboard import create_indexes
+from shivu.modules.top import create_indexes
 from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 all_characters = []
 valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
@@ -534,9 +534,11 @@ def main() -> None:
     #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
     # Use asyncio.create_task to run the bot in the background
-    asyncio.create_task(application.run_polling(drop_pending_updates=True))
+    await create_indexes()
     application.add_error_handler(error_handler)
-    #asyncio.gather(update_leaderboards(), create_indexes())
+    asyncio.create_task(application.run_polling(drop_pending_updates=True))
+   
+    
     
 if __name__ == "__main__":
     shivuu.start()
