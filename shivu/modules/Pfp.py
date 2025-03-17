@@ -8,7 +8,8 @@ from .block import block_dec, temp_block
 
 
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import collection, user_collection, required_group_id
+from shivu import collection, user_collection
+from shivu import LOG_CHANNEL as required_group_id
 
 CATBOX_API_URL = "https://catbox.moe/user/api.php"
 
