@@ -9,6 +9,7 @@ import asyncio
 from . import user_collection, collection, app, chat_data
 from .block import block_dec, temp_block
 from . import top_global_groups_collection as bot_chats
+from .lock import command_lock as cmd
 
 def custom_format_number(num):
     if int(num) >= 10**6:
@@ -127,6 +128,7 @@ async def upgrade_chat_data():
 
 @app.on_message(filters.command('hprofile'))
 @block_dec
+@cmd
 async def xprofile(client, message):
     user_id = message.from_user.id
     if temp_block(user_id):
@@ -202,11 +204,13 @@ async def xprofile(client, message):
 
             # Send profile picture if available
             if profile_media:
-                await message.reply_photo(
+                p = await message.reply_photo(
                     photo=profile_media,
                     caption=balance_message
                     #parse_mode="markdown"  # Enable Markdown formatting
                 )
+                await asyncio.sleep(15)
+                await p.delete()
             else:
                 await message.reply_text(
                     balance_message
