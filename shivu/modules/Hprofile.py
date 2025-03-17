@@ -64,6 +64,7 @@ async def get_chat_rank(chat_id, user_id):
 
     return None  # User not found in the chat data
 
+
 async def upgrade_chat_data():
     """
     Upgrade the chat_data collection by adding all users (excluding bots) to their respective chat groups.
@@ -72,7 +73,7 @@ async def upgrade_chat_data():
     print("🚀 Starting chat_data upgrade process...")
 
     # Pagination settings
-    batch_size = 1000  # Number of users to process per batch
+    batch_size = 300  # Adjusted to 300 users per batch
     skip = 0
     total_users_processed = 0
 
@@ -90,6 +91,7 @@ async def upgrade_chat_data():
         print(f"🔄 Processing batch {skip // batch_size + 1} ({len(users)} users)...")
 
         # Update chat_data for each user in the batch (excluding bots)
+        updates = []
         for user in users:
             if user.get('is_bot', False):  # Skip bots
                 continue
@@ -99,18 +101,29 @@ async def upgrade_chat_data():
 
             # Update or insert the user's data in chat_data for each chat group
             for chat_id in chat_ids:
-                await chat_data.update_one(
-                    {'chat_id': chat_id, 'user_id': user_id},
-                    {'$set': {'total_characters': total_characters, 'last_updated': datetime.now()}},
-                    upsert=True  # Create a new document if it doesn't exist
-                )
+                updates.append({
+                    'update_one': {
+                        'filter': {'chat_id': chat_id, 'user_id': user_id},
+                        'update': {
+                            '$set': {
+                                'total_characters': total_characters,
+                                'last_updated': datetime.now()
+                            }
+                        },
+                        'upsert': True  # Create a new document if it doesn't exist
+                    }
+                })
+
+        # Perform bulk updates
+        if updates:
+            await chat_data.bulk_write(updates, ordered=False)
 
         total_users_processed += len(users)
         skip += batch_size
 
     print(f"✅ chat_data collection upgraded successfully! Processed {total_users_processed} users (bots excluded).")
 
-
+    
 
 @app.on_message(filters.command('hprofile'))
 @block_dec
