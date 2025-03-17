@@ -12,7 +12,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 from shivu.modules.fav import button
-from shivu.modules.pfp import delete_profile_media_callback
+from shivu.modules.Pfp import delete_profile_media_callback
 
 # Handler for callback queries
 @app.on_callback_query()
