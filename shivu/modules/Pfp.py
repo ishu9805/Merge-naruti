@@ -109,7 +109,7 @@ async def delete_profile_media_callback(client, callback_query):
         await user_collection.update_one({'id': user_id}, {'$unset': {'profile_media': ""}})
         await callback_query.answer("✅ Profile media has been deleted.")
     else:
-        await callback_query.answer("❌ You are not authorized to delete this profile media.")
+        return #await callback_query.answer("")
 
     # Edit the message to remove the buttons
     await callback_query.message.edit_reply_markup(reply_markup=None)
