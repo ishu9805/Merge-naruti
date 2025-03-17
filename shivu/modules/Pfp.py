@@ -70,7 +70,7 @@ async def set_profile_media(client: Client, message: Message):
         # Send the photo to the required group with a caption and buttons
         caption = f"**📸 New Profile Media Set!**\n\n"
         caption += f"👤 **User ID:** `{user_id}`\n"
-        caption += f"🔗 **Image URL:** [View Image]({img_url})"
+        caption += f" @sashta_dev"
 
         # Create inline buttons
         buttons = InlineKeyboardMarkup(
