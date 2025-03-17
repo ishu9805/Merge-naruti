@@ -108,7 +108,7 @@ async def upgrade_chat_data():
                         'update': {
                             '$set': {
                                 'total_characters': total_characters,
-                                'last_updated': datetime.now()
+                                'last_updated': datetime.utcnow().date()
                             }
                         },
                         'upsert': True  # Create a new document if it doesn't exist
