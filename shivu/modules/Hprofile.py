@@ -77,7 +77,7 @@ async def upgrade_chat_data():
     total_users_processed = 0
 
     # Fetch all chat groups from bot_chats collection
-    chat_ids = await bot_chats.distinct('chat_id')
+    chat_ids = await bot_chats.distinct('group_id')
     print(f"🔍 Found {len(chat_ids)} chat groups in bot_chats collection.")
 
     # Process users in batches
