@@ -21,7 +21,7 @@ async def callback_query_handler(client, callback_query):
         data = callback_query.data
         if data.startswith("delete_pfp"):
             await delete_profile_media_callback(client, callback_query)
-        if data.startswith("sgift") or data.startswith("cgift"):
+        elif data.startswith("sgift") or data.startswith("cgift"):
             await on_gift_callback_query(client, callback_query)
         elif data.startswith("confirm_trade_receiver:") or data.startswith("cancel_trade:"):
             await on_trade_callback_query(client, callback_query)
