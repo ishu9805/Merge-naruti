@@ -1,5 +1,5 @@
 import asyncio
-import datetime
+from datetime import datetime
 import importlib
 import random
 import re
@@ -429,7 +429,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 
         await chat_data.update_one(
             {'chat_id': chat_id, 'user_id': user_id},
-            {'$inc': {'total_characters': 1}, '$set': {'last_updated': datetime.now()}},
+            {'$inc': {'total_characters': 1}, '$set': {'last_updated': datetime.utcnow().date()}},
             upsert=True  # Create a new document if it doesn't exist
         )
         
