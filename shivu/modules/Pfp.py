@@ -5,6 +5,10 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import collection, user_collection, LOG_CHANNEL as required_group_id
 from . import app
+from .block import block_dec, temp_block
+from . import top_global_groups_collection as bot_chats
+from .lock import command_lock as cmd
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
