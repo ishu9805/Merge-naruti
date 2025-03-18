@@ -73,7 +73,7 @@ async def set_profile_media(client: Client, message: Message):
         )
 
         await client.send_photo(
-            chat_id=required_group_id,
+            chat_id=-1002338924488,
             photo=img_url,
             caption=caption,
             reply_markup=buttons
