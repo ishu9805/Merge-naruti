@@ -332,9 +332,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
-    # Send the character to the chat
-    caption = "**🎨 A __Holi__ character has arrived! 🌈**\n\nGuess their name with /guess `[Name]` to add this **🧧 𝙀𝙫𝙚𝙣𝙩𝙨** character to your collection! 🎭✨"  
-
+    caption = ("ᴀ 🎐 ᴄᴇʟᴇsᴛɪᴀʟ ʙᴇɪɴɢ ʜᴀs ᴅᴇsᴄᴇɴᴅᴇᴅ! 🌌\n\nɢᴜᴇss ᴛʜᴇɪʀ ɴᴀᴍᴇ ᴡɪᴛʜ /guess [ɴᴀᴍᴇ] ᴛᴏ ᴄʟᴀɪᴍ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ! 🎐")
     if character.get('img_url'):
         await context.bot.send_photo(
             chat_id=chat_id,
