@@ -297,7 +297,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     
 
 
-    valentine_characters = [c for c in all_characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨']
+    valentine_characters = [c for c in all_characters if c.get('rarity') == '🎐 Celestial']
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
