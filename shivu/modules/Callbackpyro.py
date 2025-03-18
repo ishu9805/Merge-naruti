@@ -21,7 +21,7 @@ async def callback_query_handler(client, callback_query):
         data = callback_query.data
         if data.startswith("approve_pfp"):
             await approve_profile_media(client, callback_query)
-        if data.startswith("reject_pfp"):
+        elif data.startswith("reject_pfp"):
             await reject_profile_media(client, callback_query)
                                 
         elif data.startswith("sgift") or data.startswith("cgift"):
