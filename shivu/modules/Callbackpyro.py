@@ -12,15 +12,18 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 from shivu.modules.fav import button
-from shivu.modules.Pfp import delete_profile_media_callback
+from shivu.modules.Pfp import approve_profile_media, reject_profile_media
 
 # Handler for callback queries
 @app.on_callback_query()
 async def callback_query_handler(client, callback_query):
     try:
         data = callback_query.data
-        if data.startswith("delete_pfp"):
-            await delete_profile_media_callback(client, callback_query)
+        if data.startswith("approve_pfp"):
+            await approve_profile_media(client, callback_query)
+        if data.startswith("reject_pfp"):
+            await reject_profile_media(client, callback_query)
+                                
         elif data.startswith("sgift") or data.startswith("cgift"):
             await on_gift_callback_query(client, callback_query)
         elif data.startswith("confirm_trade_receiver:") or data.startswith("cancel_trade:"):
