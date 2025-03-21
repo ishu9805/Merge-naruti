@@ -10,7 +10,10 @@ from shivu import (
     top_global_groups_collection, group_user_totals_collection, 
     sudo_users as SUDO_USERS, PARTNER, ban_collection
 )
+
 from cachetools import TTLCache
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +22,9 @@ logger = logging.getLogger(__name__)
 # Cache for user and group data
 USER_CACHE = TTLCache(maxsize=1000, ttl=3600)  # Cache with 1-hour TTL
 GROUP_CACHE = TTLCache(maxsize=100, ttl=3600)  # Cache with 1-hour TTL
+
+# Initialize the scheduler
+scheduler = AsyncIOScheduler()
 
 # Function to create necessary indexes
 async def create_indexes():
@@ -43,6 +49,126 @@ async def get_group_data(group_id: int):
     if group:
         GROUP_CACHE[group_id] = group
     return group
+
+# Scheduled tasks
+async def reset_daily_tops():
+    """Reset daily_top for all users at midnight."""
+    await user_collection.update_many({}, {"$set": {"daily_top": 0}})
+    logger.info("Daily tops reset.")
+
+async def reset_weekly_tops():
+    """Reset weekly_top for all users at midnight on Sunday."""
+    await user_collection.update_many({}, {"$set": {"weekly_top": 0}})
+    logger.info("Weekly tops reset.")
+
+async def reset_monthly_tops():
+    """Reset monthly_top for all users at midnight on the last day of the month."""
+    await user_collection.update_many({}, {"$set": {"monthly_top": 0}})
+    logger.info("Monthly tops reset.")
+
+# Schedule the tasks
+scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
+scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0)  # Every Sunday at midnight
+scheduler.add_job(reset_monthly_tops, 'cron', day='last', hour=0, minute=0)  # Last day of the month at midnight
+
+# Start the scheduler
+scheduler.start()
+
+# Command handlers
+async def daily_top_grabbers(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+
+    # Check if the user is banned
+    if await ban_collection.find_one({"user_id": user_id}):
+        return
+
+    try:
+        # Fetch top users based on daily_top field
+        cursor = user_collection.find(
+            {},  # No time filter, as daily_top is already updated
+            {"username": 1, "first_name": 1, "daily_top": 1}
+        ).sort("daily_top", -1).limit(10)
+
+        leaderboard_data = await cursor.to_list(length=10)
+
+        # Generate the leaderboard message
+        leaderboard_message = "<b>TOP 10 DAILY GRABBERS</b>\n\n"
+        for i, user in enumerate(leaderboard_data, start=1):
+            username = user.get('username', 'Unknown')
+            first_name = html.escape(user.get('first_name', 'Unknown'))[:15] + '...'
+            daily_top = user.get('daily_top', 0)
+            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ➾ <b>{daily_top}</b>\n'
+
+        # Send the leaderboard with a random photo
+        photo_url = random.choice(PHOTO_URL)
+        await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
+    except Exception as e:
+        logger.error(f"Error in daily_top_grabbers: {e}")
+        await update.message.reply_text("An error occurred while generating the daily leaderboard.")
+
+async def weekly_top_grabbers(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+
+    # Check if the user is banned
+    if await ban_collection.find_one({"user_id": user_id}):
+        return
+
+    try:
+        # Fetch top users based on weekly_top field
+        cursor = user_collection.find(
+            {},  # No time filter, as weekly_top is already updated
+            {"username": 1, "first_name": 1, "weekly_top": 1}
+        ).sort("weekly_top", -1).limit(10)
+
+        leaderboard_data = await cursor.to_list(length=10)
+
+        # Generate the leaderboard message
+        leaderboard_message = "<b>TOP 10 WEEKLY GRABBERS</b>\n\n"
+        for i, user in enumerate(leaderboard_data, start=1):
+            username = user.get('username', 'Unknown')
+            first_name = html.escape(user.get('first_name', 'Unknown'))[:15] + '...'
+            weekly_top = user.get('weekly_top', 0)
+            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ➾ <b>{weekly_top}</b>\n'
+
+        # Send the leaderboard with a random photo
+        photo_url = random.choice(PHOTO_URL)
+        await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
+    except Exception as e:
+        logger.error(f"Error in weekly_top_grabbers: {e}")
+        await update.message.reply_text("An error occurred while generating the weekly leaderboard.")
+
+async def monthly_top_grabbers(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+
+    # Check if the user is banned
+    if await ban_collection.find_one({"user_id": user_id}):
+        return
+
+    try:
+        # Fetch top users based on monthly_top field
+        cursor = user_collection.find(
+            {},  # No time filter, as monthly_top is already updated
+            {"username": 1, "first_name": 1, "monthly_top": 1}
+        ).sort("monthly_top", -1).limit(10)
+
+        leaderboard_data = await cursor.to_list(length=10)
+
+        # Generate the leaderboard message
+        leaderboard_message = "<b>TOP 10 MONTHLY GRABBERS</b>\n\n"
+        for i, user in enumerate(leaderboard_data, start=1):
+            username = user.get('username', 'Unknown')
+            first_name = html.escape(user.get('first_name', 'Unknown'))[:15] + '...'
+            monthly_top = user.get('monthly_top', 0)
+            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ➾ <b>{monthly_top}</b>\n'
+
+        # Send the leaderboard with a random photo
+        photo_url = random.choice(PHOTO_URL)
+        await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
+    except Exception as e:
+        logger.error(f"Error in monthly_top_grabbers: {e}")
+        await update.message.reply_text("An error occurred while generating the monthly leaderboard.")
+
+
 
 # Fetch top 10 global groups
 async def global_leaderboard(update: Update, context: CallbackContext) -> None:
@@ -147,3 +273,7 @@ application.add_handler(CommandHandler('TopGroups', global_leaderboard, block=Fa
 application.add_handler(CommandHandler('top', leaderboard, block=False))
 
 
+# Add command handlers
+application.add_handler(CommandHandler('dailytop', daily_top_grabbers, block=False))
+application.add_handler(CommandHandler('weeklytop', weekly_top_grabbers, block=False))
+application.add_handler(CommandHandler('monthlytop', monthly_top_grabbers, block=False))
