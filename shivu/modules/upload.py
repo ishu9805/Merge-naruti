@@ -178,7 +178,8 @@ async def ul(client, message):
                 'name': character_name,
                 'anime': anime,
                 'rarity': rarity_text,
-                'id': available_id
+                'id': available_id,
+                'added': message.from_user.id
             }
 
             processing_message = await message.reply("<ᴘʀᴏᴄᴇꜱꜱɪɴɢ>....")
@@ -203,6 +204,16 @@ async def ul(client, message):
                     f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
                 ),
             )
+            await client.send_photo(
+                chat_id=,
+                photo=catbox_url,
+                caption=(
+                    f"Character Name: {character_name}\n"
+                    f"Anime Name: {anime}\n"
+                    f"Rarity: {rarity_text}\n"
+                    f"ID: {available_id}\n"
+                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+                ),
             await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
         
         except Exception as e:
