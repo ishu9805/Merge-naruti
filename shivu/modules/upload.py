@@ -205,14 +205,17 @@ async def ul(client, message):
                 ),
             )
             await client.send_photo(
-                chat_id=,
+                chat_id=-1002398468292,
                 photo=catbox_url,
-                caption=(
-                    f"Character Name: {character_name}\n"
-                    f"Anime Name: {anime}\n"
-                    f"Rarity: {rarity_text}\n"
-                    f"ID: {available_id}\n"
-                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+                caption = (
+                f"🌟 **Character Detail** 🌟\n"
+                    f"\n━━━━━━━━━━━━━━━━━━\n"
+                    f"🔹 **Name:** {character_name}\n"
+                    f"🔸 **Anime:** {character_anime}\n"
+                    f"🔹 **ID:** {character_id}\n"
+                    f"🔸 **Rarity:** {rarity_id}\n"
+                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+                    f"\n━━━━━━━━━━━━━━━━━━\n"
                 ),
             await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
         
@@ -237,9 +240,11 @@ async def delete(client: Client, message: Message):
 
     character_id = args[0]
     character = await collection.find_one_and_delete({'id': character_id})
+   
+ 
 
     if character:
-        await client.delete_messages(chat_id=CHARA_CHANNEL_ID, message_ids=character['message_id'])
+        
 
         bulk_operations = []
         async for user in user_collection.find():
@@ -341,11 +346,11 @@ async def update(client: Client, message: Message):
 
    
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
-    await client.send_photo(
+    await client.message(
                 chat_id=7378476666,
-                photo={character['img_url']},
-                caption=(
-                    f"{new_value}"
+            
+                text=(
+                    f"{character['id']}"
                     f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
                 ),
             )
