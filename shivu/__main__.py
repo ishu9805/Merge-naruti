@@ -421,7 +421,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         
         await user_collection.update_one(
             {"id": user_id},
-            {"$inc": {"total_characters": 1}},
+            {"$inc": {"total_characters": 1, "daily_top": 1, "weekly_top": 1, "monthly_top": 1}},
             upsert=True
         )
                 
