@@ -217,6 +217,7 @@ async def ul(client, message):
                     f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
                     f"\n━━━━━━━━━━━━━━━━━━\n"
                 ),
+            )
             await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
         
         except Exception as e:
