@@ -211,9 +211,9 @@ async def ul(client, message):
                 f"🌟 **Character Detail** 🌟\n"
                     f"\n━━━━━━━━━━━━━━━━━━\n"
                     f"🔹 **Name:** {character_name}\n"
-                    f"🔸 **Anime:** {character_anime}\n"
-                    f"🔹 **ID:** {character_id}\n"
-                    f"🔸 **Rarity:** {rarity_id}\n"
+                    f"🔸 **Anime:** {anime}\n"
+                    f"🔹 **ID:** {available_id}\n"
+                    f"🔸 **Rarity:** {rarity_text}\n"
                     f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
                     f"\n━━━━━━━━━━━━━━━━━━\n"
                 ),
