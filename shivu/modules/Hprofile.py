@@ -12,6 +12,7 @@ from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
+    top_global_groups_collectionps as bot_chats,
     group_user_totals_collectionps as group_user_totals_collection,
     user_collectionps as user_collection,
     user_totals_collectionps as user_totals_collection,
