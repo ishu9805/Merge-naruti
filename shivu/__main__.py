@@ -10,17 +10,17 @@ from telegram.constants import ReactionEmoji
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import (
     
-    collection,
-    top_global_groups_collection,
-    group_user_totals_collection,
-    user_collection,
-    user_totals_collection,
-    shivuu,
-    application,
-    SUPPORT_CHAT,
-    UPDATE_CHAT,
-    db,
-    ban_collection
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    ban_collectionps as ban_collection
     
 )
 from shivu import user_count, chat_data
