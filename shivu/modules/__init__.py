@@ -7,7 +7,7 @@ import time
 from shivu import *
 from functools import wraps
 from telegram import Update
-from shivu.utils import * 
+from shivu.utills import * 
 from .watchers import *
 from .lock import *
 
@@ -17,7 +17,7 @@ dev_users = {7469481988}
 
 sudb = db.sudo
 devb = db.dev 
-app = shivuu
+app = shivuups
 # enable logging
 
 # if version < 3.6, stop bot.
