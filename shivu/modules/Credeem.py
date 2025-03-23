@@ -6,10 +6,27 @@ from shivu import application, user_collection, PARTNER, ban_collection, collect
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ContextTypes
 from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
-from . import app
+
 from .coin import is_member
 from .lock import command_lock
-
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 # MongoDB Collection for user sho
