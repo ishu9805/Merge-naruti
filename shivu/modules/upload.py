@@ -8,7 +8,7 @@ from . import uploader_filter
 
 from telegraph import upload_file
 from pyrogram import filters
-from shivu import shivuu, collection
+#from shivu import shivuu, collection
 from pyrogram.types import InputMediaPhoto
 import os
 from pyrogram import Client, filters
