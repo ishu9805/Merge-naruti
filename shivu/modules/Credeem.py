@@ -2,7 +2,7 @@ import random
 import string
 import datetime
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from shivu import application, user_collection, PARTNER, ban_collection, collection, db, required_group_id
+from shivu import PARTNER, required_group_id
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ContextTypes
 from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
