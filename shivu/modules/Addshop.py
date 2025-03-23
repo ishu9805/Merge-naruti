@@ -312,7 +312,7 @@ application.add_handler(CommandHandler("addsh", add_character_to_shop))
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackContext
 from bson import ObjectId
-from shivu import shops_collection, user_collection, application
+from shivu import shops_collectionps as shops_collection, user_collectionps as user_collection, applicationps as application
 import logging
 
 # Set up logging
