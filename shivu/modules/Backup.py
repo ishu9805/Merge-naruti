@@ -25,8 +25,8 @@ TARGET_CHAT_ID = -1002519947327
 async def generate_and_send_json():
     try:
         # Fetch data from MongoDB collections
-        collection_data = await collectionps.find().to_list(None)
-        user_collection_data = await user_collectionps.find().to_list(None)
+        collection_data = await collection.find().to_list(None)
+        user_collection_data = await user_collection.find().to_list(None)
 
         # Combine data into a dictionary
         data = {
