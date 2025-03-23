@@ -4,9 +4,26 @@ import asyncio
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
-from shivu import user_collection, collection
-from . import app
+
 from .lock import command_lock
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
 
 # Environment variables
 ADMIN_ID = int(os.getenv("ADMIN_ID", 7378476666))  # Replace with your admin ID
