@@ -29,8 +29,8 @@ class Client(PyrogramClient):
         return await obj.resolve_peer(id)
 
 
-application = Application.builder().token(TOKEN).concurrent_updates(True).build()
-shivuu = Client("Shivu", api_id, api_hash, bot_token=TOKEN)
+applicationps = Application.builder().token(TOKENsingings).concurrent_updates(True).build()
+shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
 #app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
 
 lol = AsyncIOMotorClient(mongo_urlings)
