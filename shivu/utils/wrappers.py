@@ -2,7 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from functools import wraps
 
-from shivu import user_collection, db
+from shivu import user_collectionps as user_collection, dbps as db
 
 sudb = db.sudo
 devb = db.dev
