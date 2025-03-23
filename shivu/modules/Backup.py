@@ -42,13 +42,13 @@ async def generate_and_send_json():
         LOGGER.info("JSON file created successfully.")
 
         # Send the JSON file to the target chat
-        async with app:
-            await app.send_document(
-                chat_id=TARGET_CHAT_ID,
-                document=json_filename,
-                caption="Here is the exported data from MongoDB collections."
-            )
-            LOGGER.info(f"JSON file sent to chat {TARGET_CHAT_ID}.")
+        
+        await app.send_document(
+            chat_id=TARGET_CHAT_ID,
+            document=json_filename,
+            caption="Here is the exported data from MongoDB collections."
+        )
+        LOGGER.info(f"JSON file sent to chat {TARGET_CHAT_ID}.")
 
     except Exception as e:
         LOGGER.error(f"An error occurred: {e}")
