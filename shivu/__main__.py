@@ -16,6 +16,7 @@ from shivu import (
     user_collectionps as user_collection,
     user_totals_collectionps as user_totals_collection,
     shivuups as shivuu,
+    shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
     UPDATE_CHATps as UPDATE_CHAT,
