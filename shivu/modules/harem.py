@@ -4,7 +4,7 @@ from itertools import groupby
 import math
 import random
 from html import escape
-from shivu import collection, user_collection, application, ban_collection
+#from shivu import collection, user_collection, application, ban_collection
 from telegram.error import BadRequest
 from shivu import PARTNER
 #from shivu import shivuu as app
