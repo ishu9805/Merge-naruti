@@ -7,7 +7,7 @@ GROUP_ID = -1002198664660
 LOG_CHANNEL = -1002455650183
 #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"
 TOKENsingings = "7107840748:AAFc8v9lLpHPafEplEXLcoOmNSiiqe-O2XE"
-mongo_urlings = "mongodb+srv://nibbanmisal3302:Gokukhan3303@cluster0.0u22b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_urlings = "mongodb+srv://abhi47903:sashtadev143@naruto.svojv.mongodb.net/"
 PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "naruto_support_chat"
 SUPPORT_CHATps = "naruto_support_chat"
