@@ -30,10 +30,23 @@ from shivu.modules.coin import add_coins
 from shivu.modules.top import create_indexes
 from shivu.modules.Hprofile import upgrade_chat_data
 from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
+import os
+from threading import Thread
+from flask import Flask
+
+
+
 all_characters = []
 valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
 
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
+
+server = Flask(__name__)
+
+@server.route("/")
+def home():
+    return "Bot is running"
+    
 
 async def preload_characters(context: CallbackContext) -> None:
     global all_characters
@@ -542,6 +555,11 @@ def error_handler(update: Update, context: CallbackContext):
     """Log the error and handle it gracefully."""
     print("An error occurred: %s", context.error)
 
+
+def run():
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+
+
 def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
@@ -560,6 +578,8 @@ def main() -> None:
     
     
 if __name__ == "__main__":
+    t = Thread(target=run)
+    t.start()
     shivuu.start()
     #app.start()
   
