@@ -3,7 +3,7 @@ import logging
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import collection, user_collection, LOG_CHANNEL as required_group_id
+from shivu import LOG_CHANNEL as required_group_id
 #from . import app
 from .block import block_dec, temp_block
 #from . import top_global_groups_collection as bot_chats
