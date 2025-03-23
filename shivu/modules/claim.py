@@ -63,7 +63,7 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
         print(f"Error fetching unique characters: {e}")
         return []
 
-@bot.on_message(filters.command(["hclaim"]))
+@app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
@@ -157,7 +157,7 @@ async def hclaim(_, message: t.Message):
         claim_lock.pop(user_id, None)
 
 
-@bot.on_message(filters.command(["check"]))
+@app.on_message(filters.command(["check"]))
 async def hfind(_, message: t.Message):
     if len(message.command) < 2:
         return await message.reply_text("📌 Please provide the ID 🆔", quote=True)
@@ -229,7 +229,7 @@ async def hfind(_, message: t.Message):
         
 
 
-@bot.on_message(filters.command(["find"]))
+@app.on_message(filters.command(["find"]))
 async def cfind(_, message: t.Message):
     if len(message.command) < 2:
         return await message.reply_text("Please provide the anime name.", quote=True)
@@ -264,7 +264,7 @@ async def send_character_page(message, characters, anime_name, page):
         quote=True
     )
 
-@bot.on_callback_query(filters.regex(r"next_(.+)_(\d+)"))
+@app.on_callback_query(filters.regex(r"next_(.+)_(\d+)"))
 async def next_page_callback(_, callback_query: t.CallbackQuery):
     anime_name, page = callback_query.data.split("_")[1], int(callback_query.data.split("_")[2])
     characters = await collection.find({'anime': anime_name}).to_list(length=None)
