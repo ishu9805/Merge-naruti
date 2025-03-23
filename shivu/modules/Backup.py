@@ -6,7 +6,7 @@ import asyncio
 from bson import json_util  # For handling BSON types
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-from shivu import applicationps as application, user_collectionps as user_collection, collectionps as collection
+from shivu import applicationps as application, user_collectionps as user_collection, shivuups as app, collectionps as collection
 # Logging configuration
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
