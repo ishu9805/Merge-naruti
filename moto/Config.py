@@ -12,6 +12,7 @@ PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs
 SUPPORT_CHAT = "naruto_support_chat"
 SUPPORT_CHATps = "naruto_support_chat"
 UPDATE_CHAT = "blade_x_community"
+UPDATE_CHATps = "blade_x_community"
 BOT_USERNAME = "Fancy_Waifu_Husbando_Bot"
 CHARA_CHANNEL_ID = "-1002117539029"
 api_id = 22792918
