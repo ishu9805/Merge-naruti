@@ -1,6 +1,6 @@
 import random
 from pyrogram import Client, filters
-from shivu import shivuu as app, user_collection
+from shivu import shivuups as app, user_collectionps as user_collection
 
 # Global variable to store all user collections
 global_user_collections = {}
