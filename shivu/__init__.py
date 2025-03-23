@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 
-from .config import *
+from moto.Config import *
 
 class Client(PyrogramClient):
     def __init__(self, *args, **kwargs):
@@ -33,31 +33,31 @@ application = Application.builder().token(TOKEN).concurrent_updates(True).build(
 shivuu = Client("Shivu", api_id, api_hash, bot_token=TOKEN)
 #app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
 
-lol = AsyncIOMotorClient(mongo_url)
-db = lol['NARUTOGAMEBOT']
-collection = db['anime_characters_lol']
-user_totals_collection = db['user_totals_lmaoooo']
-user_collection = db["user_collection_lmaoooo"]
-group_user_totals_collection = db['group_user_totalsssssss']
-top_global_groups_collection = db['top_global_groups']
-pm_users = db['total_pm_users']
-users_collection = db['users']
-chat_data = db['chat_data']
-shops_collection = db['shoping']
-ban_collection = db['bans']
-main_count = db['counts']
-user_count = db['ucount']
-banned_collection = db['banned']
+lol = AsyncIOMotorClient(mongo_urlings)
+dbps = lol['NARUTOGAMEBOTS']
+collectionps = dbps['anime_characters_lol']
+user_totals_collectionps = dbpd['user_totals_lmaoooo']
+user_collectionps = dbps["user_collection_lmaoooo"]
+group_user_totals_collectionps = dbps['group_user_totalsssssss']
+top_global_groups_collectionps = dbps['top_global_groups']
+pm_usersps = dbps['total_pm_users']
+users_collectionps = dbps['users']
+chat_dataps = dbps['chat_data']
+shops_collectionps = dbps['shoping']
+ban_collectionps = dbps['bans']
+main_countps = dbps['counts']
+user_countps = dbps['ucount']
+banned_collectionps = dbps['banned']
 
-guild = db["guild_team"]
-gban = db["gban"]
-clan_collection = db['clans']
-join_requests_collection = db['join_requests']
-global_ban_users_collection = db['global_ban_users']
-users_collection = db['user']
-videos_collection = db['videos']
-sales_collection = db['sales']
-blocked_users_collection = db["blocked_users"]
+guild = dbpd["guild_team"]
+gban = dbps["gban"]
+clan_collection = dbps['clans']
+join_requests_collection = dbpd['join_requests']
+global_ban_users_collection = dbpd['global_ban_users']
+users_collection = dbps['user']
+videos_collection = dbps['videos']
+sales_collection = dbps['sales']
+blocked_users_collection = dbps["blocked_users"]
 
-safari_cooldown_collection = db['safari_cooldown_collection']
-safari_users_collection = db['safari_users_collection']
+safari_cooldown_collection = dbps['safari_cooldown_collection']
+safari_users_collection = dbps['safari_users_collection']
