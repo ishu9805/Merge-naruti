@@ -1,13 +1,13 @@
-,,
+
     # Get this value from my.telegram.org/app
 OWNER_ID = 7378476666
 PARTNER =  "7378476666", "1744744841"
 sudo_users =  "7378476666", "1744744841"
 GROUP_ID = -1002198664660
 LOG_CHANNEL = -1002455650183
-TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"
-TOKENs = "7107840748:AAGl6VQIM_XMaV6r1fjtk-eJ1HOEPFqL35o"
-mongo_url = "mongodb+srv://nibbanmisal3302:Gokukhan3303@cluster0.0u22b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+#TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"
+TOKENsingings = "7107840748:AAGl6VQIM_XMaV6r1fjtk-eJ1HOEPFqL35o"
+mongo_urlings = "mongodb+srv://nibbanmisal3302:Gokukhan3303@cluster0.0u22b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "naruto_support_chat"
 UPDATE_CHAT = "blade_x_community"
