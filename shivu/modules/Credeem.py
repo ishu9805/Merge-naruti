@@ -47,7 +47,7 @@ import string
 import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from shivu import user_collection, PARTNER, shivuu as app
+f#rom shivu import user_collection, PARTNER, shivuu as app
 from .lock import command_lock
 
 # Constants
