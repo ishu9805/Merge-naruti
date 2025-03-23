@@ -212,8 +212,27 @@ from pyrogram import Client, filters
 from pyrogram.errors import UserIsBlocked
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
-from . import collection, user_collection, sudo_filter, app, dev_filter
+from . import sudo_filter, dev_filter
 from shivu import LOG_CHANNEL as LOG_CHAT_ID
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
+
 
 CHARACTERS_FIELD = "characters"
 ID_FIELD = "id"
