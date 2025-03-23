@@ -23,7 +23,7 @@ from shivu import (
     ban_collectionps as ban_collection
     
 )
-from shivu import user_count, chat_data
+from shivu import user_countps as user_count, chat_dataps as chat_data
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins
 from shivu.modules.top import create_indexes
