@@ -2,7 +2,7 @@ import asyncio
 import logging
 from pyrogram import filters
 from pyrogram.errors import PeerIdInvalid, FloodWait, ChatWriteForbidden, UserIsBlocked
-from . import dev_filter, 
+from . import dev_filter
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
