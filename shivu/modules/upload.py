@@ -3,8 +3,7 @@ from pymongo import ReturnDocument
 import os
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
-
-from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT, OWNER_ID, user_collection
+#, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT, OWNER_ID, user_collection
 from . import uploader_filter
 
 from telegraph import upload_file
@@ -17,16 +16,33 @@ from pyrogram.types import Message
 from pymongo import ReturnDocument, UpdateOne
 import urllib.request
 import random
-from . import sudo_filter, app
-from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
+from . import sudo_filter
+#from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
 from . import uploader_filter
-
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
 # Channel ID for posting character information (replace with your actual channel ID)
 CHARA_CHANNEL_ID = -1002117539029
 
 import os
 import requests
-from shivu import shivuu, collection
+#from shivu import shivuu, collection
 from pyrogram import filters
 
 # Define the wrong format message and rarity map
