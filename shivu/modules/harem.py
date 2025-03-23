@@ -6,11 +6,30 @@ import random
 from html import escape
 from shivu import collection, user_collection, application, ban_collection
 from telegram.error import BadRequest
-from shivu import PARTNER, user_count
-from shivu import shivuu as app
+from shivu import PARTNER
+#from shivu import shivuu as app
 from pyrogram import filters
 from datetime import datetime, timedelta
 import logging
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
+
 MAX_CAPTION_LENGTH = 1024
 
 # Define rarity emojis
@@ -38,7 +57,7 @@ RARITY_MAPPING = {
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
-    user_info = await user_count.find_one({'user_id': user_id})
+    #user_info = await user_count.find_one({'user_id': user_id})
     is_banned = await ban_collection.find_one({"user_id": user_id})
     
     if is_banned:
