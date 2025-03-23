@@ -1,15 +1,31 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
-from shivu import user_collection, ban_collection
-from shivu import shivuu, user_count
+
 from .lock import command_lock as cl
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
-from shivu import user_collection, ban_collection
-from shivu import shivuu
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
+
 
 # Global variables to track pending gifts, trades, locks, and cooldowns
 pending_gifts = {}          # Store pending gifts
@@ -157,27 +173,7 @@ async def on_gift_callback_query(client, callback_query):
             })
         
         rarity = gift['character']['rarity']
-        await user_count.update_one(
-            {'user_id': sender_id},
-            {'$inc': {f'rarity_count.{rarity}': -1}},
-            upsert=True
-        )
         
-        await user_count.update_one(
-            {'user_id': r_id},
-            {'$inc': {f'rarity_count.{rarity}': 1}},
-            upsert=True
-        )
-        await user_count.update_one(
-            {'user_id': sender_id},
-            {'$inc': {'ccount': -1}},
-            upsert=True
-        ) 
-        await user_count.update_one(
-            {'user_id': r_id},
-            {'$inc': {'ccount': 1}},
-            upsert=True
-        )        
         # Set the cooldown for the sender (15 seconds from now)
         cooldowns[sender_id] = time.time()
 
