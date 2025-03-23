@@ -4,7 +4,7 @@ import uuid
 import requests
 import random
 import html
-from . import app
+#from . import app
 import logging
 from pymongo import ReturnDocument
 from typing import List
@@ -12,15 +12,32 @@ from bson import ObjectId
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from datetime import datetime, timedelta
-from shivu import ban_collection
-
+#from shivu import ban_collection
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
 # Assuming these are defined elsewhere in your code
-from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection, required_group_id
-from shivu import (application, PHOTO_URL, OWNER_ID,
-                    user_collection, top_global_groups_collection, top_global_groups_collection, 
-                    group_user_totals_collection)
+#from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection, required_group_id
+#from shivu import (application, PHOTO_URL, OWNER_ID,
+                   # user_collection, top_global_groups_collection, top_global_groups_collection, 
+                  #  group_user_totals_collection)
 
-from shivu import PARTNER
+#from shivu import PARTNER
 from .block import block_dec, temp_block
 from .lock import command_lock
 logging.basicConfig(
