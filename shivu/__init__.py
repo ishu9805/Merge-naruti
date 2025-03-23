@@ -36,7 +36,7 @@ shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
 lol = AsyncIOMotorClient(mongo_urlings)
 dbps = lol['NARUTOGAMEBOTS']
 collectionps = dbps['anime_characters_lol']
-user_totals_collectionps = dbpd['user_totals_lmaoooo']
+user_totals_collectionps = dbps['user_totals_lmaoooo']
 user_collectionps = dbps["user_collection_lmaoooo"]
 group_user_totals_collectionps = dbps['group_user_totalsssssss']
 top_global_groups_collectionps = dbps['top_global_groups']
@@ -49,11 +49,15 @@ main_countps = dbps['counts']
 user_countps = dbps['ucount']
 banned_collectionps = dbps['banned']
 
-guild = dbpd["guild_team"]
+
+
+    
+
+guild = dbps["guild_team"]
 gban = dbps["gban"]
 clan_collection = dbps['clans']
-join_requests_collection = dbpd['join_requests']
-global_ban_users_collection = dbpd['global_ban_users']
+join_requests_collection = dbps['join_requests']
+global_ban_users_collection = dbps['global_ban_users']
 users_collection = dbps['user']
 videos_collection = dbps['videos']
 sales_collection = dbps['sales']
