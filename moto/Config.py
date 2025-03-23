@@ -10,6 +10,7 @@ TOKENsingings = "7107840748:AAFc8v9lLpHPafEplEXLcoOmNSiiqe-O2XE"
 mongo_urlings = "mongodb+srv://nibbanmisal3302:Gokukhan3303@cluster0.0u22b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "naruto_support_chat"
+SUPPORT_CHATps = "naruto_support_chat"
 UPDATE_CHAT = "blade_x_community"
 BOT_USERNAME = "Fancy_Waifu_Husbando_Bot"
 CHARA_CHANNEL_ID = "-1002117539029"
