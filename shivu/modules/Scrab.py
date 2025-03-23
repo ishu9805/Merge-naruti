@@ -4,13 +4,32 @@ from pyrogram.types import Message
 import random
 from datetime import datetime
 from pytz import timezone
-from . import collection, user_collection, app, nopvt
+#from . import collection, user_collection, app, nopvt
 from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
 
 from datetime import datetime
 
-from . import user_collection, sudo_filter
+#from . import user_collection, sudo_filter
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
+
 
 @app.on_message(filters.command("rstw") & sudo_filter)
 def reset_all_win_counts_command(client: Client, message: Message):
@@ -126,7 +145,7 @@ async def scrabble(client, message: Message):
         f"🔠 Unshuffle this word:\n\n"
         f"✨ `{scrambled_word}` ✨\n\n"
         f"⏳ You have *{MAX_ATTEMPTS} attempts* to guess the word.\n"
-        f"❌ Use /xshuffle to end the game."
+        #f"❌ Use /xshuffle to end the game."
     )
 
 @app.on_message(~filters.me, group=scrabble_watcher)
@@ -221,7 +240,7 @@ async def remove_cooldown(user_id):
     if user_id in cooldown_users:
         del cooldown_users[user_id]
 
-@app.on_message(filters.command("xshuffle"))
+"""@app.on_message(filters.command("xshuffle"))
 async def xscrabble(client, message: Message):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -230,4 +249,4 @@ async def xscrabble(client, message: Message):
         del active_scrabbles[user_id]
         await message.reply_text("🛑 *Game terminated!* 🛑")
     else:
-        await message.reply_text("⚠️ You don't have an active game to terminate.")
+        await message.reply_text("⚠️ You don't have an active game to terminate.")"""
