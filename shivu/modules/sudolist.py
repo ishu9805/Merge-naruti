@@ -1,7 +1,25 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
-from . import app, dev_filter, sudo_filter, db, user_collection
-from shivu import OWNER_ID
+from . import dev_filter, sudo_filter
+#from shivu import OWNER_ID
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import (
+    collectionps as collection,
+    top_global_groups_collectionps as top_global_groups_collection,
+    group_user_totals_collectionps as group_user_totals_collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as shivuu,
+    shivuups as app,
+    applicationps as application,
+    SUPPORT_CHATps as SUPPORT,
+    UPDATE_CHATps as UPDATE_CHAT,
+    dbps as db,
+    pmusersps as pmusers,
+    ban_collectionps as ban_collection,
+    user_countps as user_count, 
+    chat_dataps as chat_data,
+)
 
 sudb = db.sudo
 devb = db.dev
@@ -79,7 +97,7 @@ async def remove_dev(client, message: Message):
         except Exception:
             return await message.reply_text("Please reply to a user or provide a valid user ID.")
 
-    if tar == 6769185674:
+    if tar == 7378476666:
         return await message.reply_text("This developer cannot be removed.")
 
     if not await devb.find_one({'user_id': tar}):
