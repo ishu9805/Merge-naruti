@@ -2,7 +2,7 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from . import nopvt
 from .watchers import scrabble_watcher
