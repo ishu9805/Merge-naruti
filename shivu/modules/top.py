@@ -47,8 +47,8 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 # Configuration
-TARGET_CHAT_ID = -1002519947327  # Move to environment variables in production
-ALLOWED_USER_IDS = {12345678}    
+TARGET_CHAT_ID = -1002399891190  # Move to environment variables in production
+ALLOWED_USER_IDS = 7378476666
 
 
 # Cache for user and group data
@@ -103,7 +103,7 @@ async def perform_backup():
 async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for manual backup command"""
     user = update.effective_user
-    if user.id not in ALLOWED_USER_IDS:
+    if user.id != ALLOWED_USER_IDS:
         await update.message.reply_text("You are not authorized to perform backups.")
         LOGGER.warning(f"Unauthorized backup attempt by user {user.id}")
         return
