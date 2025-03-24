@@ -231,4 +231,4 @@ async def xscrabble(client, message: Message):
         del active_scrabbles[user_id]
         await message.reply_text("🛑 *Game terminated!* 🛑")
     else:
-        await message.reply_text("⚠️ You don't have an active game to terminate.")q
+        await message.reply_text("⚠️ You don't have an active game to terminate.")
