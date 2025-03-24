@@ -29,8 +29,27 @@ from shivu import (
     chat_dataps as chat_data,
 )
 # Logging setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import json
+import logging
+import os
+from datetime import datetime
+
+from pyrogram import Client
+from motor.motor_asyncio import AsyncIOMotorClient
+from bson import json_util
+
+
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
+    level=logging.INFO,
+)
+LOGGER = logging.getLogger(__name__)
+
+# Configuration
+TARGET_CHAT_ID = -1002519947327  # Move to environment variables in production
+ALLOWED_USER_IDS = {12345678}    
+
 
 # Cache for user and group data
 USER_CACHE = TTLCache(maxsize=1000, ttl=3600)  # Cache with 1-hour TTL
@@ -38,6 +57,72 @@ GROUP_CACHE = TTLCache(maxsize=100, ttl=3600)  # Cache with 1-hour TTL
 
 # Initialize the scheduler
 scheduler = AsyncIOScheduler()
+
+
+
+async def perform_backup():
+    """Perform the actual backup operation"""
+    json_filename = f"data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    try:
+        LOGGER.info("Starting database backup...")
+        
+        # Fetch data from MongoDB collections
+        collection_data = await collection.find().to_list(None)
+        user_collection_data = await user_collection.find().to_list(None)
+
+        # Combine data
+        data = {
+            "collection": collection_data,
+            "user_collection": user_collection_data,
+        }
+
+        # Save to JSON file
+        with open(json_filename, "w") as json_file:
+            json.dump(data, json_file, indent=4, default=json_util.default)
+        LOGGER.info("JSON file created successfully.")
+
+        # Send the file
+        await app.send_document(
+            chat_id=TARGET_CHAT_ID,
+            document=json_filename,
+            caption=f"Database Backup - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        LOGGER.info("Backup sent successfully.")
+        
+    except Exception as e:
+        LOGGER.error(f"Backup failed: {e}", exc_info=True)
+        raise
+    finally:
+        # Clean up the file
+        if os.path.exists(json_filename):
+            try:
+                os.remove(json_filename)
+            except Exception as e:
+                LOGGER.warning(f"Could not remove temporary file: {e}")
+
+async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for manual backup command"""
+    user = update.effective_user
+    if user.id not in ALLOWED_USER_IDS:
+        await update.message.reply_text("You are not authorized to perform backups.")
+        LOGGER.warning(f"Unauthorized backup attempt by user {user.id}")
+        return
+
+    try:
+        await update.message.reply_text("Starting manual backup process...")
+        await perform_backup()
+        await update.message.reply_text("✅ Backup completed and sent successfully.")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Backup failed: {str(e)}")
+        LOGGER.error(f"Manual backup failed: {e}", exc_info=True)
+
+
+    
+    
+    
+
+
+    
 
 # Function to create necessary indexes
 async def create_indexes():
@@ -83,6 +168,8 @@ async def reset_monthly_tops():
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
 scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0)  # Every Sunday at midnight
 scheduler.add_job(reset_monthly_tops, 'cron', day='last', hour=0, minute=0)  # Last day of the month at midnight
+scheduler.add_job(perform_backup, 'cron', hour=0, minute=0)  # Every day at midnight
+        
 
 # Start the scheduler
 scheduler.start()
@@ -284,7 +371,8 @@ application.add_handler(CommandHandler('ctop', ctop, block=False))
 application.add_handler(CommandHandler('stats', stats, block=False))
 application.add_handler(CommandHandler('TopGroups', global_leaderboard, block=False))
 application.add_handler(CommandHandler('top', leaderboard, block=False))
-
+application.add_handler(CommandHandler("backup", backup_command))
+    
 
 # Add command handlers
 application.add_handler(CommandHandler('dailytop', daily_top_grabbers, block=False))
