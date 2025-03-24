@@ -4,7 +4,7 @@ import random
 import html
 import logging
 from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext, Application
+from telegram.ext import CommandHandler, CallbackContext, Application, ContextTypes
 
 
 from cachetools import TTLCache
