@@ -41,11 +41,11 @@ valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
 
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 
-server = Flask(__name__)
-
+"""server = Flask(__name__)
 @server.route("/")
 def home():
     return "Bot is running"
+"""
     
 
 async def preload_characters(context: CallbackContext) -> None:
@@ -556,8 +556,8 @@ def error_handler(update: Update, context: CallbackContext):
     print("An error occurred: %s", context.error)
 
 
-def run():
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+"""def run():
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))"""
 
 
 def main() -> None:
@@ -578,8 +578,8 @@ def main() -> None:
     
     
 if __name__ == "__main__":
-    t = Thread(target=run)
-    t.start()
+    """t = Thread(target=run)
+    t.start()"""
     shivuu.start()
     #app.start()
   
