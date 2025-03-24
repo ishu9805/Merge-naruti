@@ -2,8 +2,9 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from pytz import timezone
+from shivu import collectionps as collection, user_collectionps as user_collection, shivuups as app
 from . import nopvt
 from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
@@ -11,79 +12,69 @@ from .block import block_dec, temp_block
 from datetime import datetime
 
 from . import sudo_filter
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
-from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
-    shivuups as app,
-    applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
-)
+
+@app.on_message(filters.command("rstw") & sudo_filter)
+def reset_all_win_counts_command(client: Client, message: Message):
+    try:
+        user_collection.update_many({}, {'$set': {'wins': 0, 'last_win_time': datetime.min}})
+        message.reply_text("Win counts have been reset for all users.")
+    except Exception as e:
+        message.reply_text(f"An error occurred while resetting win counts: {e}")
 
 
-
-import asyncio
-from pyrogram import Client, filters
-from pyrogram.types import Message
-import random
-from datetime import datetime
-from pytz import timezone
-from . import nopvt
-from .watchers import scrabble_watcher
-from .block import block_dec, temp_block
-from . import sudo_filter
-
-# Game constants
+active_scrabbles = {}
 MAX_ATTEMPTS = 3
 WIN_LIMIT = 15
-COOLDOWN_TIME = 50  # Normal cooldown after winning
-XSCRAMBLE_COOLDOWN = 30  # Cooldown after canceling game
-LIMITED_EDITION_CHANCE = 0.01
+COOLDOWN_TIME = 50
+cooldown_users = {}
 
-# Game state trackers
-active_scrabbles = {}
-cooldown_users = {}  # Tracks both win cooldowns and cancel cooldowns
-
-# Rarity definitions
+# Define allowed rarities
 ALLOWED_RARITIES = {
     "⚪️ Common",
     "🟣 Rare",
     "🟡 Legendary",
     "🟢 Medium"
 }
+
 LIMITED_EDITION_RARITY = "🔮 Limited Edition"
+
+# Probability of getting a Limited Edition character (e.g., 5% chance)
+LIMITED_EDITION_CHANCE = 0.01
 
 async def get_limited_edition_character():
     try:
+        # Fetch all Limited Edition characters
         limited_characters = await collection.find({'rarity': LIMITED_EDITION_RARITY}).to_list(length=None)
+        
         if not limited_characters:
-            raise ValueError("No Limited Edition characters found")
+            raise ValueError("No Limited Edition characters found in the database.")
+        
+        # Return a random Limited Edition character
         return random.choice(limited_characters)
     except Exception as e:
-        print(f"Error getting limited edition character: {e}")
-        return await get_random_character()
+        logger.error(f"Error fetching limited edition character: {e}")
+        raise
+
+def is_new_day(last_win_time):
+    ist = timezone('Asia/Kolkata')
+    now_ist = datetime.now(ist)
+    last_win_ist = last_win_time.astimezone(ist)
+    return now_ist.date() != last_win_ist.date()
 
 async def get_random_character():
-    pipeline = [
-        {'$match': {
-            'id': {'$gte': '01', '$lte': '4100'},
-            'rarity': {'$in': list(ALLOWED_RARITIES)},
-            '$expr': {'$gt': [{'$strLenCP': {'$arrayElemAt': [{'$split': ['$name', ' ']}, 0]}}, 5]}
-        }},
-        {'$sample': {'size': 1}}
-    ]
-    character = await collection.aggregate(pipeline).next()
-    return character
+    # Fetch characters with allowed rarities
+    all_characters = await collection.find({
+        'id': {'$gte': '01', '$lte': '4100'},
+        'rarity': {'$in': list(ALLOWED_RARITIES)}
+    }).to_list(length=None)
+    
+    if not all_characters:
+        raise ValueError("No characters found with the allowed rarities.")
+    
+    while True:
+        character = random.choice(all_characters)
+        if len(character['name'].split()[0]) > 5:  # Ensure word length > 5
+            return character
 
 def scramble_word(word):
     if len(word) <= 5:
@@ -98,29 +89,25 @@ def provide_hint(word, attempts):
     elif attempts == 2:
         return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 3)}{word[-1]}"
     else:
-        return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 4)}{word[-2:]}"
+        return f"🔍 Hint: {word[:2]}{'_' * (len(word) - 3)}{word[-1]}"
 
 @app.on_message(filters.command("scramble"))
 @block_dec
+@nopvt
 async def scrabble(client, message: Message):
     user_id = message.from_user.id
     if temp_block(user_id):
         return
-
-    # Check for any cooldown (either from winning or canceling)
+    chat_id = message.chat.id
+    
     if user_id in cooldown_users:
-        remaining = int((cooldown_users[user_id] - datetime.now()).total_seconds())
-        if remaining > 0:
-            await message.reply_text(
-                f"⏳ Please wait {remaining} seconds before starting a new game."
-            )
-            return
+        remaining_time = COOLDOWN_TIME - (datetime.now() - cooldown_users[user_id]).total_seconds()
+        remaining_time = max(remaining_time, 0)
+        await message.reply_text(f"⏳ Please wait {int(remaining_time)} seconds before starting a new game.")
+        return
 
     if user_id in active_scrabbles:
-        await message.reply_text(
-            "🚨 You already have an active game!\n"
-            "Finish it or use /xscramble to cancel."
-        )
+        await message.reply_text("🚨 You already have an active game. Finish it first! or use /xshuffle")
         return
 
     character = await get_random_character()
@@ -136,33 +123,11 @@ async def scrabble(client, message: Message):
     }
 
     await message.reply_text(
-        f"🎲 **Word Scramble Game** 🎲\n\n"
-        f"🔠 Unscramble this word:\n\n"
+        f"🎲 **Welcome to Word Resembled Game!** 🎲\n\n"
+        f"🔠 Unshuffle this word:\n\n"
         f"✨ `{scrambled_word}` ✨\n\n"
-        f"⏳ You have {MAX_ATTEMPTS} attempts\n"
-        f"❌ Cancel with /xscramble"
-    )
-
-@app.on_message(filters.command("xscramble"))
-@block_dec
-async def cancel_scramble(client, message: Message):
-    user_id = message.from_user.id
-
-    if user_id not in active_scrabbles:
-        await message.reply_text(
-            "⚠️ You don't have an active game!\n"
-            "Start one with /scramble"
-        )
-        return
-
-    # Remove game and set cooldown
-    del active_scrabbles[user_id]
-    cooldown_users[user_id] = datetime.now() + timedelta(seconds=XSCRAMBLE_COOLDOWN)
-    asyncio.create_task(remove_cooldown(user_id))
-
-    await message.reply_text(
-        f"🛑 Game cancelled!\n\n"
-        f"⏳ You can play again in {XSCRAMBLE_COOLDOWN} seconds."
+        f"⏳ You have *{MAX_ATTEMPTS} attempts* to guess the word.\n"
+        f"❌ Use /xshuffle to end the game."
     )
 
 @app.on_message(~filters.me, group=scrabble_watcher)
@@ -171,6 +136,7 @@ async def check_answer(client, message: Message):
         return
     
     user_id = message.from_user.id
+
     if user_id not in active_scrabbles:
         return
 
@@ -178,50 +144,91 @@ async def check_answer(client, message: Message):
         return
 
     answer = message.text.strip()
-    game = active_scrabbles[user_id]
-    game['attempts'] += 1
+    scrabble_data = active_scrabbles[user_id]
+    scrabble_data['attempts'] += 1
 
-    user_data = await user_collection.find_one({'id': user_id}) or {
-        'id': user_id,
-        'wins': 0,
-        'last_win_time': datetime.min,
-        'has_limited': False
-    }
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        user_data = {'id': user_id, 'winss': 0, 'last_win_time': datetime.min, 'limited_edition_awarded': False}
+    else:
+        if 'winss' not in user_data:
+            user_data['winss'] = 0
+        if 'limited_edition_awarded' not in user_data:
+            user_data['limited_edition_awarded'] = False
 
-    if answer.lower() == game['word'].lower():
-        # Win handling (same as before)
+    if answer.lower() == scrabble_data['word'].lower():
+        now = datetime.now()
         del active_scrabbles[user_id]
-        cooldown_users[user_id] = datetime.now() + timedelta(seconds=COOLDOWN_TIME)
+        user_data['winss'] += 1
+        user_data['last_win_time'] = now
+        await user_collection.update_one(
+                {'id': user_id},
+                {'$set': {'winss': user_data['winss'], 'last_win_time': now}},
+                upsert=True
+        )
+
+        # Check if the user gets a Limited Edition character (random chance)
+        if not user_data['limited_edition_awarded'] and random.random() < LIMITED_EDITION_CHANCE:
+            limited_character = await get_limited_edition_character()
+            await message.reply_photo(
+                photo=limited_character['img_url'],
+                caption=f"🎉 *You won!* 🎉\n\n"
+                        f"🏆 {limited_character['name']} ({limited_character['rarity']}) has been added to your collection!"
+            )
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': limited_character}})
+            user_data['limited_edition_awarded'] = True
+
+        # Award regular character on every 10th win
+        elif user_data['winss'] % 10 == 0:
+            character = await get_random_character()
+            await message.reply_photo(
+                photo=character['img_url'],
+                caption=f"🎉 *You won!* 🎉\n\n"
+                        f"🏆 {character['name']} ({character['rarity']}) has been added to your collection!"
+            )
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+    
+        else:
+            gold = random.randint(20, 60)
+            await message.reply_text(
+                f"🎉 *You won!* 🎉\n\n"
+                f"💰 You've won {gold} coins!\n\n"
+                f"🏆 Total Wins: {user_data['winss']}"
+            )
+            await user_collection.update_one({'id': user_id}, {'$inc': {'coins': gold}})
+
+        
+
+        cooldown_users[user_id] = datetime.now()
         asyncio.create_task(remove_cooldown(user_id))
-        
-        # Rest of your win logic here...
-        
-    elif game['attempts'] >= MAX_ATTEMPTS:
-        # Loss handling
+
+    elif scrabble_data['attempts'] >= MAX_ATTEMPTS:
         await message.reply_text(
-            f"❌ Game over! The word was: `{game['word']}`"
+            f"❌ *Out of attempts!* ❌\n\n"
+            f"🔠 The correct word was: `{scrabble_data['word']}`"
         )
         del active_scrabbles[user_id]
     else:
-        # Hint for wrong answer
-        hint = provide_hint(game['word'], game['attempts'])
+        hint = provide_hint(scrabble_data['word'], scrabble_data['attempts'])
         await message.reply_text(
-            f"❌ Wrong! {hint}\n"
-            f"Attempts left: {MAX_ATTEMPTS - game['attempts']}"
+            f"❌ *Incorrect!* ❌\n\n"
+            f"🔠 Scrambled Word: `{scrabble_data['scrambled_word']}`\n\n"
+            f"{hint}\n\n"
+            f"🔄 Try again!"
         )
 
 async def remove_cooldown(user_id):
-    await asyncio.sleep(max(
-        COOLDOWN_TIME,
-        XSCRAMBLE_COOLDOWN
-    ))
+    await asyncio.sleep(COOLDOWN_TIME)
     if user_id in cooldown_users:
         del cooldown_users[user_id]
 
-@app.on_message(filters.command("rstw") & sudo_filter)
-async def reset_wins(client, message: Message):
-    await user_collection.update_many(
-        {},
-        {'$set': {'wins': 0, 'last_win_time': datetime.min, 'has_limited': False}}
-    )
-    await message.reply_text("✅ All user win counts and limited status reset!")
+@app.on_message(filters.command("xshuffle"))
+async def xscrabble(client, message: Message):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    if user_id in active_scrabbles:
+        del active_scrabbles[user_id]
+        await message.reply_text("🛑 *Game terminated!* 🛑")
+    else:
+        await message.reply_text("⚠️ You don't have an active game to terminate.")q
