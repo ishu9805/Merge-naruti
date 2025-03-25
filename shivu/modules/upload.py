@@ -164,6 +164,12 @@ async def find_available_id():
                 return candidate_id
         return str(max(map(int, ids)) + 1).zfill(2)  # Return the next available ID
 
+
+@shivuu.on_message(filters.command(["uid"]) & uploader_filter)
+async def ulo(client, message):
+    available_id = await find_available_id()
+    await client.send_message(chat_id=message.chat.id, text=f"{available_id}")
+            
 # Command to upload character information
 @shivuu.on_message(filters.command(["upload"]) & uploader_filter)
 async def ul(client, message):
