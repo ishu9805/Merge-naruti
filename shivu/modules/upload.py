@@ -164,6 +164,17 @@ async def find_available_id():
                 return candidate_id
         return str(max(map(int, ids)) + 1).zfill(2)  # Return the next available ID
 
+"""async def find_available_id():
+    async with id_lock:  # Ensure only one upload can find and reserve an ID at a time
+        cursor = collection.find().sort('id', 1)
+        ids = [doc['id'] for doc in await cursor.to_list(length=None)]
+        for i in range(1, max(map(int, ids)) + 2):  # +2 to account for the case where the max ID is the last one
+            candidate_id = str(i).zfill(2)
+            if candidate_id not in ids and candidate_id not in active_ids:
+                active_ids.add(candidate_id)
+                return candidate_id
+        return str(max(map(int, ids)) + 1).zfill(2) """ # Return the next available ID
+        
 
 @shivuu.on_message(filters.command(["uid"]) & uploader_filter)
 async def ulo(client, message):
