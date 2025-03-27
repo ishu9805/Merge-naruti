@@ -38,7 +38,7 @@ from shivu import (
     chat_dataps as chat_data,
 )
 # Channel ID for posting character information (replace with your actual channel ID)
-CHARA_CHANNEL_ID = -1002117539029
+CHARA_CHANNEL_ID = -1002567797000
 
 import os
 import requests
