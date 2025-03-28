@@ -19,7 +19,7 @@ import random
 from . import sudo_filter
 #from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
 from . import uploader_filter
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
