@@ -19,7 +19,7 @@ import random
 from . import sudo_filter
 #from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
 from . import uploader_filter
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
@@ -38,7 +38,7 @@ from shivu import (
     chat_dataps as chat_data,
 )
 # Channel ID for posting character information (replace with your actual channel ID)
-CHARA_CHANNEL_ID = -1002567797000
+ 
 
 import os
 import requests
@@ -56,7 +56,6 @@ rarity_map = {1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 
 """
 
 # Define the channel ID and rarity map
-CHARA_CHANNEL_ID = -1002117539029
 rarity_map = {
     1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
     5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
@@ -238,7 +237,7 @@ async def ul(client, message):
                 ),
             )
             await client.send_photo(
-                chat_id=-1002398468292,
+                chat_id=-1002567797000,
                 photo=catbox_url,
                 caption = (
                 f"🌟 **Character Detail** 🌟\n"
