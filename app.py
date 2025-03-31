@@ -1,5 +1,5 @@
 
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
@@ -16,7 +16,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = "32db2c898fbeb5d41a6bc341e0e68938dee3360b4e6a75250e1dda606ee880a7"
 CORS(app)
 
@@ -41,6 +41,16 @@ collections_collection = db['user_collection_lmaoooo']
 # limiter = Limiter(app, key_func=get_remote_address)
 
 # JWT authentication decorator
+
+@app.route('/')
+def home():
+    return send_from_directory('templates', 'index.html')
+
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
