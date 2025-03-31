@@ -44,7 +44,7 @@ collections_collection = db['user_collection_lmaoooo']
 
 @app.route('/')
 def home():
-    return send_from_directory('templates', 'index.html')
+    return send_from_directory('static', 'index.html')
 
 
 @app.route('/<path:filename>')
