@@ -1,189 +1,186 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blade Network</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: url('https://files.catbox.moe/9jbemn.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #333;
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-        }
-        header img {
-            height: 50px;
-        }
-        header h1 {
-            font-size: 24px;
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        .character-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .character-item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 150px;
-            height: auto;
-        }
-        .character-item img {
-            width: 120px; /* Adjust width */
-            height: 120px; /* Adjust height */
-            object-fit: cover; /* Maintain aspect ratio */
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 10px /* Lazy load images */
-            cursor: pointer; /* Change cursor to pointer */
-        }
-        .character-item h3 {
-            margin: 10px 0 5px;
-            font-size: 1.0em;
-        }
-        .character-item p {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pagination button {
-            margin: 0 5px;
-            padding: 10px 20px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            font-size: 1em;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .pagination button:disabled {
-            background-color: #ccc;
-        }
-
-        /* Modal (Popup) */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.8); /* Black with opacity */
-            animation: fadeIn 0.5s; /* Animation for showing */
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; /* 15% from the top and centered */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; /* Could be more or less, depending on screen size */
-            max-width: 600px;
-            position: relative;
-        }
-
-        .modal-content img {
-            width: 100%; /* Responsive image */
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+    <title>Blade Network | Premium Anime Database</title>
+    <meta name="description" content="Discover and collect anime characters with Blade Network's premium database">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
-    <header>
-        <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network">
-        <h1>Blade Network</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="#search">Search</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>        
-        <section id="search">
-            <h2>Search Characters</h2>
-            <form id="multi-search-form">
-                <input type="text" id="name-query" placeholder="Search by name">
-                <input type="text" id="anime-query" placeholder="Search by anime">
-                <input type="text" id="rarity-query" placeholder="Search by rarity">
-                <input type="text" id="id-query" placeholder="Search by ID">
-                <button type="submit">Search</button>
-            </form>
-            <div id="applied-filters"></div>
-            <div id="search-results" class="character-grid"></div>
-            <div class="pagination">
-                <button id="prev-page" disabled>Previous</button>
-                <button id="next-page">Next</button>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 Blade Network</p>
-    </footer>
-    
-    <!-- Popup Modal -->
-    <div id="image-popup" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <img id="popup-image" src="" alt="Popup Image">
+            <p class="loading-text">Initializing Blade Network...</p>
         </div>
     </div>
-    
-    <script src="scripts.js"></script>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar animate__animated animate__fadeInDown">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network Logo" class="logo">
+                <h1>Blade Network</h1>
+            </div>
+            <div class="navbar-menu">
+                <ul class="nav-links">
+                    <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#search" class="nav-link"><i class="fas fa-search"></i> Search</a></li>
+                    <li><a href="#collections" class="nav-link"><i class="fas fa-bookmark"></i> Collections</a></li>
+                    <li><a href="#about" class="nav-link"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><button id="theme-toggle" class="theme-toggle"><i class="fas fa-moon"></i></button></li>
+                </ul>
+            </div>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero animate__animated animate__fadeIn">
+        <div class="hero-content">
+            <h2 class="hero-title">Discover Rare Anime Characters</h2>
+            <p class="hero-subtitle">The most comprehensive anime character database with advanced search and collection features</p>
+            <div class="hero-search">
+                <input type="text" placeholder="Search characters..." id="hero-search-input">
+                <button class="search-button"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+        <div class="hero-scroll-indicator">
+            <i class="fas fa-chevron-down animate__animated animate__bounce animate__infinite"></i>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Search Section -->
+        <section id="search" class="search-section animate__animated animate__fadeInUp">
+            <h2 class="section-title"><i class="fas fa-search"></i> Advanced Character Search</h2>
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label for="name-query"><i class="fas fa-user"></i> Name</label>
+                    <input type="text" id="name-query" placeholder="Character name...">
+                </div>
+                <div class="filter-group">
+                    <label for="anime-query"><i class="fas fa-film"></i> Anime</label>
+                    <input type="text" id="anime-query" placeholder="Anime title...">
+                </div>
+                <div class="filter-group">
+                    <label for="rarity-query"><i class="fas fa-gem"></i> Rarity</label>
+                    <select id="rarity-query">
+                        <option value="">Any Rarity</option>
+                        <option value="Common">Common</option>
+                        <option value="Rare">Rare</option>
+                        <option value="Epic">Epic</option>
+                        <option value="Legendary">Legendary</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="id-query"><i class="fas fa-id-card"></i> ID</label>
+                    <input type="text" id="id-query" placeholder="Character ID...">
+                </div>
+                <button id="search-button" class="primary-button animate__animated animate__pulse">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button id="reset-button" class="secondary-button">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+            
+            <div id="applied-filters" class="applied-filters"></div>
+            
+            <div class="search-meta">
+                <div id="results-count" class="results-count">0 results found</div>
+                <div class="view-toggle">
+                    <button id="grid-view" class="view-button active"><i class="fas fa-th"></i></button>
+                    <button id="list-view" class="view-button"><i class="fas fa-list"></i></button>
+                </div>
+            </div>
+            
+            <div id="search-results" class="character-grid"></div>
+            
+            <div class="pagination-container">
+                <button id="prev-page" class="pagination-button" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div id="page-numbers" class="page-numbers"></div>
+                <button id="next-page" class="pagination-button">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+        
+        <!-- Collections Section -->
+        <section id="collections" class="collections-section animate__animated animate__fadeInUp">
+            <!-- Content will be loaded dynamically -->
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer animate__animated animate__fadeInUp">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Blade Network</h3>
+                <p>The premier anime character database for collectors and enthusiasts.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#search">Search</a></li>
+                    <li><a href="#collections">Collections</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-discord"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Blade Network. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h3 id="modal-character-name">Character Name</h3>
+                <p id="modal-anime-name">Anime Title</p>
+            </div>
+            <img id="modal-image" src="" alt="Character Image" class="modal-image">
+            <div class="modal-footer">
+                <div class="character-info">
+                    <span class="rarity-badge" id="modal-rarity">Rare</span>
+                    <span class="character-id">ID: <span id="modal-character-id">12345</span></span>
+                </div>
+                <button class="collection-button" id="add-to-collection">
+                    <i class="fas fa-plus"></i> Add to Collection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="js/main.js" type="module"></script>
 </body>
 </html>
