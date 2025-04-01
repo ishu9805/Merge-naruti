@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blade Network - Anime Database</title>
+    <title>AnimePins - Character Collection</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -14,114 +14,79 @@
         <header class="main-header">
             <div class="header-container">
                 <div class="logo-wrapper">
-                    <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network" class="logo-img">
-                    <h1 class="logo-text">Blade Network</h1>
+                    <img src="https://files.catbox.moe/078cs5.jpg" alt="AnimePins" class="logo-img">
+                    <h1 class="logo-text">AnimePins</h1>
+                </div>
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search characters..." class="search-input">
                 </div>
                 <nav class="main-nav">
                     <ul class="nav-list">
-                        <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> <span class="nav-text">Home</span></a></li>
-                        <li><a href="#search" class="nav-link"><i class="fas fa-search"></i> <span class="nav-text">Search</span></a></li>
+                        <li><a href="/" class="nav-link active"><i class="fas fa-home"></i></a></li>
+                        <li><a href="#" class="nav-link"><i class="fas fa-compass"></i></a></li>
+                        <li><a href="#" class="nav-link"><i class="fas fa-user"></i></a></li>
                     </ul>
                 </nav>
-                <button class="mobile-menu-btn">
-                    <i class="fas fa-bars"></i>
-                </button>
             </div>
         </header>
 
         <main class="main-content">
-            <section id="search" class="search-section">
-                <div class="section-title-box">
-                    <h2 class="section-title">Character Search</h2>
-                </div>
-                
-                <form id="multi-search-form" class="search-form">
-                    <div class="search-row">
-                        <div class="search-group">
-                            <i class="fas fa-user search-icon"></i>
-                            <input type="text" id="name-query" placeholder="Character name" class="search-input">
-                        </div>
-                        <div class="search-group">
-                            <i class="fas fa-film search-icon"></i>
-                            <input type="text" id="anime-query" placeholder="Anime title" class="search-input">
-                        </div>
-                    </div>
-                    <div class="search-row">
-                        <div class="search-group">
-                            <i class="fas fa-star search-icon"></i>
-                            <input type="text" id="rarity-query" placeholder="Rarity" class="search-input">
-                        </div>
-                        <div class="search-group">
-                            <i class="fas fa-id-card search-icon"></i>
-                            <input type="text" id="id-query" placeholder="ID" class="search-input">
-                        </div>
-                    </div>
-                    <button type="submit" class="search-button">
-                        <i class="fas fa-search"></i> Search Characters
-                    </button>
-                </form>
-                
-                <div id="applied-filters" class="applied-filters"></div>
-                
-                <div class="results-container">
-                    <div id="search-results" class="character-grid"></div>
-                    <div class="loading-spinner" id="loading-spinner">
-                        <div class="spinner"></div>
-                    </div>
-                    <div class="no-results" id="no-results">
-                        <i class="fas fa-search"></i>
-                        <p>Search for characters to display results</p>
-                    </div>
-                </div>
-                
-                <div class="pagination">
-                    <button id="prev-page" class="pagination-button" disabled>
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    <span class="page-indicator">Page <span id="current-page">1</span></span>
-                    <button id="next-page" class="pagination-button">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </section>
+            <div class="masonry-grid" id="character-grid">
+                <!-- Character cards will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="loading-spinner" id="loading-spinner">
+                <div class="spinner"></div>
+            </div>
         </main>
 
-        <footer class="main-footer">
-            <div class="footer-container">
-                <div class="footer-copyright">
-                    &copy; 2024 Blade Network. All rights reserved.
+        <div class="character-modal" id="character-modal">
+            <div class="modal-content">
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-columns">
+                    <div class="modal-image-container">
+                        <img id="modal-character-image" src="" alt="Character Image" class="modal-image">
+                    </div>
+                    <div class="modal-info">
+                        <div class="info-header">
+                            <h2 id="modal-character-name"></h2>
+                            <div class="character-meta">
+                                <span class="anime-name" id="modal-anime-name"></span>
+                                <span class="character-id" id="modal-character-id"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-container">
+                            <div class="stat-item">
+                                <div class="stat-value" id="modal-rarity"></div>
+                                <div class="stat-label">Rarity</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="modal-popularity"></div>
+                                <div class="stat-label">Popularity</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="modal-tier"></div>
+                                <div class="stat-label">Tier</div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="action-btn save-btn"><i class="fas fa-bookmark"></i> Save</button>
+                            <button class="action-btn share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                        </div>
+                        
+                        <div class="similar-section">
+                            <h3>More like this</h3>
+                            <div class="similar-grid" id="similar-grid">
+                                <!-- Similar characters will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </footer>
-    </div>
-    
-    <!-- Character Detail View -->
-    <div id="character-view" class="character-view">
-        <div class="view-container">
-            <button class="close-view">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="main-character">
-                <img id="view-main-image" src="" alt="Character Image" class="main-image">
-                <div class="main-info">
-                    <h3 id="view-character-name"></h3>
-                    <div class="info-row">
-                        <span class="info-label"><i class="fas fa-film"></i> Anime:</span>
-                        <span id="view-anime-name" class="info-value"></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="fas fa-star"></i> Rarity:</span>
-                        <span id="view-rarity" class="info-value"></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label"><i class="fas fa-id-card"></i> ID:</span>
-                        <span id="view-character-id" class="info-value"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="similar-characters">
-                <h4>Similar Characters</h4>
-                <div id="similar-results" class="similar-grid"></div>
             </div>
         </div>
     </div>
