@@ -8,7 +8,7 @@ from flask import Flask, jsonify, send_from_directory, request, Response
 # Other routes...
 
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder='staticing')
 CORS(app)
 
 # MongoDB connection URL
@@ -16,7 +16,7 @@ mongo_url = "mongodb+srv://abhi47903:sashtadev143@naruto.svojv.mongodb.net/"
 client = MongoClient(mongo_url)
 db = client['NARUTOGAMEBOT']
 collection = db['anime_characters_lol']
-user_collection = db['user_characters']  # Collection storing user collections with a 'characters' array
+user_collection = db['user_collection_lmaoooo']  # Collection storing user collections with a 'characters' array
 
 @app.route('/proxy-image/<path:url>')
 def proxy_image(url):
@@ -31,7 +31,7 @@ def proxy_image(url):
 # Serve homepage
 @app.route('/')
 def home():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory('staticing', 'index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
