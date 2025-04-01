@@ -1,6 +1,122 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Previous code remains the same until loadCharacters function
-
+    // DOM Elements
+    const searchForm = document.getElementById('multi-search-form');
+    const searchResultsDiv = document.getElementById('search-results');
+    const prevPageButton = document.getElementById('prev-page');
+    const nextPageButton = document.getElementById('next-page');
+    const currentPageSpan = document.getElementById('current-page');
+    const appliedFiltersDiv = document.getElementById('applied-filters');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const noResultsDiv = document.getElementById('no-results');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
+    
+    // State variables
+    let currentPage = 1;
+    let currentFilters = {};
+    let backgroundScrollPosition = 0;
+    const backgroundImages = [
+        'https://files.catbox.moe/9jbemn.jpg',
+        'https://files.catbox.moe/l5g4xp.jpg',
+        'https://files.catbox.moe/7tdou5.jpg',
+        'https://files.catbox.moe/4sgb37.jpg',
+        'https://files.catbox.moe/qggqe3.jpg'
+    ];
+    
+    // Initialize the page
+    initPage();
+    
+    function initPage() {
+        // Set random background
+        setRandomBackground();
+        
+        // Hide results initially
+        searchResultsDiv.style.display = 'none';
+        noResultsDiv.style.display = 'flex';
+        
+        // Set up event listeners
+        setupEventListeners();
+    }
+    
+    function setRandomBackground() {
+        const randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
+        document.querySelector('.background-layer').style.backgroundImage = `url('${randomImage}')`;
+    }
+    
+    function setupEventListeners() {
+        // Form submission
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentPage = 1;
+            updateCurrentFilters();
+            updateFiltersDisplay();
+            loadCharacters(currentPage);
+        });
+        
+        // Pagination buttons
+        prevPageButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadCharacters(currentPage);
+            }
+        });
+        
+        nextPageButton.addEventListener('click', () => {
+            currentPage++;
+            loadCharacters(currentPage);
+        });
+        
+        // Filter removal
+        appliedFiltersDiv.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-filter') || e.target.closest('.remove-filter')) {
+                const filterType = e.target.closest('button').dataset.filterType;
+                clearFilter(filterType);
+            }
+        });
+        
+        // Mobile menu toggle
+        mobileMenuBtn.addEventListener('click', () => {
+            mainNav.classList.toggle('active');
+        });
+    }
+    
+    function updateCurrentFilters() {
+        currentFilters = {
+            name: document.getElementById('name-query').value.trim(),
+            anime: document.getElementById('anime-query').value.trim(),
+            rarity: document.getElementById('rarity-query').value.trim(),
+            id: document.getElementById('id-query').value.trim()
+        };
+    }
+    
+    function updateFiltersDisplay() {
+        const activeFilters = Object.entries(currentFilters)
+            .filter(([_, value]) => value !== '')
+            .map(([key, value]) => ({ type: key, value }));
+        
+        if (activeFilters.length === 0) {
+            appliedFiltersDiv.innerHTML = '';
+            return;
+        }
+        
+        appliedFiltersDiv.innerHTML = activeFilters.map(filter => `
+            <div class="filter-tag">
+                ${filter.type}: ${filter.value}
+                <button class="remove-filter" data-filter-type="${filter.type}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    function clearFilter(filterType) {
+        document.getElementById(`${filterType}-query`).value = '';
+        currentFilters[filterType] = '';
+        updateFiltersDisplay();
+        currentPage = 1;
+        loadCharacters(currentPage);
+    }
+    
     async function loadCharacters(page) {
         // Show loading state
         loadingSpinner.style.display = 'flex';
@@ -105,9 +221,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    function updatePaginationButtons(hasNextPage) {
+        prevPageButton.disabled = currentPage === 1;
+        nextPageButton.disabled = !hasNextPage;
+    }
+    
     async function openCharacterView(character) {
         // Freeze the background
         document.body.style.overflow = 'hidden';
+        backgroundScrollPosition = window.scrollY;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${backgroundScrollPosition}px`;
+        document.body.style.width = '100%';
         
         // Set main character info
         document.getElementById('view-main-image').src = character.image_url;
@@ -117,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('view-rarity').textContent = character.rarity;
         document.getElementById('view-character-id').textContent = character.id;
         
-        // Load similar characters (in this case, we'll just use the same anime)
+        // Load similar characters (from same anime)
         try {
             const response = await fetch(`/waifus/search?anime=${encodeURIComponent(character.anime_name)}`);
             const data = await response.json();
@@ -165,6 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeCharacterView() {
         document.getElementById('character-view').style.display = 'none';
         document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, backgroundScrollPosition);
     }
     
     // Set up close button
@@ -183,6 +312,4 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCharacterView();
         }
     });
-
-    // Rest of your existing code remains the same
 });
