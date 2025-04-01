@@ -3,751 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniVerse | Premium Anime Character Database</title>
-    <meta name="description" content="The most comprehensive anime character database with advanced search and collection features">
-    
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="/assets/favicon/site.webmanifest">
-    
-    <!-- Fonts & Icons -->
+    <title>AnimeVerse | Premium Character Database</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap">
-    
-    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/animations.css">
-    
-    <!-- Preload critical assets -->
-    <link rel="preload" href="js/main.js" as="script">
-    <link rel="preload" href="css/styles.css" as="style">
 </head>
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader">
-        <div class="loader-spinner">
-            <div class="spinner-inner"></div>
-            <div class="spinner-outer"></div>
-        </div>
-        <div class="loader-logo">
-            <svg viewBox="0 0 200 50" class="logo-svg">
-                <text x="0" y="35" class="logo-text">AniVerse</text>
-            </svg>
-        </div>
-    </div>
-    
-    <!-- Floating Particles Background -->
-    <div class="particles-container">
-        <canvas id="particles-canvas"></canvas>
-    </div>
-    
-    <!-- Main Navigation -->
-    <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <a href="/" class="logo-link">
-                    <div class="logo-image">
-                        <img src="https://files.catbox.moe/078cs5.jpg" alt="AniVerse Logo" loading="lazy">
-                    </div>
-                    <h1 class="logo-text">AniVerse</h1>
-                </a>
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-inner">
+            <div class="loading-spinner">
+                <div class="spinner-sector spinner-sector-red"></div>
+                <div class="spinner-sector spinner-sector-blue"></div>
+                <div class="spinner-sector spinner-sector-green"></div>
             </div>
-            
-            <nav class="main-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/" class="nav-link active" data-text="Home">
-                            <span class="link-text">Home</span>
-                            <span class="link-icon"><i class="fas fa-home"></i></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#search" class="nav-link" data-text="Search">
-                            <span class="link-text">Search</span>
-                            <span class="link-icon"><i class="fas fa-search"></i></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#collections" class="nav-link" data-text="Collections">
-                            <span class="link-text">Collections</span>
-                            <span class="link-icon"><i class="fas fa-bookmark"></i></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#about" class="nav-link" data-text="About">
-                            <span class="link-text">About</span>
-                            <span class="link-icon"><i class="fas fa-info-circle"></i></span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="header-actions">
-                <button class="theme-toggle" aria-label="Toggle theme">
-                    <span class="toggle-icon sun"><i class="fas fa-sun"></i></span>
-                    <span class="toggle-icon moon"><i class="fas fa-moon"></i></span>
-                </button>
-                
-                <button class="user-menu-toggle" aria-label="User menu">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                </button>
-                
-                <button class="mobile-menu-toggle" aria-label="Mobile menu">
-                    <span class="menu-bar"></span>
-                    <span class="menu-bar"></span>
-                    <span class="menu-bar"></span>
+            <h2 class="preloader-text animate__animated animate__fadeIn">Loading AnimeVerse...</h2>
+        </div>
+    </div>
+
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Floating Navigation -->
+    <div class="floating-nav">
+        <button class="floating-nav-btn" id="theme-toggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        <button class="floating-nav-btn" id="music-toggle">
+            <i class="fas fa-music"></i>
+        </button>
+        <button class="floating-nav-btn" id="back-to-top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
+
+    <!-- Main Header -->
+    <header class="glass-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="https://files.catbox.moe/078cs5.jpg" alt="AnimeVerse" class="logo animate__animated animate__fadeInLeft">
+                    <h1 class="site-title animate__animated animate__fadeInDown">Anime<span class="highlight">Verse</span></h1>
+                </div>
+                <nav class="main-nav animate__animated animate__fadeInRight">
+                    <ul>
+                        <li><a href="#home" class="nav-link active" data-text="Home"><i class="fas fa-home"></i> <span>Home</span></a></li>
+                        <li><a href="#search" class="nav-link" data-text="Search"><i class="fas fa-search"></i> <span>Search</span></a></li>
+                        <li><a href="#collection" class="nav-link" data-text="Collection"><i class="fas fa-bookmark"></i> <span>Collection</span></a></li>
+                        <li><a href="#about" class="nav-link" data-text="About"><i class="fas fa-info-circle"></i> <span>About</span></a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn btn-primary animate__animated animate__fadeIn">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </button>
+                </div>
+                <button class="hamburger-menu" id="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </button>
             </div>
         </div>
     </header>
-    
+
     <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-container">
+    <section id="home" class="hero-section parallax">
+        <div class="hero-overlay"></div>
+        <div class="container">
             <div class="hero-content">
-                <h2 class="hero-title">
-                    <span class="title-line">Discover Your</span>
-                    <span class="title-line highlight">Favorite Characters</span>
+                <h2 class="hero-title animate__animated animate__fadeInDown">
+                    Discover <span class="text-gradient">Thousands</span> of Anime Characters
                 </h2>
-                <p class="hero-subtitle">The most comprehensive anime character database with thousands of entries</p>
-                
-                <div class="hero-actions">
-                    <a href="#search" class="btn btn-primary btn-hero">
-                        <span>Explore Now</span>
-                        <i class="fas fa-arrow-right"></i>
+                <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
+                    The most comprehensive anime character database with advanced search and collection features
+                </p>
+                <div class="hero-actions animate__animated animate__fadeInUp animate__delay-2s">
+                    <a href="#search" class="btn btn-primary btn-lg btn-glow">
+                        <i class="fas fa-search"></i> Explore Now
                     </a>
-                    <a href="#about" class="btn btn-outline btn-hero">
-                        <span>Learn More</span>
-                        <i class="fas fa-info-circle"></i>
+                    <a href="#collection" class="btn btn-outline btn-lg">
+                        <i class="fas fa-bookmark"></i> My Collection
                     </a>
-                </div>
-            </div>
-            
-            <div class="hero-character">
-                <div class="character-card featured">
-                    <div class="card-image">
-                        <img src="https://files.catbox.moe/9jbemn.jpg" alt="Featured Character" loading="lazy">
-                    </div>
-                    <div class="card-glow"></div>
-                    <div class="card-badge">
-                        <i class="fas fa-crown"></i>
-                        <span>Featured</span>
-                    </div>
                 </div>
             </div>
         </div>
-        
         <div class="hero-scroll-indicator">
-            <div class="scroll-line"></div>
-            <span>Scroll Down</span>
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <div class="arrow-down"></div>
         </div>
     </section>
-    
+
     <!-- Search Section -->
-    <section id="search" class="search-section">
-        <div class="section-container">
+    <section id="search" class="section search-section">
+        <div class="container">
             <div class="section-header">
-                <h2 class="section-title">
-                    <span class="title-decorator"></span>
-                    <span class="title-text">Character Search</span>
+                <h2 class="section-title animate__animated animate__fadeIn">
+                    <span class="text-gradient">Search</span> Characters
                 </h2>
-                <p class="section-subtitle">Find your favorite anime characters with our powerful search engine</p>
+                <div class="section-divider animate__animated animate__fadeIn"></div>
+                <p class="section-subtitle animate__animated animate__fadeIn">
+                    Find your favorite anime characters with our powerful search engine
+                </p>
             </div>
-            
-            <div class="search-container">
-                <form id="multi-search-form" class="search-form">
+
+            <div class="search-container animate__animated animate__fadeIn">
+                <form id="multi-search-form" class="search-form glass-card">
                     <div class="search-input-group">
-                        <div class="input-field">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" id="name-query" placeholder="Search by name" class="search-input">
-                            <div class="input-underline"></div>
+                        <div class="input-icon">
+                            <i class="fas fa-user"></i>
                         </div>
-                        
-                        <div class="input-field">
-                            <i class="fas fa-film input-icon"></i>
-                            <input type="text" id="anime-query" placeholder="Search by anime" class="search-input">
-                            <div class="input-underline"></div>
+                        <input type="text" id="name-query" placeholder="Search by character name..." class="search-input">
+                        <div class="input-effects"></div>
+                    </div>
+                    
+                    <div class="search-input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-film"></i>
                         </div>
-                        
-                        <div class="input-field">
-                            <i class="fas fa-star input-icon"></i>
-                            <select id="rarity-query" class="search-select">
-                                <option value="">All Rarities</option>
-                                <option value="Common">Common</option>
-                                <option value="Rare">Rare</option>
-                                <option value="Super Rare">Super Rare</option>
-                                <option value="Ultra Rare">Ultra Rare</option>
-                                <option value="Legendary">Legendary</option>
-                            </select>
-                            <div class="input-underline"></div>
+                        <input type="text" id="anime-query" placeholder="Search by anime..." class="search-input">
+                        <div class="input-effects"></div>
+                    </div>
+                    
+                    <div class="search-input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-star"></i>
                         </div>
-                        
-                        <div class="input-field">
-                            <i class="fas fa-id-card input-icon"></i>
-                            <input type="text" id="id-query" placeholder="Search by ID" class="search-input">
-                            <div class="input-underline"></div>
+                        <select id="rarity-query" class="search-input">
+                            <option value="">All Rarities</option>
+                            <option value="SSR">SSR</option>
+                            <option value="SR">SR</option>
+                            <option value="R">R</option>
+                            <option value="N">N</option>
+                        </select>
+                        <div class="input-effects"></div>
+                    </div>
+                    
+                    <div class="search-input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-id-card"></i>
                         </div>
+                        <input type="text" id="id-query" placeholder="Search by ID..." class="search-input">
+                        <div class="input-effects"></div>
                     </div>
                     
                     <div class="search-actions">
-                        <button type="submit" class="btn btn-primary btn-search">
-                            <i class="fas fa-search"></i>
-                            <span>Search</span>
+                        <button type="submit" class="btn btn-primary btn-glow">
+                            <i class="fas fa-search"></i> Search
                         </button>
-                        
-                        <button type="reset" id="reset-filters" class="btn btn-outline btn-search">
-                            <i class="fas fa-undo"></i>
-                            <span>Reset</span>
-                        </button>
-                        
-                        <button type="button" id="advanced-toggle" class="btn btn-text btn-search">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Advanced</span>
+                        <button type="reset" id="reset-filters" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset
                         </button>
                     </div>
                 </form>
-                
-                <div class="advanced-search" id="advanced-search">
-                    <div class="advanced-filters">
-                        <div class="filter-group">
-                            <label class="filter-label">Attributes</label>
-                            <div class="filter-options">
-                                <div class="filter-checkbox">
-                                    <input type="checkbox" id="filter-attribute1" name="attributes" value="Sword">
-                                    <label for="filter-attribute1">Sword</label>
-                                </div>
-                                <div class="filter-checkbox">
-                                    <input type="checkbox" id="filter-attribute2" name="attributes" value="Magic">
-                                    <label for="filter-attribute2">Magic</label>
-                                </div>
-                                <div class="filter-checkbox">
-                                    <input type="checkbox" id="filter-attribute3" name="attributes" value="Ranged">
-                                    <label for="filter-attribute3">Ranged</label>
-                                </div>
-                                <div class="filter-checkbox">
-                                    <input type="checkbox" id="filter-attribute4" name="attributes" value="Melee">
-                                    <label for="filter-attribute4">Melee</label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">Gender</label>
-                            <div class="filter-options">
-                                <div class="filter-radio">
-                                    <input type="radio" id="filter-gender-all" name="gender" value="" checked>
-                                    <label for="filter-gender-all">All</label>
-                                </div>
-                                <div class="filter-radio">
-                                    <input type="radio" id="filter-gender-male" name="gender" value="Male">
-                                    <label for="filter-gender-male">Male</label>
-                                </div>
-                                <div class="filter-radio">
-                                    <input type="radio" id="filter-gender-female" name="gender" value="Female">
-                                    <label for="filter-gender-female">Female</label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">Sort By</label>
-                            <div class="filter-select">
-                                <select id="sort-by">
-                                    <option value="id_desc">ID (Newest First)</option>
-                                    <option value="id_asc">ID (Oldest First)</option>
-                                    <option value="name_asc">Name (A-Z)</option>
-                                    <option value="name_desc">Name (Z-A)</option>
-                                    <option value="rarity_desc">Rarity (Highest)</option>
-                                    <option value="rarity_asc">Rarity (Lowest)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="applied-filters" class="applied-filters"></div>
             </div>
-            
+
+            <div id="applied-filters" class="applied-filters animate__animated animate__fadeIn"></div>
+
             <div id="loading-indicator" class="loading-indicator">
                 <div class="loading-spinner">
-                    <div class="spinner-circle"></div>
-                    <div class="spinner-circle"></div>
-                    <div class="spinner-circle"></div>
+                    <div class="spinner-sector spinner-sector-red"></div>
+                    <div class="spinner-sector spinner-sector-blue"></div>
+                    <div class="spinner-sector spinner-sector-green"></div>
                 </div>
-                <p class="loading-text">Loading characters...</p>
+                <p>Loading characters...</p>
             </div>
-            
-            <div id="search-results" class="character-grid">
-                <!-- Results will be loaded here -->
-            </div>
-            
-            <div class="pagination-container">
+
+            <div id="search-results" class="character-grid"></div>
+
+            <div class="pagination-container animate__animated animate__fadeIn">
                 <div class="pagination">
-                    <button id="prev-page" class="pagination-button prev" disabled>
-                        <i class="fas fa-chevron-left"></i>
-                        <span>Previous</span>
+                    <button id="prev-page" class="pagination-button" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
                     </button>
-                    
                     <div class="page-info">
-                        <span id="current-page">1</span>
-                        <span class="page-separator">of</span>
-                        <span id="total-pages">1</span>
+                        <span id="current-page">1</span> / <span id="total-pages">1</span>
                     </div>
-                    
-                    <button id="next-page" class="pagination-button next">
-                        <span>Next</span>
-                        <i class="fas fa-chevron-right"></i>
+                    <button id="next-page" class="pagination-button">
+                        Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
         </div>
     </section>
-    
-    <!-- Collections Section -->
-    <section id="collections" class="collections-section">
-        <div class="section-container">
+
+    <!-- Collection Section -->
+    <section id="collection" class="section collection-section">
+        <div class="container">
             <div class="section-header">
-                <h2 class="section-title">
-                    <span class="title-decorator"></span>
-                    <span class="title-text">Featured Collections</span>
+                <h2 class="section-title animate__animated animate__fadeIn">
+                    My <span class="text-gradient">Collection</span>
                 </h2>
-                <p class="section-subtitle">Browse popular character collections curated by our community</p>
+                <div class="section-divider animate__animated animate__fadeIn"></div>
+                <p class="section-subtitle animate__animated animate__fadeIn">
+                    Your personal collection of favorite anime characters
+                </p>
             </div>
-            
-            <div class="collections-grid">
-                <div class="collection-card">
-                    <div class="collection-preview">
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/9jbemn.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/l5g4xp.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/7tdou5.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/4sgb37.jpg" alt="Character" loading="lazy">
-                        </div>
-                    </div>
-                    
-                    <div class="collection-info">
-                        <h3 class="collection-title">Legendary Warriors</h3>
-                        <p class="collection-count">42 characters</p>
-                        
-                        <div class="collection-actions">
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-bookmark"></i>
-                            </button>
-                        </div>
-                    </div>
+
+            <div class="collection-container">
+                <div class="collection-empty animate__animated animate__fadeIn">
+                    <i class="fas fa-bookmark collection-empty-icon"></i>
+                    <h3>Your collection is empty</h3>
+                    <p>Start building your collection by saving characters</p>
+                    <a href="#search" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Browse Characters
+                    </a>
                 </div>
-                
-                <div class="collection-card">
-                    <div class="collection-preview">
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/qggqe3.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/9jbemn.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/l5g4xp.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/7tdou5.jpg" alt="Character" loading="lazy">
-                        </div>
-                    </div>
-                    
-                    <div class="collection-info">
-                        <h3 class="collection-title">Magic Casters</h3>
-                        <p class="collection-count">36 characters</p>
-                        
-                        <div class="collection-actions">
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-bookmark"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="collection-card">
-                    <div class="collection-preview">
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/4sgb37.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/qggqe3.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/9jbemn.jpg" alt="Character" loading="lazy">
-                        </div>
-                        <div class="preview-character">
-                            <img src="https://files.catbox.moe/l5g4xp.jpg" alt="Character" loading="lazy">
-                        </div>
-                    </div>
-                    
-                    <div class="collection-info">
-                        <h3 class="collection-title">Villains Collection</h3>
-                        <p class="collection-count">28 characters</p>
-                        
-                        <div class="collection-actions">
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-icon btn-collection">
-                                <i class="fas fa-bookmark"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section-footer">
-                <a href="#" class="btn btn-outline btn-view-all">
-                    <span>View All Collections</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
+
+                <div id="collection-results" class="character-grid"></div>
             </div>
         </div>
     </section>
-    
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="section-container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
+
+    <!-- About Section -->
+    <section id="about" class="section about-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title animate__animated animate__fadeIn">
+                    About <span class="text-gradient">AnimeVerse</span>
+                </h2>
+                <div class="section-divider animate__animated animate__fadeIn"></div>
+                <p class="section-subtitle animate__animated animate__fadeIn">
+                    The ultimate anime character database
+                </p>
+            </div>
+
+            <div class="about-content">
+                <div class="about-card glass-card animate__animated animate__fadeInLeft">
+                    <div class="about-card-icon">
+                        <i class="fas fa-database"></i>
                     </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" data-count="10000">0</h3>
-                        <p class="stat-label">Registered Users</p>
-                    </div>
+                    <h3>Comprehensive Database</h3>
+                    <p>Access thousands of anime characters with detailed information from hundreds of anime series.</p>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-id-card"></i>
+
+                <div class="about-card glass-card animate__animated animate__fadeInUp">
+                    <div class="about-card-icon">
+                        <i class="fas fa-search-plus"></i>
                     </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" data-count="5000">0</h3>
-                        <p class="stat-label">Characters</p>
-                    </div>
+                    <h3>Advanced Search</h3>
+                    <p>Powerful search functionality to find exactly the characters you're looking for.</p>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-film"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" data-count="350">0</h3>
-                        <p class="stat-label">Anime Titles</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
+
+                <div class="about-card glass-card animate__animated animate__fadeInRight">
+                    <div class="about-card-icon">
                         <i class="fas fa-bookmark"></i>
                     </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value" data-count="1200">0</h3>
-                        <p class="stat-label">Collections</p>
-                    </div>
+                    <h3>Personal Collection</h3>
+                    <p>Save your favorite characters and build your personal anime collection.</p>
+                </div>
+            </div>
+
+            <div class="stats-container animate__animated animate__fadeIn">
+                <div class="stats-card">
+                    <div class="stats-number" id="characters-count">0</div>
+                    <div class="stats-label">Characters</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-number" id="anime-count">0</div>
+                    <div class="stats-label">Anime Series</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-number" id="users-count">0</div>
+                    <div class="stats-label">Active Users</div>
                 </div>
             </div>
         </div>
     </section>
-    
-    <!-- About Section -->
-    <section id="about" class="about-section">
-        <div class="section-container">
-            <div class="about-content">
-                <div class="about-text">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <span class="title-decorator"></span>
-                            <span class="title-text">About AniVerse</span>
-                        </h2>
-                        <p class="section-subtitle">The ultimate anime character database</p>
-                    </div>
-                    
-                    <div class="about-description">
-                        <p>AniVerse is the most comprehensive anime character database, featuring thousands of characters from hundreds of anime series. Our mission is to provide anime fans with a powerful platform to discover, explore, and collect their favorite characters.</p>
-                        
-                        <p>With advanced search capabilities, detailed character profiles, and community-driven collections, AniVerse offers an unparalleled experience for anime enthusiasts.</p>
-                    </div>
-                    
-                    <div class="about-features">
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
-                            <div class="feature-text">
-                                <h3>Advanced Search</h3>
-                                <p>Find characters by name, anime, rarity, and more with our powerful search engine.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-bookmark"></i>
-                            </div>
-                            <div class="feature-text">
-                                <h3>Collections</h3>
-                                <p>Create and share collections of your favorite characters with the community.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="feature-text">
-                                <h3>Detailed Stats</h3>
-                                <p>View comprehensive statistics and information about each character.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="about-image">
-                    <div class="image-container">
-                        <img src="https://files.catbox.moe/9jbemn.jpg" alt="About AniVerse" loading="lazy">
-                        <div class="image-overlay"></div>
-                        <div class="image-badge">
-                            <i class="fas fa-heart"></i>
-                            <span>Anime Community</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Newsletter Section -->
-    <section class="newsletter-section">
-        <div class="section-container">
-            <div class="newsletter-card">
-                <div class="newsletter-content">
-                    <h2 class="newsletter-title">Stay Updated</h2>
-                    <p class="newsletter-text">Subscribe to our newsletter for the latest character additions and updates</p>
-                    
-                    <form class="newsletter-form">
-                        <div class="form-group">
-                            <input type="email" placeholder="Your email address" class="newsletter-input">
-                            <button type="submit" class="btn btn-primary btn-newsletter">
-                                <span>Subscribe</span>
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <div class="newsletter-image">
-                    <img src="https://files.catbox.moe/l5g4xp.jpg" alt="Newsletter" loading="lazy">
-                </div>
-            </div>
-        </div>
-    </section>
-    
+
     <!-- Footer -->
-    <footer class="main-footer">
-        <div class="footer-container">
-            <div class="footer-grid">
-                <div class="footer-column">
-                    <div class="footer-logo">
-                        <img src="https://files.catbox.moe/078cs5.jpg" alt="AniVerse Logo" loading="lazy">
-                        <h3>AniVerse</h3>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="https://files.catbox.moe/078cs5.jpg" alt="AnimeVerse" class="logo">
+                    <h2>Anime<span class="highlight">Verse</span></h2>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h3>Explore</h3>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#search">Search</a></li>
+                            <li><a href="#collection">Collection</a></li>
+                            <li><a href="#about">About</a></li>
+                        </ul>
                     </div>
-                    <p class="footer-about">The ultimate anime character database for fans and collectors.</p>
-                    
-                    <div class="footer-social">
-                        <a href="#" class="social-link">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-discord"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-github"></i>
-                        </a>
-                        <a href="#" class="social-link">
-                            <i class="fab fa-instagram"></i>
-                        </a>
+                    <div class="footer-column">
+                        <h3>Resources</h3>
+                        <ul>
+                            <li><a href="#">API Documentation</a></li>
+                            <li><a href="#">GitHub Repository</a></li>
+                            <li><a href="#">Contribution Guide</a></li>
+                        </ul>
                     </div>
-                </div>
-                
-                <div class="footer-column">
-                    <h4 class="footer-title">Explore</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">Characters</a></li>
-                        <li><a href="#">Anime Series</a></li>
-                        <li><a href="#">Collections</a></li>
-                        <li><a href="#">Community</a></li>
-                        <li><a href="#">Leaderboards</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h4 class="footer-title">Resources</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">API Documentation</a></li>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Community Guidelines</a></li>
-                        <li><a href="#">Contribute</a></li>
-                        <li><a href="#">Status</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h4 class="footer-title">Company</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
+                    <div class="footer-column">
+                        <h3>Connect</h3>
+                        <ul>
+                            <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+                            <li><a href="#"><i class="fab fa-discord"></i> Discord</a></li>
+                            <li><a href="#"><i class="fab fa-github"></i> GitHub</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            
             <div class="footer-bottom">
-                <div class="footer-copyright">
-                    <p>&copy; 2024 AniVerse. All rights reserved.</p>
-                </div>
-                
-                <div class="footer-legal">
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Cookie Policy</a>
+                <p>&copy; 2024 AnimeVerse. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
                 </div>
             </div>
         </div>
     </footer>
-    
-    <!-- Back to Top Button -->
-    <button class="back-to-top" aria-label="Back to top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-    
+
     <!-- Character Modal -->
     <div id="character-modal" class="modal">
-        <div class="modal-container">
+        <div class="modal-overlay"></div>
+        <div class="modal-container glass-card">
             <button class="modal-close">
                 <i class="fas fa-times"></i>
             </button>
-            
             <div class="modal-content">
-                <div class="modal-image">
-                    <img id="modal-character-image" src="" alt="Character" loading="lazy">
-                    <div class="image-badge" id="modal-rarity-badge">
-                        <span>Rare</span>
+                <div class="modal-image-container">
+                    <img id="modal-character-image" src="" alt="Character Image" class="modal-image">
+                    <div class="modal-image-overlay">
+                        <button class="btn btn-circle btn-favorite">
+                            <i class="fas fa-heart"></i>
+                        </button>
                     </div>
                 </div>
-                
                 <div class="modal-info">
-                    <h2 id="modal-character-name">Character Name</h2>
-                    <h3 id="modal-anime-name">Anime Title</h3>
-                    
-                    <div class="character-id">
-                        <span>ID:</span>
-                        <span id="modal-character-id">0000</span>
+                    <h2 id="modal-character-name"></h2>
+                    <div class="modal-meta">
+                        <span class="modal-anime" id="modal-character-anime"></span>
+                        <span class="modal-rarity" id="modal-character-rarity"></span>
+                        <span class="modal-id" id="modal-character-id"></span>
                     </div>
-                    
-                    <div class="character-rarity">
-                        <span>Rarity:</span>
-                        <span id="modal-character-rarity">Rare</span>
-                    </div>
-                    
-                    <div class="character-stats">
+                    <div class="modal-stats">
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-heart"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-value">85%</span>
-                                <span class="stat-label">Popularity</span>
-                            </div>
+                            <div class="stat-value" id="modal-character-power">0</div>
+                            <div class="stat-label">Power</div>
                         </div>
-                        
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-value">92</span>
-                                <span class="stat-label">Power</span>
-                            </div>
+                            <div class="stat-value" id="modal-character-speed">0</div>
+                            <div class="stat-label">Speed</div>
                         </div>
-                        
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-value">4.8</span>
-                                <span class="stat-label">Rating</span>
-                            </div>
+                            <div class="stat-value" id="modal-character-intelligence">0</div>
+                            <div class="stat-label">Intelligence</div>
                         </div>
                     </div>
-                    
-                    <div class="character-description">
-                        <h4>Description</h4>
-                        <p id="modal-character-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
-                    </div>
-                    
-                    <div class="character-attributes">
-                        <h4>Attributes</h4>
-                        <div class="attributes-list" id="modal-attributes-list">
-                            <span class="attribute-tag">Sword</span>
-                            <span class="attribute-tag">Magic</span>
-                            <span class="attribute-tag">Protagonist</span>
-                        </div>
-                    </div>
-                    
+                    <div class="modal-description" id="modal-character-description"></div>
+                    <div class="modal-tags" id="modal-character-tags"></div>
                     <div class="modal-actions">
-                        <button class="btn btn-primary btn-modal">
-                            <i class="fas fa-bookmark"></i>
-                            <span>Add to Collection</span>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-bookmark"></i> Add to Collection
                         </button>
-                        <button class="btn btn-outline btn-modal">
-                            <i class="fas fa-share-alt"></i>
-                            <span>Share</span>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-share-alt"></i> Share
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Toast Notification -->
-    <div id="toast-notification" class="toast">
-        <div class="toast-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="toast-content">
-            <h4 class="toast-title">Success</h4>
-            <p class="toast-message">Character added to your collection</p>
-        </div>
-        <button class="toast-close">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    
+
+    <!-- Audio Element (for background music) -->
+    <audio id="background-music" loop>
+        <source src="assets/music/background.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- Scripts -->
-    <script src="js/main.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/particles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <script src="js/scripts.js"></script>
 </body>
 </html>
