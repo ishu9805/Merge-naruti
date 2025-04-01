@@ -3,91 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Character Gallery | Blade Network</title>
+    <title>Anime Gallery | Blade Network</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-overlay"></div>
-    
+    <div class="color-theme-selector">
+        <div class="theme-option" data-theme="purple"></div>
+        <div class="theme-option" data-theme="blue"></div>
+        <div class="theme-option" data-theme="red"></div>
+        <div class="theme-option" data-theme="green"></div>
+    </div>
+
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-wrapper">
-                <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network" class="logo-img">
-                <h1 class="logo-text">Anime Gallery</h1>
-            </div>
-            
-            <div class="search-container">
-                <div class="search-box">
+        <h1 class="site-title">Anime Gallery</h1>
+        <div class="search-container">
+            <form id="multi-search-form" class="search-form">
+                <div class="search-group">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search characters..." class="search-input">
+                    <input type="text" id="name-query" placeholder="Search characters..." class="search-input">
                 </div>
-            </div>
-            
-            <nav class="main-nav">
-                <ul class="nav-list">
-                    <li><a href="#" class="nav-link active"><i class="fas fa-home"></i></a></li>
-                    <li><a href="#" class="nav-link"><i class="fas fa-compass"></i></a></li>
-                    <li><a href="#" class="nav-link"><i class="fas fa-user"></i></a></li>
-                </ul>
-            </nav>
+                <button type="submit" class="search-button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
         </div>
+        <nav class="main-nav">
+            <a href="#" class="nav-link"><i class="fas fa-home"></i></a>
+            <a href="#" class="nav-link"><i class="fas fa-heart"></i></a>
+            <a href="#" class="nav-link"><i class="fas fa-user"></i></a>
+        </nav>
     </header>
 
     <main class="main-content">
-        <div class="filter-bar">
-            <div class="filter-options">
-                <button class="filter-btn active">All</button>
-                <button class="filter-btn">Popular</button>
-                <button class="filter-btn">Rare</button>
-                <button class="filter-btn">New</button>
+        <div id="applied-filters" class="applied-filters"></div>
+        
+        <div class="results-container">
+            <div id="search-results" class="masonry-grid"></div>
+            <div class="loading-spinner" id="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <div class="no-results" id="no-results">
+                <i class="fas fa-search"></i>
+                <p>Search for characters to display results</p>
             </div>
         </div>
         
-        <div class="masonry-grid">
-            <!-- Character cards will be inserted here by JavaScript -->
-        </div>
-        
-        <div class="loading-spinner">
-            <div class="spinner"></div>
+        <div class="pagination">
+            <button id="prev-page" class="pagination-button" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="page-indicator">Page <span id="current-page">1</span></span>
+            <button id="next-page" class="pagination-button">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </main>
 
-    <div class="character-modal">
+    <div id="character-modal" class="modal">
         <div class="modal-overlay"></div>
-        <div class="modal-container">
-            <button class="close-modal"><i class="fas fa-times"></i></button>
-            <div class="modal-content">
-                <div class="modal-image-container">
-                    <img src="" alt="Character Image" class="modal-image">
-                    <div class="image-actions">
-                        <button class="action-btn"><i class="fas fa-heart"></i></button>
-                        <button class="action-btn"><i class="fas fa-bookmark"></i></button>
-                        <button class="action-btn"><i class="fas fa-share-alt"></i></button>
-                    </div>
+        <div class="modal-content">
+            <button class="close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-main-image">
+                <img id="modal-character-image" src="" alt="Character Image">
+            </div>
+            <div class="modal-info">
+                <h3 id="modal-character-name"></h3>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-film"></i> Anime:</span>
+                    <span id="modal-anime-name" class="info-value"></span>
                 </div>
-                <div class="modal-info">
-                    <h2 class="character-name"></h2>
-                    <div class="character-meta">
-                        <span class="anime-name"></span>
-                        <span class="character-id"></span>
-                    </div>
-                    <div class="character-stats">
-                        <div class="stat-item">
-                            <div class="stat-value rarity"></div>
-                            <div class="stat-label">Rarity</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value popularity">95%</div>
-                            <div class="stat-label">Popularity</div>
-                        </div>
-                    </div>
-                    <div class="similar-characters">
-                        <h3>Similar Characters</h3>
-                        <div class="similar-grid"></div>
-                    </div>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-star"></i> Rarity:</span>
+                    <span id="modal-rarity" class="info-value"></span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-id-card"></i> ID:</span>
+                    <span id="modal-character-id" class="info-value"></span>
+                </div>
+            </div>
+            <div class="similar-characters">
+                <h4>Similar Characters</h4>
+                <div id="similar-results" class="similar-grid"></div>
             </div>
         </div>
     </div>
