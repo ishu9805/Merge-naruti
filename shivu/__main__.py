@@ -38,7 +38,7 @@ from flask import Flask
 
 all_characters = []
 valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
-
+summer_spawn_thresholds = {}
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 
 """server = Flask(__name__)
@@ -119,8 +119,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize total message count and random threshold for Valentine spawn
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            valentine_spawn_thresholds[chat_id] = random.randint(3500, 6000)
-
+            valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
+            summer_spawn_thresholds[chat_id]  = random.randint(1200, 3500)
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
 
@@ -152,8 +152,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Reset the threshold for the next spawn
-            valentine_spawn_thresholds[chat_id] = random.randint(5000, 8000)
-            
+            valentine_spawn_thresholds[chat_id] = random.randint(8000, 14000)
+
+        if total_message_counts[chat_id] == summer_spawn_thresholds[chat_id]:
+            await spawn_summer_character(update, context)
+            summer_spawn_thresholds[chat_id] = random.randint(1650, 3000)
+            total_message_counts[chat_id] = 0
+
 
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -368,6 +373,70 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     # Notify admin (optional)
     await context.bot.send_message(chat_id=7378476666, text=f"A holi character has spawned! Character id: {character['id']}")
 
+
+async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
+
+    summer_characters = [c for c in all_characters if c.get('rarity') == '🌤 Summer']
+
+    if not summer_characters:
+        print("No Summer characters found in the database.")
+        return
+
+    # Select a random Summer character
+    character = random.choice(summer_characters)
+    
+    # Check global ownership count
+    waifu_id = character['id']
+    user_ownership_data = await user_collection.aggregate([
+        {'$match': {'characters.id': waifu_id}},
+        {'$unwind': '$characters'},
+        {'$match': {'characters.id': waifu_id}},
+        {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
+        {'$sort': {'count': -1}}
+    ]).to_list(length=10)
+
+    global_count = sum(user['count'] for user in user_ownership_data)
+
+    if global_count >= 20:
+        print(f"Summer character {waifu_id} has reached the global ownership limit.")
+        return
+
+    sent_characters[chat_id].append(character.get('id'))
+    last_characters[chat_id] = character
+
+    if chat_id in first_correct_guesses:
+        del first_correct_guesses[chat_id]
+
+    caption = ("☀️ *A Summer Breeze Brings a New Challenge!* 🌊\n\n"
+              "Guess their name with `/guess [name]` to claim this character and enjoy the summer vibes! 🏖️")
+    
+    if character.get('img_url'):
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=character['img_url'],
+            caption=caption,
+            parse_mode='Markdown'
+        )
+    elif character.get('vid_url'):
+        await context.bot.send_video(
+            chat_id=chat_id,
+            video=character['vid_url'],
+            caption=caption,
+            parse_mode='Markdown',
+            supports_streaming=True
+        )
+
+    # Notify admin (optional)
+    await context.bot.send_message(
+        chat_id=7378476666,
+        text=f"A summer character has spawned! Character ID: {character['id']}"
+    )
+    
 
 
 @block_dec_ptb
