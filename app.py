@@ -48,7 +48,7 @@ def search_waifus():
     results = [{
         'character_name': waifu['name'],
         'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
+        #'image_url': waifu['img_url'],
         'rarity': waifu.get('rarity', 'Unknown'),
         'id': waifu.get('id', 'N/A')
     } for waifu in waifus]
