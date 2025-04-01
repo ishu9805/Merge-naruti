@@ -1,240 +1,139 @@
-
-from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
-from bson import ObjectId
-from datetime import datetime
-import os
-from dotenv import load_dotenv
-import logging
-from logging.handlers import RotatingFileHandler
-from functools import wraps
-import jwt
-from werkzeug.security import generate_password_hash, check_password_hash
+import requests
+from flask import Flask, jsonify, send_from_directory, request, Response
 
-# Load environment variables
-load_dotenv()
 
-# Initialize Flask app
+
+# Other routes...
+
+
 app = Flask(__name__, static_folder='static')
-app.config['SECRET_KEY'] = "32db2c898fbeb5d41a6bc341e0e68938dee3360b4e6a75250e1dda606ee880a7"
 CORS(app)
 
-# Configure logging
-handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-handler.setLevel(logging.INFO)
-app.logger.addHandler(handler)
+# MongoDB connection URL
+mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(mongo_url)
+db = client['Character_catcher']
+collection = db['anime_characters_lol']
+user_collection = db['user_characters']  # Collection storing user collections with a 'characters' array
 
-# Database connection
-mongo_uri = "mongodb+srv://abhi47903:sashtadev143@naruto.svojv.mongodb.net/"
-client = MongoClient(mongo_uri)
-db = client['NARUTOGAMEBOT']
-
-# Collections
-characters_collection = db['anime_characters_lol']
-users_collection = db['users']
-collections_collection = db['user_collection_lmaoooo']
-
-# Rate limiting setup (requires Redis)
-# from flask_limiter import Limiter
-# from flask_limiter.util import get_remote_address
-# limiter = Limiter(app, key_func=get_remote_address)
-
-# JWT authentication decorator
-
+@app.route('/proxy-image/<path:url>')
+def proxy_image(url):
+    telegraph_url = f"https://telegra.ph/{url}"
+    try:
+        response = requests.get(telegraph_url, stream=True)
+        response.raise_for_status()
+        return Response(response.content, mimetype=response.headers['Content-Type'])
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': 'Image not found or could not be retrieved'}), 404
+    
+# Serve homepage
 @app.route('/')
 def home():
     return send_from_directory('static', 'index.html')
 
-
 @app.route('/<path:filename>')
 def serve_static(filename):
-    return send_from_directory('static', filename)
+    return send_from_directory('frontend/static', filename)
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
-            
-        try:
-            data = jwt.decode(token.split()[1], app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user = users_collection.find_one({'username': data['username']})
-        except:
-            return jsonify({'message': 'Token is invalid!'}), 401
-            
-        return f(current_user, *args, **kwargs)
-    return decorated
-
-# Error handlers
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Not found'}), 404
-
-@app.errorhandler(400)
-def bad_request(error):
-    return jsonify({'error': 'Bad request'}), 400
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Internal server error'}), 500
-
-# Authentication routes
-@app.route('/api/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    
-    # Validate input
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'message': 'Username and password required'}), 400
-        
-    # Check if user exists
-    if users_collection.find_one({'username': data['username']}):
-        return jsonify({'message': 'User already exists'}), 400
-        
-    # Create new user
-    hashed_password = generate_password_hash(data['password'], method='sha256')
-    users_collection.insert_one({
-        'username': data['username'],
-        'password': hashed_password,
-        'created_at': datetime.utcnow()
-    })
-    
-    return jsonify({'message': 'User registered successfully'}), 201
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    
-    # Validate input
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'message': 'Username and password required'}), 400
-        
-    # Find user
-    user = users_collection.find_one({'username': data['username']})
-    if not user or not check_password_hash(user['password'], data['password']):
-        return jsonify({'message': 'Invalid credentials'}), 401
-        
-    # Generate token
-    token = jwt.encode({
-        'username': user['username'],
-        'exp': datetime.utcnow() + timedelta(hours=24)
-    }, app.config['SECRET_KEY'])
-    
-    return jsonify({'token': token}), 200
-
-# Enhanced character search with pagination and caching
+# Search waifus by name, anime, rarity, or ID
 @app.route('/waifus/search', methods=['GET'])
-# @limiter.limit("60 per minute")  # Rate limiting
 def search_waifus():
+    name_query = request.args.get('name', '')
+    anime_query = request.args.get('anime', '')
+    rarity_query = request.args.get('rarity', '')
+    id_query = request.args.get('id', '')
+
+    query_filters = {}
+    if name_query:
+        query_filters['name'] = {'$regex': name_query, '$options': 'i'}
+    if anime_query:
+        query_filters['anime'] = {'$regex': anime_query, '$options': 'i'}
+    if rarity_query:
+        query_filters['rarity'] = {'$regex': rarity_query, '$options': 'i'}
+    if id_query:
+        query_filters['id'] = {'$regex': id_query, '$options': 'i'}
+
+    waifus = list(collection.find(query_filters))
+    results = [{
+        'character_name': waifu['name'],
+        'anime_name': waifu['anime'],
+        'image_url': waifu['img_url'],
+        'rarity': waifu.get('rarity', 'Unknown'),
+        'id': waifu.get('id', 'N/A')
+    } for waifu in waifus]
+    return jsonify({'results': results})
+
+@app.route('/waifus', methods=['GET'])
+def get_characters():
     try:
-        # Get query parameters
-        name = request.args.get('name', '').strip()
-        anime = request.args.get('anime', '').strip()
-        rarity = request.args.get('rarity', '').strip()
-        character_id = request.args.get('id', '').strip()
-        
-        # Pagination
         page = int(request.args.get('page', 1))
-        size = int(request.args.get('size', 12))
+        size = int(request.args.get('size', 15))
         skip = (page - 1) * size
-        
-        # Build query
-        query = {}
-        if name:
-            query['name'] = {'$regex': name, '$options': 'i'}
-        if anime:
-            query['anime'] = {'$regex': anime, '$options': 'i'}
-        if rarity:
-            query['rarity'] = {'$regex': rarity, '$options': 'i'}
-        if character_id:
-            query['id'] = {'$regex': character_id, '$options': 'i'}
-        
-        # Get total count for pagination
-        total = characters_collection.count_documents(query)
-        
-        # Fetch paginated results
-        characters = list(characters_collection.find(query)
-                         .sort('id', -1)
-                         .skip(skip)
-                         .limit(size))
-        
-        # Prepare response
+        limit = size
+
+        total_count = collection.count_documents({})
+        has_next_page = (total_count > page * size)
+
+        waifus = list(collection.find().skip(skip).limit(limit))
         results = [{
-            'character_name': char['name'],
-            'anime_name': char['anime'],
-            'image_url': char['img_url'],
-            'rarity': char.get('rarity', 'Unknown'),
-            'id': str(char.get('id', ''))
-        } for char in characters]
-        
+            'character_name': waifu['name'],
+            'anime_name': waifu['anime'],
+            'image_url': f"/proxy-image/{waifu['img_url'].replace('https://telegra.ph/', '')}",
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
+        } for waifu in waifus]
+
+        return jsonify({'results': results, 'hasNextPage': has_next_page})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get specific waifu by character name
+@app.route('/waifus/<string:character_name>', methods=['GET'])
+def get_waifu(character_name):
+    waifu = collection.find_one({'name': {'$regex': character_name, '$options': 'i'}})
+    if waifu:
         return jsonify({
-            'results': results,
-            'total': total,
-            'page': page,
-            'size': size,
-            'hasNextPage': (skip + size) < total
+            'character_name': waifu['name'],
+            'anime_name': waifu['anime'],
+            'image_url': waifu['img_url'],
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
         })
-        
-    except Exception as e:
-        app.logger.error(f"Search error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+    else:
+        return jsonify({'error': 'Waifu not found'}), 404
 
-# Collection management
-@app.route('/api/collection', methods=['GET'])
-@token_required
-def get_user_collection(current_user):
-    try:
-        collection = collections_collection.find_one({'user_id': current_user['_id']})
-        if not collection:
-            return jsonify({'characters': []})
-            
-        # Get character details
-        character_ids = [ObjectId(char_id) for char_id in collection['characters']]
-        characters = list(characters_collection.find({'_id': {'$in': character_ids}}))
-        
-        results = [{
-            'character_name': char['name'],
-            'anime_name': char['anime'],
-            'image_url': char['img_url'],
-            'rarity': char.get('rarity', 'Unknown'),
-            'id': str(char.get('id', ''))
-        } for char in characters]
-        
-        return jsonify({'characters': results})
-        
-    except Exception as e:
-        app.logger.error(f"Collection error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+# Search user by ID and get their characters array
+@app.route('/user/search', methods=['GET'])
+def search_user_collection():
+    user_id = request.args.get('user_id', '')
+    if user_id:
+        user = user_collection.find_one({'user_id': user_id})
+        if user:
+            characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+            return jsonify({
+                'user_id': user_id,
+                'characters': characters
+            })
+        else:
+            return jsonify({'error': 'User not found'}), 404
+    else:
+        return jsonify({'error': 'User ID is required'}), 400
 
-@app.route('/api/collection', methods=['POST'])
-@token_required
-def add_to_collection(current_user):
-    try:
-        data = request.get_json()
-        character_id = data.get('character_id')
-        
-        if not character_id:
-            return jsonify({'message': 'Character ID required'}), 400
-            
-        # Find or create user collection
-        collections_collection.update_one(
-            {'user_id': current_user['_id']},
-            {'$addToSet': {'characters': character_id}},
-            upsert=True
-        )
-        
-        return jsonify({'message': 'Character added to collection'}), 200
-        
-    except Exception as e:
-        app.logger.error(f"Add to collection error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# Health check endpoint
-@app.route('/health')
-def health_check():
-    return jsonify({'status': 'healthy'}), 200
+# Serve user's collection via URL
+@app.route('/user/<string:user_id>/collection', methods=['GET'])
+def get_user_collection(user_id):
+    user = user_collection.find_one({'user_id': user_id})
+    if user:
+        characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+        return jsonify({
+            'user_id': user_id,
+            'characters': characters
+        })
+    else:
+        return jsonify({'error': 'User not found'}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0')
