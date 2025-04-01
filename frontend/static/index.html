@@ -3,95 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Gallery | Blade Network</title>
+    <title>AnimeVerse - Character Database</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="color-theme-selector">
-        <div class="theme-option" data-theme="purple"></div>
-        <div class="theme-option" data-theme="blue"></div>
-        <div class="theme-option" data-theme="red"></div>
-        <div class="theme-option" data-theme="green"></div>
+    <div class="background-layer"></div>
+    <div class="page-wrapper">
+        <header class="main-header">
+            <h1 class="site-title">AnimeVerse</h1>
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#search" class="nav-link"><i class="fas fa-search"></i> Search</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <section id="search" class="search-section">
+                <div class="section-title-box">
+                    <h2 class="section-title">Discover Characters</h2>
+                </div>
+                
+                <form id="multi-search-form" class="search-form">
+                    <div class="search-row">
+                        <div class="search-group">
+                            <i class="fas fa-user search-icon"></i>
+                            <input type="text" id="name-query" placeholder="Character name" class="search-input">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-film search-icon"></i>
+                            <input type="text" id="anime-query" placeholder="Anime title" class="search-input">
+                        </div>
+                    </div>
+                    <div class="search-row">
+                        <div class="search-group">
+                            <i class="fas fa-star search-icon"></i>
+                            <input type="text" id="rarity-query" placeholder="Rarity" class="search-input">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-id-card search-icon"></i>
+                            <input type="text" id="id-query" placeholder="ID" class="search-input">
+                        </div>
+                    </div>
+                    <button type="submit" class="search-button">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+                
+                <div id="applied-filters" class="applied-filters"></div>
+                
+                <div class="results-container">
+                    <div id="search-results" class="character-grid"></div>
+                    <div class="loading-spinner" id="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="no-results" id="no-results">
+                        <i class="fas fa-search"></i>
+                        <p>Search for characters to display results</p>
+                    </div>
+                </div>
+                
+                <div class="pagination">
+                    <button id="prev-page" class="pagination-button" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span class="page-indicator">Page <span id="current-page">1</span></span>
+                    <button id="next-page" class="pagination-button">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-container">
+                <div class="footer-copyright">
+                    &copy; 2024 AnimeVerse. All rights reserved.
+                </div>
+            </div>
+        </footer>
     </div>
-
-    <header class="main-header">
-        <h1 class="site-title">Anime Gallery</h1>
-        <div class="search-container">
-            <form id="multi-search-form" class="search-form">
-                <div class="search-group">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="name-query" placeholder="Search characters..." class="search-input">
-                </div>
-                <button type="submit" class="search-button">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-        </div>
-        <nav class="main-nav">
-            <a href="#" class="nav-link"><i class="fas fa-home"></i></a>
-            <a href="#" class="nav-link"><i class="fas fa-heart"></i></a>
-            <a href="#" class="nav-link"><i class="fas fa-user"></i></a>
-        </nav>
-    </header>
-
-    <main class="main-content">
-        <div id="applied-filters" class="applied-filters"></div>
-        
-        <div class="results-container">
-            <div id="search-results" class="masonry-grid"></div>
-            <div class="loading-spinner" id="loading-spinner">
-                <div class="spinner"></div>
-            </div>
-            <div class="no-results" id="no-results">
-                <i class="fas fa-search"></i>
-                <p>Search for characters to display results</p>
-            </div>
-        </div>
-        
-        <div class="pagination">
-            <button id="prev-page" class="pagination-button" disabled>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <span class="page-indicator">Page <span id="current-page">1</span></span>
-            <button id="next-page" class="pagination-button">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-    </main>
-
-    <div id="character-modal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <button class="close-modal">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="modal-main-image">
-                <img id="modal-character-image" src="" alt="Character Image">
-            </div>
-            <div class="modal-info">
-                <h3 id="modal-character-name"></h3>
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-film"></i> Anime:</span>
-                    <span id="modal-anime-name" class="info-value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-star"></i> Rarity:</span>
-                    <span id="modal-rarity" class="info-value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label"><i class="fas fa-id-card"></i> ID:</span>
-                    <span id="modal-character-id" class="info-value"></span>
-                </div>
-            </div>
-            <div class="similar-characters">
-                <h4>Similar Characters</h4>
-                <div id="similar-results" class="similar-grid"></div>
-            </div>
-        </div>
-    </div>
-
+    
     <script src="scripts.js"></script>
 </body>
 </html>
