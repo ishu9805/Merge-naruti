@@ -90,7 +90,7 @@ async def get_block_reason(user_id):
 
 
 
-@app.on_message(filters.command("block") & sudo_filter)
+@app.on_message(filters.command("nban") & sudo_filter)
 async def block_command(client, message: Message):
     if message.reply_to_message:
         target_id = message.reply_to_message.from_user.id
@@ -126,7 +126,7 @@ async def block_command(client, message: Message):
         parse_mode="Markdown"
     )
 
-@app.on_message(filters.command("unblock") & sudo_filter)
+@app.on_message(filters.command("nunban") & sudo_filter)
 async def unblock_command(client, message: Message):
     if message.reply_to_message:
         target_id = message.reply_to_message.from_user.id
