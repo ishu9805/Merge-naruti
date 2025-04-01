@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPageSpan = document.getElementById('current-page');
     const appliedFiltersDiv = document.getElementById('applied-filters');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const noResultsDiv = document.getElementById('no-results');
     const modal = document.getElementById('character-modal');
     const modalImage = document.getElementById('modal-character-image');
     const modalName = document.getElementById('modal-character-name');
@@ -14,12 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalRarity = document.getElementById('modal-rarity');
     const modalId = document.getElementById('modal-character-id');
     const closeModal = document.querySelector('.close-modal');
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mainNav = document.querySelector('.main-nav');
     
     // State variables
     let currentPage = 1;
     let currentFilters = {};
+    let backgroundScrollPosition = 0;
     const backgroundImages = [
         'https://files.catbox.moe/9jbemn.jpg',
         'https://files.catbox.moe/l5g4xp.jpg',
@@ -35,8 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set random background
         setRandomBackground();
         
-        // Load initial characters
-        loadCharacters(currentPage);
+        // Hide results initially
+        searchResultsDiv.style.display = 'none';
+        noResultsDiv.style.display = 'flex';
         
         // Set up event listeners
         setupEventListeners();
@@ -44,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function setRandomBackground() {
         const randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
-        document.body.style.backgroundImage = `url('${randomImage}')`;
+        document.querySelector('.background-layer').style.backgroundImage = `url('${randomImage}')`;
     }
     
     function setupEventListeners() {
@@ -71,27 +74,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Filter removal
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-filter')) {
-                const filterType = e.target.dataset.filterType;
+        appliedFiltersDiv.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-filter') || e.target.closest('.remove-filter')) {
+                const filterType = e.target.closest('button').dataset.filterType;
                 clearFilter(filterType);
             }
         });
         
         // Modal interactions
-        closeModal.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
+        closeModal.addEventListener('click', closeCharacterModal);
         
         // Mobile menu toggle
-        mobileMenuToggle.addEventListener('click', () => {
+        mobileMenuBtn.addEventListener('click', () => {
             mainNav.classList.toggle('active');
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeCharacterModal();
+            }
         });
     }
     
@@ -133,9 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function loadCharacters(page) {
-        // Show loading spinner
+        // Show loading state
         loadingSpinner.style.display = 'flex';
-        searchResultsDiv.innerHTML = '';
+        noResultsDiv.style.display = 'none';
+        searchResultsDiv.style.display = 'none';
         
         // Update current page display
         currentPageSpan.textContent = page;
@@ -157,53 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Sort by ID descending
                 data.results.sort((a, b) => b.id - a.id);
                 
-                // Create character cards
-                searchResultsDiv.innerHTML = data.results.map(character => `
-                    <div class="character-card" data-id="${character.id}">
-                        <div class="character-rarity">${character.rarity}</div>
-                        <img src="${character.image_url}" 
-                             alt="${character.character_name}" 
-                             class="character-image" 
-                             loading="lazy"
-                             data-character='${JSON.stringify(character).replace(/'/g, "\\'")}'>
-                        <div class="character-info">
-                            <h3 class="character-name">${character.character_name}</h3>
-                            <p class="character-detail">
-                                <i class="fas fa-film"></i> ${character.anime_name}
-                            </p>
-                            <p class="character-detail">
-                                <i class="fas fa-id-card"></i> ${character.id}
-                            </p>
-                        </div>
-                    </div>
-                `).join('');
-                
-                // Set up click handlers for character cards
-                document.querySelectorAll('.character-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const character = JSON.parse(card.querySelector('img').dataset.character);
-                        openCharacterModal(character);
-                    });
-                });
+                // Create character cards with animation
+                createCharacterCards(data.results);
                 
                 // Update pagination buttons
                 updatePaginationButtons(data.hasNextPage);
+                
+                // Show results
+                searchResultsDiv.style.display = 'grid';
             } else {
-                searchResultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search"></i>
-                        <p>No characters found matching your criteria</p>
-                    </div>
+                // No results found
+                noResultsDiv.style.display = 'flex';
+                noResultsDiv.innerHTML = `
+                    <i class="fas fa-search"></i>
+                    <p>No characters found matching your criteria</p>
                 `;
                 updatePaginationButtons(false);
             }
         } catch (error) {
             console.error('Error loading characters:', error);
-            searchResultsDiv.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Error loading characters. Please try again.</p>
-                </div>
+            noResultsDiv.style.display = 'flex';
+            noResultsDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Error loading characters. Please try again.</p>
             `;
             updatePaginationButtons(false);
         } finally {
@@ -212,12 +191,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    function createCharacterCards(characters) {
+        // Clear previous results
+        searchResultsDiv.innerHTML = '';
+        
+        // Create and append new cards with staggered animation
+        characters.forEach((character, index) => {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+            card.dataset.id = character.id;
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.animationDelay = `${index * 0.05}s`;
+            
+            card.innerHTML = `
+                <div class="character-rarity">${character.rarity}</div>
+                <img src="${character.image_url}" 
+                     alt="${character.character_name}" 
+                     class="character-image" 
+                     loading="lazy"
+                     data-character='${JSON.stringify(character).replace(/'/g, "\\'")}'>
+                <div class="character-info">
+                    <h3 class="character-name">${character.character_name}</h3>
+                    <p class="character-detail">
+                        <i class="fas fa-film"></i> ${character.anime_name}
+                    </p>
+                    <p class="character-detail">
+                        <i class="fas fa-id-card"></i> ${character.id}
+                    </p>
+                </div>
+            `;
+            
+            // Add click handler for modal
+            card.addEventListener('click', () => {
+                openCharacterModal(character);
+            });
+            
+            searchResultsDiv.appendChild(card);
+            
+            // Animate card entrance
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+                card.style.transition = 'opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+            }, 10);
+        });
+    }
+    
     function updatePaginationButtons(hasNextPage) {
         prevPageButton.disabled = currentPage === 1;
         nextPageButton.disabled = !hasNextPage;
     }
     
     function openCharacterModal(character) {
+        // Store current scroll position
+        backgroundScrollPosition = window.scrollY;
+        
+        // Freeze background
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${backgroundScrollPosition}px`;
+        document.body.style.width = '100%';
+        
+        // Set modal content
         modalImage.src = character.image_url;
         modalImage.alt = character.character_name;
         modalName.textContent = character.character_name;
@@ -225,15 +261,26 @@ document.addEventListener('DOMContentLoaded', () => {
         modalRarity.textContent = character.rarity;
         modalId.textContent = character.id;
         
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        // Show modal with animation
+        modal.style.display = 'flex';
+    }
+    
+    function closeCharacterModal() {
+        // Hide modal
+        modal.style.display = 'none';
+        
+        // Unfreeze background and restore scroll position
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, backgroundScrollPosition);
     }
     
     // Close modal when pressing Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'block') {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeCharacterModal();
         }
     });
 });
