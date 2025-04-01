@@ -30,13 +30,6 @@
         </header>
 
         <main class="main-content">
-            <section class="hero-section">
-                <div class="hero-content">
-                    <h2 class="hero-title">Anime Character Database</h2>
-                    <p class="hero-subtitle">Search through our extensive collection</p>
-                </div>
-            </section>
-
             <section id="search" class="search-section">
                 <div class="section-title-box">
                     <h2 class="section-title">Character Search</h2>
@@ -102,32 +95,33 @@
         </footer>
     </div>
     
-    <!-- Character Modal -->
-    <div id="character-modal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-container">
-            <div class="modal-content">
-                <button class="close-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="modal-image-wrapper">
-                    <img id="modal-character-image" src="" alt="Character Image" class="modal-image">
-                </div>
-                <div class="modal-info">
-                    <h3 id="modal-character-name"></h3>
+    <!-- Character Detail View -->
+    <div id="character-view" class="character-view">
+        <div class="view-container">
+            <button class="close-view">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="main-character">
+                <img id="view-main-image" src="" alt="Character Image" class="main-image">
+                <div class="main-info">
+                    <h3 id="view-character-name"></h3>
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-film"></i> Anime:</span>
-                        <span id="modal-anime-name" class="info-value"></span>
+                        <span id="view-anime-name" class="info-value"></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-star"></i> Rarity:</span>
-                        <span id="modal-rarity" class="info-value"></span>
+                        <span id="view-rarity" class="info-value"></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-id-card"></i> ID:</span>
-                        <span id="modal-character-id" class="info-value"></span>
+                        <span id="view-character-id" class="info-value"></span>
                     </div>
                 </div>
+            </div>
+            <div class="similar-characters">
+                <h4>Similar Characters</h4>
+                <div id="similar-results" class="similar-grid"></div>
             </div>
         </div>
     </div>
