@@ -3,59 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blade Network - Anime Character Database</title>
+    <title>Blade Network - Anime Database</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-overlay"></div>
-    <div class="page-container">
+    <div class="background-layer"></div>
+    <div class="page-wrapper">
         <header class="main-header">
-            <div class="header-content">
-                <div class="logo-container">
-                    <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network Logo" class="logo">
-                    <h1>Blade Network</h1>
+            <div class="header-container">
+                <div class="logo-wrapper">
+                    <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network" class="logo-img">
+                    <h1 class="logo-text">Blade Network</h1>
                 </div>
                 <nav class="main-nav">
-                    <ul>
-                        <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
-                        <li><a href="#search" class="nav-link"><i class="fas fa-search"></i> Search</a></li>
-                        <li><a href="#" class="nav-link"><i class="fas fa-user"></i> My Collection</a></li>
+                    <ul class="nav-list">
+                        <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> <span class="nav-text">Home</span></a></li>
+                        <li><a href="#search" class="nav-link"><i class="fas fa-search"></i> <span class="nav-text">Search</span></a></li>
                     </ul>
                 </nav>
-                <div class="mobile-menu-toggle">
+                <button class="mobile-menu-btn">
                     <i class="fas fa-bars"></i>
-                </div>
+                </button>
             </div>
         </header>
 
         <main class="main-content">
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h2 class="hero-title">Anime Character Database</h2>
+                    <p class="hero-subtitle">Search through our extensive collection</p>
+                </div>
+            </section>
+
             <section id="search" class="search-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-search"></i> Character Database</h2>
-                    <p>Search through our extensive collection of anime characters</p>
+                <div class="section-title-box">
+                    <h2 class="section-title">Character Search</h2>
                 </div>
                 
                 <form id="multi-search-form" class="search-form">
-                    <div class="search-input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="name-query" placeholder="Character name...">
+                    <div class="search-row">
+                        <div class="search-group">
+                            <i class="fas fa-user search-icon"></i>
+                            <input type="text" id="name-query" placeholder="Character name" class="search-input">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-film search-icon"></i>
+                            <input type="text" id="anime-query" placeholder="Anime title" class="search-input">
+                        </div>
                     </div>
-                    <div class="search-input-group">
-                        <i class="fas fa-film"></i>
-                        <input type="text" id="anime-query" placeholder="Anime title...">
-                    </div>
-                    <div class="search-input-group">
-                        <i class="fas fa-star"></i>
-                        <input type="text" id="rarity-query" placeholder="Rarity...">
-                    </div>
-                    <div class="search-input-group">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" id="id-query" placeholder="ID...">
+                    <div class="search-row">
+                        <div class="search-group">
+                            <i class="fas fa-star search-icon"></i>
+                            <input type="text" id="rarity-query" placeholder="Rarity" class="search-input">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-id-card search-icon"></i>
+                            <input type="text" id="id-query" placeholder="ID" class="search-input">
+                        </div>
                     </div>
                     <button type="submit" class="search-button">
-                        <i class="fas fa-search"></i> Search
+                        <i class="fas fa-search"></i> Search Characters
                     </button>
                 </form>
                 
@@ -65,6 +74,10 @@
                     <div id="search-results" class="character-grid"></div>
                     <div class="loading-spinner" id="loading-spinner">
                         <div class="spinner"></div>
+                    </div>
+                    <div class="no-results" id="no-results">
+                        <i class="fas fa-search"></i>
+                        <p>Search for characters to display results</p>
                     </div>
                 </div>
                 
@@ -81,16 +94,7 @@
         </main>
 
         <footer class="main-footer">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network Logo">
-                    <span>Blade Network</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#"><i class="fab fa-discord"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-github"></i></a>
-                </div>
+            <div class="footer-container">
                 <div class="footer-copyright">
                     &copy; 2024 Blade Network. All rights reserved.
                 </div>
@@ -98,17 +102,16 @@
         </footer>
     </div>
     
-    <!-- Character Detail Modal -->
+    <!-- Character Modal -->
     <div id="character-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <div class="modal-body">
-                <div class="modal-image-container">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-content">
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-image-wrapper">
                     <img id="modal-character-image" src="" alt="Character Image" class="modal-image">
-                    <div class="image-actions">
-                        <button class="action-button favorite"><i class="fas fa-heart"></i></button>
-                        <button class="action-button share"><i class="fas fa-share-alt"></i></button>
-                    </div>
                 </div>
                 <div class="modal-info">
                     <h3 id="modal-character-name"></h3>
@@ -123,20 +126,6 @@
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-id-card"></i> ID:</span>
                         <span id="modal-character-id" class="info-value"></span>
-                    </div>
-                    <div class="character-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">95%</div>
-                            <div class="stat-label">Popularity</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">S</div>
-                            <div class="stat-label">Tier</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">8.9</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
                     </div>
                 </div>
             </div>
