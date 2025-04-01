@@ -8,7 +8,7 @@ from flask import Flask, jsonify, send_from_directory, request, Response
 # Other routes...
 
 
-app = Flask(__name__, static_folder='staticing')
+app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
 
 # MongoDB connection URL
@@ -31,7 +31,7 @@ def proxy_image(url):
 # Serve homepage
 @app.route('/')
 def home():
-    return send_from_directory('staticing', 'index.html')
+    return send_from_directory('frontend/static', 'index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
