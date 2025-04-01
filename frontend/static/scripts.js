@@ -16,11 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFilters = {};
     let backgroundScrollPosition = 0;
     const backgroundImages = [
-        'https://files.catbox.moe/9jbemn.jpg',
-        'https://files.catbox.moe/l5g4xp.jpg',
-        'https://files.catbox.moe/7tdou5.jpg',
-        'https://files.catbox.moe/4sgb37.jpg',
-        'https://files.catbox.moe/qggqe3.jpg'
+        'https://files.catbox.moe/yl8v0u.jpg',
+        'https://files.catbox.moe/oonmv6.jpg',
+        'https://files.catbox.moe/g8jkcl.jpg',
+        'https://files.catbox.moe/8sig77.jpg',
+        'https://files.catbox.moe/8sig77.jpg'
     ];
     
     // Initialize the page
