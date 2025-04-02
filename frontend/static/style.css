@@ -194,6 +194,70 @@ body {
     color: var(--text-light);
 }
 
+
+/* Add to your existing styles.css */
+
+/* Character Grid Images */
+.character-card {
+    aspect-ratio: 3/4; /* Fixed aspect ratio for cards */
+    display: flex;
+    flex-direction: column;
+}
+
+.character-image-container {
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    position: relative;
+    overflow: hidden;
+}
+
+.character-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 0.3s ease;
+}
+
+.character-card:hover .character-image {
+    transform: scale(1.05);
+}
+
+.character-info {
+    padding: 12px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Mobile (2 columns) */
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+/* Tablet (3 columns) */
+@media (min-width: 768px) {
+    .character-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+}
+
+/* Desktop (4 columns) */
+@media (min-width: 1024px) {
+    .character-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+}
+
 /* Tablet */
 @media (min-width: 768px) {
     .page-wrapper {
