@@ -93,3 +93,20 @@
     <script src="scripts.js"></script>
 </body>
 </html>
+
+<!-- Update the character card template in your HTML -->
+<div class="character-card">
+    <div class="character-image-container">
+        <img src="${character.image_url}" 
+             alt="${character.character_name}" 
+             class="character-image" 
+             loading="lazy">
+    </div>
+    <div class="character-info">
+        <h3 class="character-name">${character.character_name}</h3>
+        <div>
+            <p class="character-detail"><i class="fas fa-film"></i> ${character.anime_name}</p>
+            <p class="character-detail"><i class="fas fa-star"></i> ${character.rarity}</p>
+        </div>
+    </div>
+</div>
