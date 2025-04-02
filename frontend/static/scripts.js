@@ -1,104 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const searchForm = document.getElementById('multi-search-form');
-    const searchResultsDiv = document.getElementById('search-results');
-    const prevPageButton = document.getElementById('prev-page');
-    const nextPageButton = document.getElementById('next-page');
+    const searchResults = document.getElementById('search-results');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
     const currentPageSpan = document.getElementById('current-page');
-    const appliedFiltersDiv = document.getElementById('applied-filters');
     const loadingSpinner = document.getElementById('loading-spinner');
     const noResultsDiv = document.getElementById('no-results');
-    const modal = document.getElementById('character-modal');
-    const modalImage = document.getElementById('modal-character-image');
-    const modalName = document.getElementById('modal-character-name');
-    const modalAnime = document.getElementById('modal-anime-name');
-    const modalRarity = document.getElementById('modal-rarity');
-    const modalId = document.getElementById('modal-character-id');
-    const closeModal = document.querySelector('.close-modal');
-    const similarResults = document.getElementById('similar-results');
-    const themeOptions = document.querySelectorAll('.theme-option');
-    
-    // State variables
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
+
+    // State
     let currentPage = 1;
     let currentFilters = {};
-    let scrollPosition = 0;
-    
-    // Initialize the page
-    initPage();
-    
-    function initPage() {
-        // Hide results initially
-        searchResultsDiv.style.display = 'none';
-        noResultsDiv.style.display = 'flex';
-        
-        // Set up event listeners
-        setupEventListeners();
+
+    // Initialize
+    noResultsDiv.style.display = 'flex';
+    searchResults.style.display = 'none';
+
+    // Event Listeners
+    searchForm.addEventListener('submit', handleSearch);
+    prevPageBtn.addEventListener('click', goToPrevPage);
+    nextPageBtn.addEventListener('click', goToNextPage);
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+    // Functions
+    async function handleSearch(e) {
+        e.preventDefault();
+        currentPage = 1;
+        updateFilters();
+        await loadCharacters();
     }
-    
-    function setupEventListeners() {
-        // Form submission
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            currentPage = 1;
-            updateCurrentFilters();
-            updateFiltersDisplay();
-            loadCharacters(currentPage);
-        });
-        
-        // Pagination buttons
-        prevPageButton.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                loadCharacters(currentPage);
-            }
-        });
-        
-        nextPageButton.addEventListener('click', () => {
-            currentPage++;
-            loadCharacters(currentPage);
-        });
-        
-        // Filter removal
-        appliedFiltersDiv.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-filter') || e.target.closest('.remove-filter')) {
-                const filterType = e.target.closest('button').dataset.filterType;
-                clearFilter(filterType);
-            }
-        });
-        
-        // Modal interactions
-        closeModal.addEventListener('click', closeCharacterModal);
-        
-        // Theme selection
-        themeOptions.forEach(option => {
-            option.addEventListener('click', changeTheme);
-        });
-    }
-    
-    function changeTheme(e) {
-        const theme = e.target.dataset.theme;
-        
-        switch(theme) {
-            case 'purple':
-                document.documentElement.style.setProperty('--primary-color', '#6a11cb');
-                document.documentElement.style.setProperty('--secondary-color', '#2575fc');
-                break;
-            case 'blue':
-                document.documentElement.style.setProperty('--primary-color', '#00c6fb');
-                document.documentElement.style.setProperty('--secondary-color', '#005bea');
-                break;
-            case 'red':
-                document.documentElement.style.setProperty('--primary-color', '#f85032');
-                document.documentElement.style.setProperty('--secondary-color', '#e73827');
-                break;
-            case 'green':
-                document.documentElement.style.setProperty('--primary-color', '#11998e');
-                document.documentElement.style.setProperty('--secondary-color', '#38ef7d');
-                break;
-        }
-    }
-    
-    function updateCurrentFilters() {
+
+    function updateFilters() {
         currentFilters = {
             name: document.getElementById('name-query').value.trim(),
             anime: document.getElementById('anime-query').value.trim(),
@@ -106,227 +40,74 @@ document.addEventListener('DOMContentLoaded', () => {
             id: document.getElementById('id-query').value.trim()
         };
     }
-    
-    function updateFiltersDisplay() {
-        const activeFilters = Object.entries(currentFilters)
-            .filter(([_, value]) => value !== '')
-            .map(([key, value]) => ({ type: key, value }));
-        
-        if (activeFilters.length === 0) {
-            appliedFiltersDiv.innerHTML = '';
-            return;
-        }
-        
-        appliedFiltersDiv.innerHTML = activeFilters.map(filter => `
-            <div class="filter-tag">
-                ${filter.type}: ${filter.value}
-                <button class="remove-filter" data-filter-type="${filter.type}">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `).join('');
-    }
-    
-    function clearFilter(filterType) {
-        document.getElementById(`${filterType}-query`).value = '';
-        currentFilters[filterType] = '';
-        updateFiltersDisplay();
-        currentPage = 1;
-        loadCharacters(currentPage);
-    }
-    
-    async function loadCharacters(page) {
-        // Show loading state
+
+    async function loadCharacters() {
         loadingSpinner.style.display = 'flex';
         noResultsDiv.style.display = 'none';
-        searchResultsDiv.style.display = 'none';
-        
-        // Update current page display
-        currentPageSpan.textContent = page;
-        
+        searchResults.style.display = 'none';
+
         try {
-            // Build query parameters
             const params = new URLSearchParams();
             if (currentFilters.name) params.append('name', currentFilters.name);
             if (currentFilters.anime) params.append('anime', currentFilters.anime);
             if (currentFilters.rarity) params.append('rarity', currentFilters.rarity);
             if (currentFilters.id) params.append('id', currentFilters.id);
-            
-            // Fetch data from server
+
             const response = await fetch(`/waifus/search?${params.toString()}`);
             const data = await response.json();
-            
-            // Process results
-            if (data.results && data.results.length > 0) {
-                // Sort by ID descending
-                data.results.sort((a, b) => b.id - a.id);
-                
-                // Create character cards
-                createCharacterCards(data.results);
-                
-                // Update pagination buttons
-                updatePaginationButtons(data.hasNextPage);
-                
-                // Show results
-                searchResultsDiv.style.display = 'grid';
+
+            if (data.results?.length) {
+                displayResults(data.results);
             } else {
-                // No results found
-                noResultsDiv.style.display = 'flex';
-                noResultsDiv.innerHTML = `
-                    <i class="fas fa-search"></i>
-                    <p>No characters found matching your criteria</p>
-                `;
-                updatePaginationButtons(false);
+                showNoResults();
             }
         } catch (error) {
-            console.error('Error loading characters:', error);
-            noResultsDiv.style.display = 'flex';
-            noResultsDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i>
-                <p>Error loading characters. Please try again.</p>
-            `;
-            updatePaginationButtons(false);
+            console.error('Error:', error);
+            showNoResults('Error loading characters');
         } finally {
-            // Hide loading spinner
             loadingSpinner.style.display = 'none';
         }
     }
-    
-    function createCharacterCards(characters) {
-        // Clear previous results
-        searchResultsDiv.innerHTML = '';
-        
-        // Create and append new cards with staggered animation
-        characters.forEach((character, index) => {
+
+    function displayResults(characters) {
+        searchResults.innerHTML = '';
+        characters.sort((a, b) => b.id - a.id).forEach(character => {
             const card = document.createElement('div');
             card.className = 'character-card';
-            card.dataset.id = character.id;
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.animationDelay = `${index * 0.05}s`;
-            
             card.innerHTML = `
-                <div class="character-image-container">
-                    <img src="${character.image_url}" 
-                         alt="${character.character_name}" 
-                         class="character-image" 
-                         loading="lazy"
-                         data-character='${JSON.stringify(character).replace(/'/g, "\\'")}'>
-                    <div class="character-rarity">${character.rarity}</div>
-                </div>
+                <img src="${character.image_url}" class="character-image" loading="lazy">
                 <div class="character-info">
                     <h3 class="character-name">${character.character_name}</h3>
-                    <div class="character-details">
-                        <span><i class="fas fa-film"></i> ${character.anime_name}</span>
-                        <span class="character-rarity"><i class="fas fa-star"></i> ${character.rarity}</span>
-                    </div>
+                    <p class="character-detail">${character.anime_name}</p>
+                    <p class="character-detail">${character.rarity}</p>
                 </div>
             `;
-            
-            // Add click handler for modal
-            card.addEventListener('click', () => {
-                openCharacterModal(character);
-            });
-            
-            searchResultsDiv.appendChild(card);
-            
-            // Animate card entrance
-            setTimeout(() => {
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-                card.style.transition = 'opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
-            }, 10);
+            searchResults.appendChild(card);
         });
+        searchResults.style.display = 'grid';
     }
-    
-    function updatePaginationButtons(hasNextPage) {
-        prevPageButton.disabled = currentPage === 1;
-        nextPageButton.disabled = !hasNextPage;
+
+    function showNoResults(message = 'No characters found') {
+        noResultsDiv.innerHTML = `
+            <i class="fas fa-search"></i>
+            <p>${message}</p>
+        `;
+        noResultsDiv.style.display = 'flex';
     }
-    
-    async function openCharacterModal(character) {
-        // Store scroll position
-        scrollPosition = window.scrollY;
-        
-        // Freeze background
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollPosition}px`;
-        document.body.style.width = '100%';
-        
-        // Set modal content
-        modalImage.src = character.image_url;
-        modalImage.alt = character.character_name;
-        modalName.textContent = character.character_name;
-        modalAnime.textContent = character.anime_name;
-        modalRarity.textContent = character.rarity;
-        modalId.textContent = character.id;
-        
-        // Load similar characters
-        try {
-            const response = await fetch(`/waifus/search?anime=${encodeURIComponent(character.anime_name)}`);
-            const data = await response.json();
-            
-            similarResults.innerHTML = '';
-            
-            if (data.results && data.results.length > 0) {
-                // Filter out current character and limit to 8 similar
-                const similarChars = data.results
-                    .filter(c => c.id !== character.id)
-                    .slice(0, 8);
-                
-                similarChars.forEach(char => {
-                    const similarCard = document.createElement('div');
-                    similarCard.className = 'similar-card';
-                    similarCard.innerHTML = `
-                        <img src="${char.image_url}" 
-                             alt="${char.character_name}" 
-                             class="similar-image"
-                             loading="lazy">
-                        <div class="similar-info">
-                            <h4 class="similar-name">${char.character_name}</h4>
-                        </div>
-                    `;
-                    
-                    similarCard.addEventListener('click', () => {
-                        closeCharacterModal();
-                        setTimeout(() => openCharacterModal(char), 10);
-                    });
-                    
-                    similarResults.appendChild(similarCard);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading similar characters:', error);
+
+    function goToPrevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadCharacters();
         }
-        
-        // Show modal
-        modal.style.display = 'block';
     }
-    
-    function closeCharacterModal() {
-        // Hide modal
-        modal.style.display = 'none';
-        
-        // Unfreeze background
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        window.scrollTo(0, scrollPosition);
+
+    function goToNextPage() {
+        currentPage++;
+        loadCharacters();
     }
-    
-    // Close modal when clicking outside content
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeCharacterModal();
-        }
-    });
-    
-    // Close with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'block') {
-            closeCharacterModal();
-        }
-    });
+
+    function toggleMobileMenu() {
+        mainNav.classList.toggle('active');
+    }
 });
