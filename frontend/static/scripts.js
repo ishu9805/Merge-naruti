@@ -69,24 +69,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+                                                 
+    // Update your displayResults function to use the new HTML structure
     function displayResults(characters) {
         searchResults.innerHTML = '';
         characters.sort((a, b) => b.id - a.id).forEach(character => {
             const card = document.createElement('div');
             card.className = 'character-card';
             card.innerHTML = `
-                <img src="${character.image_url}" class="character-image" loading="lazy">
+                <div class="character-image-container">
+                     <img src="${character.image_url}" 
+                         alt="${character.character_name}" 
+                         class="character-image" 
+                         loading="lazy">
+                </div>
                 <div class="character-info">
                     <h3 class="character-name">${character.character_name}</h3>
-                    <p class="character-detail">${character.anime_name}</p>
-                    <p class="character-detail">${character.rarity}</p>
+                    <div>
+                        v<p class="character-detail"><i class="fas fa-film"></i> ${character.anime_name}</p>
+                        <p class="character-detail"><i class="fas fa-star"></i> ${character.rarity}</p>
+                    </div>
                 </div>
             `;
             searchResults.appendChild(card);
-        });
-        searchResults.style.display = 'grid';
+            });
+    searchResults.style.display = 'grid';
     }
-
+    
     function showNoResults(message = 'No characters found') {
         noResultsDiv.innerHTML = `
             <i class="fas fa-search"></i>
