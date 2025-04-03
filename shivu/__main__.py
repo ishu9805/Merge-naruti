@@ -120,7 +120,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
-            summer_spawn_thresholds[chat_id]  = random.randint(1200, 3500)
+            summer_spawn_thresholds[chat_id]  = random.randint(1800, 4000)
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
 
@@ -156,7 +156,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
         if total_message_counts[chat_id] == summer_spawn_thresholds[chat_id]:
             await spawn_summer_character(update, context)
-            summer_spawn_thresholds[chat_id] = random.randint(1650, 3000)
+            summer_spawn_thresholds[chat_id] = random.randint(1650, 3500)
             total_message_counts[chat_id] = 0
 
 
