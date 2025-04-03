@@ -517,7 +517,7 @@ async def upload_video_character(client, message):
     try:
         # Send the video to the character channel
         await client.send_video(
-            chat_id=CHARA_CHANNEL_ID,
+            chat_id=-1002567797000,
             video=vid_url,
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
