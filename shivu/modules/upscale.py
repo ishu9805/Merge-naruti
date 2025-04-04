@@ -16,7 +16,7 @@ async def enhance_image(image_path: str) -> str:
     
     # Increase saturation (color)
     color_enhancer = ImageEnhance.Color(image)
-    image = color_enhancer.enhance(1.1)  # +10% saturation
+    image = color_enhancer.enhance(1.2)  # +10% saturation
     
     # Save the enhanced image
     enhanced_path = "enhanced_" + os.path.basename(image_path)
