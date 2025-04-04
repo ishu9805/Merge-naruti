@@ -4,7 +4,7 @@ import aiofiles
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from PIL import Image, ImageEnhance
-from shivu import shivuu as app
+from shivu import shivuups as app
 
 async def download_image(url: str, save_path: str) -> bool:
     """Download image from URL"""
