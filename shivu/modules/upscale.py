@@ -1,6 +1,7 @@
 import os
 import requests
 import aiofiles
+import httpx
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from PIL import Image, ImageEnhance
@@ -17,18 +18,37 @@ async def download_image(url: str, save_path: str) -> bool:
     except Exception:
         return False
 
-async def upscale_image(image_path):
-    """Upscale image using DeepAI API"""
+async def enhance_image(image_path: str) -> str:
+    """Enhance image brightness (+15%) and saturation (+15%)"""
     try:
-        response = requests.post(
-            "https://api.deepai.org/api/torch-srgan",
-            files={
-                'image': open(image, 'rb'),
-            },
-            headers={'api-key': 'bf9ee957-9fad-46f5-a403-3e96ca9004e4'}
-        )
-        response.raise_for_status()
+        with Image.open(image_path) as img:
+            # Enhance brightness
+            brightness_enhancer = ImageEnhance.Brightness(img)
+            img = brightness_enhancer.enhance(1.10)
+            
+            # Enhance color saturation
+            color_enhancer = ImageEnhance.Color(img)
+            img = color_enhancer.enhance(1.20)
+            
+            # Save optimized version
+            enhanced_path = f"enhanced_{os.path.basename(image_path)}"
+            img.save(enhanced_path, quality=100, optimize=True)
+            return enhanced_path
+    except Exception as e:
+        raise Exception(f"Enhancement failed: {str(e)}")
 
+async def upscale_image(image_path: str) -> str:
+    """Upscale image 2x using DeepAI API"""
+    try:
+        with open(image_path, 'rb') as f:
+            response = requests.post(
+                "https://api.deepai.org/api/torch-srgan",
+                files={'image': f},
+                headers={'api-key': 'bf9ee957-9fad-46f5-a403-3e96ca9004e4'},
+                timeout=30
+            )
+        
+        response.raise_for_status()
         data = response.json()
         
         if not data.get("output_url"):
@@ -46,75 +66,56 @@ async def upscale_image(image_path):
     except Exception as e:
         raise Exception(f"Upscaling failed: {str(e)}")
 
-async def enhance_image(image_path: str) -> str:
-    """Enhance image brightness and saturation"""
-    try:
-        with Image.open(image_path) as img:
-            # Increase exposure (brightness)
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(1.15)  # +15% brightness
-            
-            # Increase saturation (color)
-            enhancer = ImageEnhance.Color(img)
-            img = enhancer.enhance(1.15)  # +15% saturation
-            
-            # Save optimized version
-            enhanced_path = f"enhanced_{os.path.basename(image_path)}"
-            img.save(enhanced_path, quality=95, optimize=True)
-            
-            return enhanced_path
-    except Exception as e:
-        raise Exception(f"Enhancement failed: {str(e)}")
-
-@app.on_message(filters.command(["upscale", "enhance"]) & filters.reply)
-async def process_image(client: Client, message: Message):
-    """Process image with upscaling and enhancement"""
+@app.on_message(filters.command(["enhanceup", "upenhance"]) & filters.reply)
+async def enhance_then_upscale(client: Client, message: Message):
+    """First enhance then upscale the image"""
     if not message.reply_to_message or not message.reply_to_message.photo:
         return await message.reply("⚠️ Please reply to an image!")
     
     progress = await message.reply("🔄 Starting image processing...")
-    original_path = upscaled_path = enhanced_path = None
+    original_path = enhanced_path = upscaled_path = None
     
     try:
-        # Download original image
+        # Step 1: Download original
         original_path = await message.reply_to_message.download()
         
-        # First try upscaling
+        # Step 2: Enhance first
         try:
-            await progress.edit_text("🖼️ Upscaling image (2x)...")
-            upscaled_path = await upscale_image(original_path)
-            await asyncio.sleep(4)
-            # Then try enhancing
+            await progress.edit_text("🎨 upscaling image...")
+            enhanced_path = await enhance_image(original_path)
+            asyncio.sleep(2)
+            
+            # Step 3: Then upscale
             try:
-                await progress.edit_text("🎨 Enhancing image...")
-                enhanced_path = await enhance_image(upscaled_path)
+                await progress.edit_text("🖼️ Upscaling 2 image...")
+                upscaled_path = await upscale_image(enhanced_path)
                 
                 await progress.edit_text("📤 Sending result...")
                 await message.reply_photo(
-                    photo=enhanced_path,
-                    caption="✨ **Upscaled & Enhanced Image**\n(2x upscaled + color enhanced)"
+                    photo=upscaled_path,
+                    caption="✨ **Upscaled** (+ 2X)"
                 )
                 
-            except Exception as enhance_error:
-                # If enhancement fails, send upscaled version
-                await progress.edit_text("⚠️ Enhancement failed. Sending upscaled version...")
+            except Exception as upscale_error:
+                # If upscaling fails, send enhanced version
+                await progress.edit_text("⚠️ U failed. Sending e version...")
+                await message.reply_photo(
+                    photo=enhanced_path,
+                    caption="✨ **Enhanced Image** (U failed)"
+                )
+                
+        except Exception as enhance_error:
+            # If enhancement fails, try upscaling original
+            try:
+                await progress.edit_text("⚠️ e failed. Trying upscaling...")
+                upscaled_path = await upscale_image(original_path)
+                
                 await message.reply_photo(
                     photo=upscaled_path,
-                    caption="✨ **Upscaled Image** (2x upscaled, enhancement failed)"
+                    caption="✨ **Upscaled Original** (2X, enhancement failed)"
                 )
                 
-        except Exception as upscale_error:
-            # If upscaling fails, try just enhancing
-            try:
-                await progress.edit_text("⚠️ Upscaling failed. Trying enhancement...")
-                enhanced_path = await enhance_image(original_path)
-                
-                await message.reply_photo(
-                    photo=enhanced_path,
-                    caption="✨ **Enhanced Image** (Upscaling failed)"
-                )
-                
-            except Exception as enhance_error:
+            except Exception as upscale_error:
                 # If both fail, send original
                 await progress.edit_text("⚠️ Both failed. Sending original...")
                 await message.reply_photo(
@@ -123,50 +124,21 @@ async def process_image(client: Client, message: Message):
                 )
                 
     except Exception as e:
-        await progress.edit_text(f"❌ Error: {str(e)}")
+        await progress.edit_text(f"❌ Unexpected error: {str(e)}")
     finally:
         # Cleanup files
         await progress.delete()
-        for path in [original_path, upscaled_path, enhanced_path]:
+        for path in [original_path, enhanced_path, upscaled_path]:
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
                 except:
                     pass
 
-@app.on_message(filters.command("upscaling") & filters.reply)
-async def upscale_only(client: Client, message: Message):
-    """Standalone upscale command"""
-    if not message.reply_to_message or not message.reply_to_message.photo:
-        return await message.reply("⚠️ Please reply to an image!")
-    
-    progress = await message.reply("🖼️ Upscaling image (2x)...")
-    original_path = upscaled_path = None
-    
-    try:
-        original_path = await message.reply_to_message.download()
-        upscaled_path = await upscale_image(original_path)
-        
-        await progress.edit_text("📤 Sending result...")
-        await message.reply_photo(
-            photo=upscaled_path,
-            caption="✨ **Upscaled Image** (2x)"
-        )
-        
-    except Exception as e:
-        await progress.edit_text(f"❌ Upscaling failed: {str(e)}")
-    finally:
-        await progress.delete()
-        for path in [original_path, upscaled_path]:
-            if path and os.path.exists(path):
-                try:
-                    os.remove(path)
-                except:
-                    pass
-
+# Standalone commands
 @app.on_message(filters.command("enhancing") & filters.reply)
 async def enhance_only(client: Client, message: Message):
-    """Standalone enhance command"""
+    """Only enhance the image"""
     if not message.reply_to_message or not message.reply_to_message.photo:
         return await message.reply("⚠️ Please reply to an image!")
     
@@ -182,12 +154,40 @@ async def enhance_only(client: Client, message: Message):
             photo=enhanced_path,
             caption="✨ **Enhanced Image**"
         )
-        
     except Exception as e:
         await progress.edit_text(f"❌ Enhancement failed: {str(e)}")
     finally:
         await progress.delete()
         for path in [original_path, enhanced_path]:
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except:
+                    pass
+
+@app.on_message(filters.command("upscaling") & filters.reply)
+async def upscale_only(client: Client, message: Message):
+    """Only upscale the image"""
+    if not message.reply_to_message or not message.reply_to_message.photo:
+        return await message.reply("⚠️ Please reply to an image!")
+    
+    progress = await message.reply("🖼️ Upscaling image (2X)...")
+    original_path = upscaled_path = None
+    
+    try:
+        original_path = await message.reply_to_message.download()
+        upscaled_path = await upscale_image(original_path)
+        
+        await progress.edit_text("📤 Sending result...")
+        await message.reply_photo(
+            photo=upscaled_path,
+            caption="✨ **Upscaled Image** (2X)"
+        )
+    except Exception as e:
+        await progress.edit_text(f"❌ Upscaling failed: {str(e)}")
+    finally:
+        await progress.delete()
+        for path in [original_path, upscaled_path]:
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
