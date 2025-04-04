@@ -72,6 +72,3 @@ async def enhance_and_upscale(client: Client, message: Message):
     for path in [photo_path, enhanced_path, upscaled_path]:
         if path and os.path.exists(path):
             os.remove(path)
-
-
-    pass
