@@ -24,7 +24,7 @@ async def enhance_image(image_path: str) -> str:
         with Image.open(image_path) as img:
             # Enhance brightness
             brightness_enhancer = ImageEnhance.Brightness(img)
-            img = brightness_enhancer.enhance(1.15)
+            img = brightness_enhancer.enhance(1.1)
             
             # Enhance color saturation
             color_enhancer = ImageEnhance.Color(img)
