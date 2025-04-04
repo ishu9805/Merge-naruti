@@ -17,17 +17,18 @@ async def download_image(url: str, save_path: str) -> bool:
     except Exception:
         return False
 
-async def upscale_image(image_path: str) -> str:
+async def upscale_image(image_path):
     """Upscale image using DeepAI API"""
     try:
-        with open(image_path, 'rb') as f:
-            response = requests.post(
-                "https://api.deepai.org/api/torch-srgan",
-                files={'image': f},
-                headers={'api-key': 'bf9ee957-9fad-46f5-a403-3e96ca9004e4'}
-            )
-        
+        response = requests.post(
+            "https://api.deepai.org/api/torch-srgan",
+            files={
+                'image': open(image, 'rb'),
+            },
+            headers={'api-key': 'bf9ee957-9fad-46f5-a403-3e96ca9004e4'}
+        )
         response.raise_for_status()
+
         data = response.json()
         
         if not data.get("output_url"):
@@ -82,7 +83,7 @@ async def process_image(client: Client, message: Message):
         try:
             await progress.edit_text("🖼️ Upscaling image (2x)...")
             upscaled_path = await upscale_image(original_path)
-            
+            await asyncio.sleep(4)
             # Then try enhancing
             try:
                 await progress.edit_text("🎨 Enhancing image...")
