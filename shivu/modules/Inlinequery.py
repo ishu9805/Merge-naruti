@@ -69,10 +69,11 @@ RARITY_MAPPING = {
 async def inlinequery(client, update):
     query = update.query.strip()
     offset = int(update.offset) if update.offset else 0
-    limit = 50  # Number of results per page
+    limit = 50
     results = []
 
     if query.startswith('collection.img.') or query.startswith('collection.vid.'):
+        # User collection view
         parts = query.split('.', 2)
         user_id = parts[2].split(' ')[0] if len(parts) > 2 else None
         search_term = ' '.join(parts[2].split(' ')[1:]) if ' ' in parts[2] else None
@@ -86,20 +87,28 @@ async def inlinequery(client, update):
 
             if user:
                 regex = re.compile(search_term, re.IGNORECASE) if search_term else None
+                
+                # Get all characters first
+                all_characters = user.get('characters', [])
+                
+                # Filter based on media type and search term
                 if query.startswith('collection.img.'):
                     characters = [
-                        char for char in user.get('characters', [])
+                        char for char in all_characters
                         if ('img_url' in char and char['img_url'] and 
                             (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
                     ]
-                elif query.startswith('collection.vid.'):
+                else:
                     characters = [
-                        char for char in user.get('characters', [])
+                        char for char in all_characters
                         if ('vid_url' in char and char['vid_url'] and
                             (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
                     ]
 
-                # Aggregate duplicates
+                # Sort characters by ID in descending order (newest first)
+                characters.sort(key=lambda x: x['id'], reverse=True)
+
+                # Aggregate duplicates while maintaining order
                 aggregated_characters = {}
                 for char in characters:
                     char_id = char['id']
@@ -111,24 +120,23 @@ async def inlinequery(client, update):
                             'count': 1
                         }
 
-                # Process aggregated results
-                for char_data in list(aggregated_characters.values())[offset:offset + limit]:
+                # Convert to sorted list (already sorted by ID)
+                sorted_characters = list(aggregated_characters.values())
+
+                # Paginate results
+                for char_data in sorted_characters[offset:offset + limit]:
                     char = char_data['character']
                     count = char_data['count']
                     rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
 
-                    # Get number of characters the user has for this anime
-                    user_anime_count = sum(1 for c in user.get('characters', []) if c.get('anime') == char['anime'])
-
-                    # Check if total count for the anime is already cached
+                    # Get anime count stats
+                    user_anime_count = sum(1 for c in all_characters if c.get('anime') == char['anime'])
                     if char['anime'] in anime_count_cache:
                         total_anime_count = anime_count_cache[char['anime']]
                     else:
-                        # If not cached, query the collection and store the result
                         total_anime_count = await collection.count_documents({'anime': char['anime']})
                         anime_count_cache[char['anime']] = total_anime_count
 
-                    # User Collection Caption
                     caption = (
                         f"Look At <a href='tg://user?id={user['id']}'>{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
                         f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
@@ -145,7 +153,7 @@ async def inlinequery(client, update):
                                 caption=caption
                             )
                         )
-                    elif query.startswith('collection.vid.'):
+                    else:
                         results.append(
                             InlineQueryResultVideo(
                                 video_url=char['vid_url'],
@@ -158,19 +166,21 @@ async def inlinequery(client, update):
                         )
 
     else:
-        # Global search (combined results for images and videos)
+        # Global character search
         if not query:
-            # If no query, fetch all characters
-            characters = all_characters_cache.get('all_characters') or await collection.find({}).to_list(length=None)
-            all_characters_cache['all_characters'] = characters
+            # Get all characters sorted by ID descending (newest first)
+            characters = all_characters_cache.get('all_characters') 
+            if not characters:
+                characters = await collection.find({}).sort('id', DESCENDING).to_list(length=None)
+                all_characters_cache['all_characters'] = characters
         else:
-            # If query is provided, perform a regex search
+            # Search with query, sorted by ID descending
             regex = re.compile(query, re.IGNORECASE)
             characters = await collection.find(
                 {"$or": [{"name": regex}, {"anime": regex}, {"rarity": regex}]}
-            ).to_list(length=None)
+            ).sort('id', DESCENDING).to_list(length=None)
 
-        # Aggregate duplicates in global search
+        # Aggregate duplicates while maintaining order
         aggregated_characters = {}
         for character in characters:
             char_id = character['id']
@@ -182,28 +192,29 @@ async def inlinequery(client, update):
                     'count': 1
                 }
 
-        for character_data in list(aggregated_characters.values())[offset:offset + limit]:
+        # Already sorted by ID descending
+        sorted_characters = list(aggregated_characters.values())
+
+        # Paginate results
+        for character_data in sorted_characters[offset:offset + limit]:
             character = character_data['character']
             count = character_data['count']
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
 
-            # Check if total count for the anime is already cached
+            # Get anime stats
             if character['anime'] in anime_count_cache:
                 total_anime_count = anime_count_cache[character['anime']]
             else:
-                # If not cached, query the collection and store the result
                 total_anime_count = await collection.count_documents({'anime': character['anime']})
                 anime_count_cache[character['anime']] = total_anime_count
 
-            # Check if user count for the character is already cached
+            # Get ownership stats
             if character['id'] in character_user_count_cache:
                 total_user_count = character_user_count_cache[character['id']]
             else:
-                # If not cached, query the user_collection and store the result
                 total_user_count = await user_collection.count_documents({'characters.id': character['id']})
                 character_user_count_cache[character['id']] = total_user_count
 
-            # Global Search Caption
             caption = (
                 f"✨ **OwO! Check out this waifu!** ✨\n\n"
                 f"🎬 **Anime**: {character['anime']} [{total_anime_count}]\n"
@@ -211,7 +222,6 @@ async def inlinequery(client, update):
                 f"🌟 **Name**: {character['name']}\n"
                 f"🔮 **Rarity**: {character['rarity']}\n"
                 f"👥 **Owned by**: {total_user_count} users\n"
-      
             )
 
             if 'vid_url' in character and character['vid_url']:
@@ -225,7 +235,7 @@ async def inlinequery(client, update):
                         caption=caption
                     )
                 )
-            elif 'img_url' in character and character['img_url']:
+            else:
                 results.append(
                     InlineQueryResultPhoto(
                         photo_url=character['img_url'],
