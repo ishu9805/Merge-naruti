@@ -24,11 +24,11 @@ async def enhance_image(image_path: str) -> str:
         with Image.open(image_path) as img:
             # Enhance brightness
             brightness_enhancer = ImageEnhance.Brightness(img)
-            img = brightness_enhancer.enhance(1.1)
+            img = brightness_enhancer.enhance(1.15)
             
             # Enhance color saturation
             color_enhancer = ImageEnhance.Color(img)
-            img = color_enhancer.enhance(1.2)
+            img = color_enhancer.enhance(1.15)
             
             # Save optimized version
             enhanced_path = f"enhanced_{os.path.basename(image_path)}"
@@ -81,33 +81,32 @@ async def enhance_then_upscale(client: Client, message: Message):
         
         # Step 2: Enhance first
         try:
-            await progress.edit_text("🎨 upscaling image...")
+            await progress.edit_text("🎨 Enhancing image...")
             enhanced_path = await enhance_image(original_path)
-            asyncio.sleep(2)
             
             # Step 3: Then upscale
             try:
-                await progress.edit_text("🖼️ Upscaling 2 image...")
+                await progress.edit_text("🖼️ Upscaling enhanced image...")
                 upscaled_path = await upscale_image(enhanced_path)
                 
                 await progress.edit_text("📤 Sending result...")
                 await message.reply_photo(
                     photo=upscaled_path,
-                    caption="✨ **Upscaled** (+ 2X)"
+                    caption="✨ **Enhanced & Upscaled** (Enhanced + 2X)"
                 )
                 
             except Exception as upscale_error:
                 # If upscaling fails, send enhanced version
-                await progress.edit_text("⚠️ U failed. Sending e version...")
+                await progress.edit_text("⚠️ Upscaling failed. Sending enhanced version...")
                 await message.reply_photo(
                     photo=enhanced_path,
-                    caption="✨ **Enhanced Image** (U failed)"
+                    caption="✨ **Enhanced Image** (Upscale failed)"
                 )
                 
         except Exception as enhance_error:
             # If enhancement fails, try upscaling original
             try:
-                await progress.edit_text("⚠️ e failed. Trying upscaling...")
+                await progress.edit_text("⚠️ Enhancement failed. Trying upscaling...")
                 upscaled_path = await upscale_image(original_path)
                 
                 await message.reply_photo(
@@ -136,7 +135,7 @@ async def enhance_then_upscale(client: Client, message: Message):
                     pass
 
 # Standalone commands
-@app.on_message(filters.command("enhancing") & filters.reply)
+@app.on_message(filters.command("enhance") & filters.reply)
 async def enhance_only(client: Client, message: Message):
     """Only enhance the image"""
     if not message.reply_to_message or not message.reply_to_message.photo:
@@ -165,7 +164,7 @@ async def enhance_only(client: Client, message: Message):
                 except:
                     pass
 
-@app.on_message(filters.command("upscaling") & filters.reply)
+@app.on_message(filters.command("upscale") & filters.reply)
 async def upscale_only(client: Client, message: Message):
     """Only upscale the image"""
     if not message.reply_to_message or not message.reply_to_message.photo:
