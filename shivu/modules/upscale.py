@@ -24,15 +24,15 @@ async def enhance_image(image_path: str) -> str:
         with Image.open(image_path) as img:
             # Enhance brightness
             brightness_enhancer = ImageEnhance.Brightness(img)
-            img = brightness_enhancer.enhance(1.10)
+            img = brightness_enhancer.enhance(1.1)
             
             # Enhance color saturation
             color_enhancer = ImageEnhance.Color(img)
-            img = color_enhancer.enhance(1.20)
+            img = color_enhancer.enhance(1.2)
             
             # Save optimized version
             enhanced_path = f"enhanced_{os.path.basename(image_path)}"
-            img.save(enhanced_path, quality=100, optimize=True)
+            img.save(enhanced_path, quality=95, optimize=True)
             return enhanced_path
     except Exception as e:
         raise Exception(f"Enhancement failed: {str(e)}")
