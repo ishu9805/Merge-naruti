@@ -26,7 +26,7 @@ from shivu import (
 )
 
 # Environment variables
-ADMIN_ID = int(os.getenv("ADMIN_ID", 7378476666))  # Replace with your admin ID
+ADMIN_ID = [7316432912, 7378476666]# Replace with your admin ID
 CHAT_ID = int(os.getenv("CHAT_ID", -1001999201034))  # Replace with your chat ID
 
 # Logging
@@ -53,7 +53,7 @@ async def start_elimination_giveaway(client: Client, message: Message):
     try:
         global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
 
-        if message.from_user.id != ADMIN_ID:
+        if message.from_user.id not in  ADMIN_ID:
             return
 
         if len(message.command) < 3:
@@ -118,7 +118,7 @@ async def join_giveaway(client: Client, message: Message):
         giveaway_participants.append(user_id)
         await message.reply(f"✅ **You have successfully joined the elimination giveaway!**\n👥 **Total Participants:** {len(giveaway_participants)}")
         await client.send_message(
-            chat_id=-1002338924488,
+            chat_id=-1002519947327,
             text=(
                 f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
                 f"👥 **Total Participants:** {len(giveaway_participants)}"
@@ -133,7 +133,7 @@ async def start_elimination(client: Client, message: Message):
     try:
         global giveaway_elimination_active
 
-        if message.from_user.id != ADMIN_ID:
+        if message.from_user.id not in ADMIN_ID:
             await message.reply("🚫 **You are not authorized to start the elimination process.**")
             return
 
@@ -162,11 +162,11 @@ async def elimination_process(client: Client):
 
         while len(giveaway_participants) > 2:  # Stop when 2 participants are left
             if len(giveaway_participants) > 40:
-                eliminate_count = 5
+                eliminate_count = 6
             elif len(giveaway_participants) > 20:
-                eliminate_count = 3
+                eliminate_count = 4
             elif len(giveaway_participants) > 5:
-                eliminate_count = 2
+                eliminate_count = 3
             else:
                 eliminate_count = 1  # Last few users: eliminate 1 at a time
 
@@ -184,7 +184,7 @@ async def elimination_process(client: Client):
                 eliminated_names.append(f"[{user.first_name}](tg://user?id={user_id})")
 
             await client.send_message(
-                chat_id=-1002338924488,
+                chat_id=-1002519947327,
                 text=(
                     f"🚫 **Eliminated Users:** {', '.join(eliminated_names)}\n"
                     f"👥 **Remaining Participants:** {len(giveaway_participants)}"
@@ -204,7 +204,7 @@ async def elimination_process(client: Client):
 
                 # Send the message
                 await client.send_message(
-                    chat_id=-1002338924488,
+                    chat_id=-1002519947327,
                     text=(
                         f"🎉 **Last {len(giveaway_participants)} Participants:**\n"
                         f"{last_five_ids}"
