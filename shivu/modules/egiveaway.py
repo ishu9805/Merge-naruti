@@ -53,7 +53,7 @@ async def start_elimination_giveaway(client: Client, message: Message):
     try:
         global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
 
-        if message.from_user.id not in  ADMIN_ID:
+        if int(message.from_user.id) not in ADMIN_ID:
             return
 
         if len(message.command) < 3:
