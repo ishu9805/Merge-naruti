@@ -114,12 +114,12 @@ async def summer_claim(client, message: t.Message):
                 return
             
             character = summer_treasure[0]
-            
+            character_with_lock = {**character, "locked": True}
             # Update your summer scrapbook
             await user_collection.update_one(
                 {'id': user_id},
                 {
-                    '$push': {'characters': character},
+                    '$push': {'characters': character_with_lock},
                     '$set': {'last_summer_claim': datetime.utcnow()}
                 },
                 upsert=True
