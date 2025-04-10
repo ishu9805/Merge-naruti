@@ -86,7 +86,15 @@ async def gift(client, message):
     if not character:
         await message.reply_text("❌ **You don't own this character** you are trying to gift!")
         return
-    
+        
+    if character.get('locked', False):
+        await message.reply_text(
+            "🔒 **Summer Festival Character Locked!**\n\n"
+            "This special summer character cannot be gifted!\n"
+            "These exclusive characters are permanently bound to your collection. ☀️"
+        )
+        return
+          
     # Check if the character is locked (already in a pending transaction)
     if character_id in locked_characters:
         await message.reply_text("🔒 **This character is already involved in another transaction!**")
@@ -248,12 +256,27 @@ async def trade(client, message):
         await message.reply_text("❌ **You don't own this character** you are trying to trade!")
         return
 
+
+    if sender_character.get('locked', False):
+        await message.reply_text(
+            "🔒 **Your character is locked!**\n\n"
+            "Summer event characters cannot be gifted or traded!"
+        )
+        return
+        
     # Check if the receiver has the character to trade
     receiver_character = next((char for char in receiver['characters'] if char['id'] == receiver_character_id), None)
     if not receiver_character:
         await message.reply_text("❌ **The user you're trying to trade with doesn't own this character!**")
         return
-
+   
+    if receiver_character.get('locked', False):
+        await message.reply_text(
+            "🔒 **The other user's character is locked!**\n\n"
+            "Summer event characters cannot be gifted or traded!"
+        )
+        return
+        
     # Check if either character is locked (already involved in another transaction)
     if sender_character_id in locked_characters or receiver_character_id in locked_characters:
         await message.reply_text("🔒 **One or both of the characters are already involved in another transaction!**")
