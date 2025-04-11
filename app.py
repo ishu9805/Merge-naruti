@@ -1,12 +1,6 @@
 from flask_cors import CORS
 from pymongo import MongoClient
-import requests
 from flask import Flask, jsonify, send_from_directory, request, Response
-
-
-
-# Other routes...
-
 
 app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
@@ -18,17 +12,6 @@ db = client['NARUTOGAMEBOT']
 collection = db['anime_characters_lol']
 user_collection = db['user_collection_lmaoooo']  # Collection storing user collections with a 'characters' array
 
-
-@app.route('/proxy-image/<path:url>')
-def proxy_image(url):
-    telegraph_url = f"https://telegra.ph/{url}"
-    try:
-        response = requests.get(telegraph_url, stream=True)
-        response.raise_for_status()
-        return Response(response.content, mimetype=response.headers['Content-Type'])
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': 'Image not found or could not be retrieved'}), 404
-    
 # Serve homepage
 @app.route('/')
 def home():
@@ -57,49 +40,56 @@ def search_waifus():
         query_filters['id'] = {'$regex': id_query, '$options': 'i'}
 
     waifus = list(collection.find(query_filters))
-    results = [{
-        'character_name': waifu['name'],
-        'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'),
-        'id': waifu.get('id', 'N/A')
-    } for waifu in waifus]
+    results = []
+    for waifu in waifus:
+        media_url = waifu.get('vid_url') or waifu.get('img_url')
+        results.append({
+            'character_name': waifu['name'],
+            'anime_name': waifu['anime'],
+            'media_url': media_url,
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
+        })
+
     return jsonify({'results': results})
 
+# Paginated characters
 @app.route('/waifus', methods=['GET'])
 def get_characters():
     try:
         page = int(request.args.get('page', 1))
         size = int(request.args.get('size', 15))
         skip = (page - 1) * size
-        limit = size
 
         total_count = collection.count_documents({})
-        has_next_page = (total_count > page * size)
+        has_next_page = total_count > (page * size)
 
-        waifus = list(collection.find().skip(skip).limit(limit))
-        results = [{
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': f"/proxy-image/{waifu['img_url'].replace('https://telegra.ph/', '')}",
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        } for waifu in waifus]
+        waifus = list(collection.find().skip(skip).limit(size))
+        results = []
+        for waifu in waifus:
+            media_url = waifu.get('vid_url') or waifu.get('img_url')
+            results.append({
+                'character_name': waifu['name'],
+                'anime_name': waifu['anime'],
+                'media_url': media_url,
+                'rarity': waifu.get('rarity', 'Unknown'),
+                'id': waifu.get('id', 'N/A')
+            })
 
         return jsonify({'results': results, 'hasNextPage': has_next_page})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 # Get specific waifu by character name
 @app.route('/waifus/<string:character_name>', methods=['GET'])
 def get_waifu(character_name):
     waifu = collection.find_one({'name': {'$regex': character_name, '$options': 'i'}})
     if waifu:
+        media_url = waifu.get('vid_url') or waifu.get('img_url')
         return jsonify({
             'character_name': waifu['name'],
             'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
+            'media_url': media_url,
             'rarity': waifu.get('rarity', 'Unknown'),
             'id': waifu.get('id', 'N/A')
         })
@@ -113,7 +103,7 @@ def search_user_collection():
     if user_id:
         user = user_collection.find_one({'user_id': user_id})
         if user:
-            characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+            characters = user.get('characters', [])
             return jsonify({
                 'user_id': user_id,
                 'characters': characters
@@ -128,7 +118,7 @@ def search_user_collection():
 def get_user_collection(user_id):
     user = user_collection.find_one({'user_id': user_id})
     if user:
-        characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
+        characters = user.get('characters', [])
         return jsonify({
             'user_id': user_id,
             'characters': characters
