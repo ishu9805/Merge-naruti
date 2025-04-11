@@ -60,25 +60,24 @@ def get_characters():
         page = int(request.args.get('page', 1))
         size = int(request.args.get('size', 15))
         skip = (page - 1) * size
+        limit = size
 
         total_count = collection.count_documents({})
-        has_next_page = total_count > (page * size)
+        has_next_page = (total_count > page * size)
 
-        waifus = list(collection.find().skip(skip).limit(size))
-        results = []
-        for waifu in waifus:
-            media_url = waifu.get('vid_url') or waifu.get('img_url')
-            results.append({
-                'character_name': waifu['name'],
-                'anime_name': waifu['anime'],
-                'media_url': media_url,
-                'rarity': waifu.get('rarity', 'Unknown'),
-                'id': waifu.get('id', 'N/A')
-            })
+        waifus = list(collection.find().skip(skip).limit(limit))
+        results = [{
+            'character_name': waifu['name'],
+            'anime_name': waifu['anime'],
+            'image_url': waifu['img_url'],  # <--- Only using img_url
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
+        } for waifu in waifus]
 
         return jsonify({'results': results, 'hasNextPage': has_next_page})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 # Get specific waifu by character name
 @app.route('/waifus/<string:character_name>', methods=['GET'])
