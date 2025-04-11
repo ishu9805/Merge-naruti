@@ -1,122 +1,126 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
     const searchForm = document.getElementById('multi-search-form');
-    const searchResults = document.getElementById('search-results');
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-    const currentPageSpan = document.getElementById('current-page');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const noResultsDiv = document.getElementById('no-results');
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const mainNav = document.querySelector('.main-nav');
-
-    // State
+    const searchResultsDiv = document.getElementById('search-results');
+    const prevPageButton = document.getElementById('prev-page');
+    const nextPageButton = document.getElementById('next-page');
+    const appliedFiltersDiv = document.getElementById('applied-filters');
+    const modal = document.getElementById('image-popup');
+    const modalImg = document.getElementById('popup-image');
+    const closeBtn = document.querySelector('.modal .close');
     let currentPage = 1;
-    let currentFilters = {};
+    const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
 
-    // Initialize
-    noResultsDiv.style.display = 'flex';
-    searchResults.style.display = 'none';
+    const backgroundImages = [
+        'https://files.catbox.moe/9jbemn.jpg',
+        'https://files.catbox.moe/l5g4xp.jpg',
+        'https://files.catbox.moe/7tdou5.jpg',
+        'https://files.catbox.moe/4sgb37.jpg',
+        'https://files.catbox.moe/qggqe3.jpg'
+    ];
 
-    // Event Listeners
-    searchForm.addEventListener('submit', handleSearch);
-    prevPageBtn.addEventListener('click', goToPrevPage);
-    nextPageBtn.addEventListener('click', goToNextPage);
-    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    // Set a random background image
+    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
 
-    // Functions
-    async function handleSearch(e) {
-        e.preventDefault();
-        currentPage = 1;
-        updateFilters();
-        await loadCharacters();
-    }
+    const updatePaginationButtons = (hasNextPage) => {
+        prevPageButton.disabled = currentPage === 1;
+        nextPageButton.disabled = !hasNextPage;
+    };
 
-    function updateFilters() {
-        currentFilters = {
-            name: document.getElementById('name-query').value.trim(),
-            anime: document.getElementById('anime-query').value.trim(),
-            rarity: document.getElementById('rarity-query').value.trim(),
-            id: document.getElementById('id-query').value.trim()
-        };
-    }
+    const updateFilters = () => {
+        const filters = [];
+        const nameQuery = document.getElementById('name-query').value.trim();
+        const animeQuery = document.getElementById('anime-query').value.trim();
+        const rarityQuery = document.getElementById('rarity-query').value.trim();
+        const idQuery = document.getElementById('id-query').value.trim();
 
-    async function loadCharacters() {
-        loadingSpinner.style.display = 'flex';
-        noResultsDiv.style.display = 'none';
-        searchResults.style.display = 'none';
+        if (nameQuery) filters.push(`Name: ${nameQuery}`);
+        if (animeQuery) filters.push(`Anime: ${animeQuery}`);
+        if (rarityQuery) filters.push(`Rarity: ${rarityQuery}`);
+        if (idQuery) filters.push(`ID: ${idQuery}`);
 
-        try {
-            const params = new URLSearchParams();
-            if (currentFilters.name) params.append('name', currentFilters.name);
-            if (currentFilters.anime) params.append('anime', currentFilters.anime);
-            if (currentFilters.rarity) params.append('rarity', currentFilters.rarity);
-            if (currentFilters.id) params.append('id', currentFilters.id);
+        appliedFiltersDiv.innerHTML = filters.map(filter => `
+            <span>${filter} <button class="remove-filter" data-filter="${filter}">x</button></span>
+        `).join(' ');
+    };
 
-            const response = await fetch(`/waifus/search?${params.toString()}`);
-            const data = await response.json();
+const loadCharacters = async (page) => {
+    searchResultsDiv.innerHTML = 'Loading...';
+    const nameQuery = document.getElementById('name-query').value.trim();
+    const animeQuery = document.getElementById('anime-query').value.trim();
+    const rarityQuery = document.getElementById('rarity-query').value.trim();
+    const idQuery = document.getElementById('id-query').value.trim();
 
-            if (data.results?.length) {
-                displayResults(data.results);
-            } else {
-                showNoResults();
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showNoResults('Error loading characters');
-        } finally {
-            loadingSpinner.style.display = 'none';
+    try {
+        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
+        let data = await response.json();
+
+        // Sort results in descending order by ID
+        data.results.sort((a, b) => b.id - a.id);
+
+        if (data.results && data.results.length > 0) {
+            searchResultsDiv.innerHTML = data.results.map(item => `
+                <div class="character-item">
+                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
+                    <h3>${item.character_name}</h3>
+                    <p>Anime: ${item.anime_name}</p>
+                    <p>Rarity: ${item.rarity}</p>
+                    <p>ID: ${item.id}</p>
+                </div>
+            `).join('');
+            updatePaginationButtons(data.hasNextPage);
+        } else {
+            searchResultsDiv.innerHTML = 'No characters found.';
+            updatePaginationButtons(false);
         }
+    } catch (error) {
+        searchResultsDiv.innerHTML = 'Error fetching results.';
+        console.error('Error:', error);
     }
+};
 
-                                                 
-    // Update your displayResults function to use the new HTML structure
-    function displayResults(characters) {
-        searchResults.innerHTML = '';
-        characters.sort((a, b) => b.id - a.id).forEach(character => {
-            const card = document.createElement('div');
-            card.className = 'character-card';
-            card.innerHTML = `
-                <div class="character-image-container">
-                     <img src="${character.image_url}" 
-                         alt="${character.character_name}" 
-                         class="character-image" 
-                         loading="lazy">
-                </div>
-                <div class="character-info">
-                    <h3 class="character-name">${character.character_name}</h3>
-                    <div>
-                        v<p class="character-detail"><i class="fas fa-film"></i> ${character.anime_name}</p>
-                        <p class="character-detail"><i class="fas fa-star"></i> ${character.rarity}</p>
-                    </div>
-                </div>
-            `;
-            searchResults.appendChild(card);
-            });
-    searchResults.style.display = 'grid';
-    }
-    
-    function showNoResults(message = 'No characters found') {
-        noResultsDiv.innerHTML = `
-            <i class="fas fa-search"></i>
-            <p>${message}</p>
-        `;
-        noResultsDiv.style.display = 'flex';
-    }
 
-    function goToPrevPage() {
+    prevPageButton.addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
-            loadCharacters();
+            loadCharacters(currentPage);
         }
-    }
+    });
 
-    function goToNextPage() {
+    nextPageButton.addEventListener('click', () => {
         currentPage++;
-        loadCharacters();
-    }
+        loadCharacters(currentPage);
+    });
 
-    function toggleMobileMenu() {
-        mainNav.classList.toggle('active');
-    }
+    searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        updateFilters();
+        loadCharacters(currentPage);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-filter')) {
+            const filter = event.target.getAttribute('data-filter');
+            const [key, value] = filter.split(': ');
+            document.getElementById(`${key.toLowerCase()}-query`).value = '';
+            updateFilters();
+            loadCharacters(currentPage);
+        } else if (event.target.tagName === 'IMG' && event.target.closest('.character-item')) {
+            // Open modal with image
+            modal.style.display = 'block';
+            modalImg.src = event.target.src;
+        }
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Initial load
+    loadCharacters(currentPage);
 });
