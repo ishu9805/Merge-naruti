@@ -1,7 +1,7 @@
 from flask_cors import CORS
 from pymongo import MongoClient
 from flask import Flask, jsonify, send_from_directory, request, Response
-
+import requests
 app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
 
