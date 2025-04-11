@@ -167,7 +167,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    if len(sent_characters[chat_id]) == len(all_characters):
+    alls_characters = [c for c in all_characters if not c.get('slock', False)]
+    
+    if not alls_characters:
+        await update.effective_chat.send_message("No characters available to spawn right now.")
+        return
+
+
+    if len(sent_characters[chat_id]) == len(alls_characters):
         sent_characters[chat_id] = []
 
     if chat_id in message_counters:
@@ -231,10 +238,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
-        characters_to_spawn.extend([c for c in all_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
+        characters_to_spawn.extend([c for c in alls_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
 
     if not characters_to_spawn:
-        characters_to_spawn = all_characters
+        characters_to_spawn = alls_characters
 
     character = random.choice(characters_to_spawn)
     
@@ -314,9 +321,13 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         sent_characters[chat_id] = []
 
     
+    alls_characters = [c for c in all_characters if not c.get('slock', False)]
+    
+    if not alls_characters:
+        await update.effective_chat.send_message("No characters available to spawn right now.")
+        return
 
-
-    valentine_characters = [c for c in all_characters if c.get('rarity') == '🎐 Celestial']
+    valentine_characters = [c for c in alls_characters if c.get('rarity') == '🎐 Celestial']
 
     if not valentine_characters:
         print("No Valentine characters found in the database.")
@@ -381,7 +392,13 @@ async def spawn_summer_character(update: Update, context: CallbackContext) -> No
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    summer_characters = [c for c in all_characters if c.get('rarity') == '🌤 Summer']
+    alls_characters = [c for c in all_characters if not c.get('slock', False)]
+    
+    if not alls_characters:
+        await update.effective_chat.send_message("No characters available to spawn right now.")
+        return
+
+    summer_characters = [c for c in alls_characters if c.get('rarity') == '🌤 Summer']
 
     if not summer_characters:
         print("No Summer characters found in the database.")
@@ -619,6 +636,54 @@ async def guess(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(f"Message count for this group: {count}")
     """
     
+sad = ["7316432912", "7378476666"]
+
+@block_dec_ptb
+async def slock(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+    if str(user_id) not in sad:
+        return
+
+    if not context.args:
+        await update.message.reply_text("⚠️ Please provide a character ID.\nUsage: /slock <character_id>")
+        return
+
+    character_id = context.args[0].strip()
+    
+    # Update the character's slock status
+    result = await collection.update_one(
+        {"id": character_id},
+        {"$set": {"slock": True}}
+    )
+
+    if result.modified_count > 0:
+        await update.message.reply_text(f"🔒 Character {character_id} has been locked and won't spawn anymore.")
+    else:
+        await update.message.reply_text(f"❌ Character {character_id} not found.")
+
+@block_dec_ptb
+async def unlock(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+    if str(user_id) not in sad:
+        return
+
+    if not context.args:
+        await update.message.reply_text("⚠️ Please provide a character ID.\nUsage: /unlock <character_id>")
+        return
+
+    character_id = context.args[0].strip()
+    
+    # Update the character's slock status
+    result = await collection.update_one(
+        {"id": character_id},
+        {"$set": {"slock": False}}
+    )
+
+    if result.modified_count > 0:
+        await update.message.reply_text(f"🔓 Character {character_id} has been unlocked and can spawn again.")
+    else:
+        await update.message.reply_text(f"❌ Character {character_id} not found or already unlocked.")
+
 
 def error_handler(update: Update, context: CallbackContext):
     """Log the error and handle it gracefully."""
@@ -633,6 +698,8 @@ def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
+    application.add_handler(CommandHandler("slock", slock, block=False))
+    application.add_handler(CommandHandler("unlock", unlock, block=False))
     #application.add_handler(CommandHandler("fav", fav, block=False))
     application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
     #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
