@@ -211,6 +211,7 @@ async def ul(client, message):
                 'anime': anime,
                 'rarity': rarity_text,
                 'id': available_id,
+                'slock': false,
                 'added': message.from_user.id
             }
 
@@ -512,6 +513,7 @@ async def upload_video_character(client, message):
         'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
         'id': available_id,
         'vid_url': vid_url,
+        'slock': false
     }
 
     try:
