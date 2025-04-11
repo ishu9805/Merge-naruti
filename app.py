@@ -57,13 +57,17 @@ def search_waifus():
         query_filters['id'] = {'$regex': id_query, '$options': 'i'}
 
     waifus = list(collection.find(query_filters))
-    results = [{
-        'character_name': waifu['name'],
-        'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'),
-        'id': waifu.get('id', 'N/A')
-    } for waifu in waifus]
+    results = []
+    for waifu in waifus:
+        media_url = waifu.get('vid_url') or waifu.get('img_url')
+        results.append({
+            'character_name': waifu['name'],
+            'anime_name': waifu['anime'],
+            'media_url': media_url,
+            'rarity': waifu.get('rarity', 'Unknown'),
+            'id': waifu.get('id', 'N/A')
+        })
+
     return jsonify({'results': results})
 
 @app.route('/waifus', methods=['GET'])
