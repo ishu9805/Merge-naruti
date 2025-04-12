@@ -1,140 +1,189 @@
-from flask_cors import CORS
-from pymongo import MongoClient
-import requests
-from flask import Flask, jsonify, send_from_directory, request, Response
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blade Network</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('https://files.catbox.moe/9jbemn.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+        }
+        header img {
+            height: 50px;
+        }
+        header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        nav ul li {
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .character-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 150px;
+            height: auto;
+        }
+        .character-item img {
+            width: 120px; /* Adjust width */
+            height: 120px; /* Adjust height */
+            object-fit: cover; /* Maintain aspect ratio */
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px /* Lazy load images */
+            cursor: pointer; /* Change cursor to pointer */
+        }
+        .character-item h3 {
+            margin: 10px 0 5px;
+            font-size: 1.0em;
+        }
+        .character-item p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+        }
 
+        /* Modal (Popup) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.8); /* Black with opacity */
+            animation: fadeIn 0.5s; /* Animation for showing */
+        }
 
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 600px;
+            position: relative;
+        }
 
-# Other routes...
+        .modal-content img {
+            width: 100%; /* Responsive image */
+        }
 
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-app = Flask(__name__, static_folder='frontend/static')
-CORS(app)
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
 
-# MongoDB connection URL
-mongo_url = "mongodb+srv://abhi47903:sashtadev143@naruto.svojv.mongodb.net/"
-client = MongoClient(mongo_url)
-db = client['NARUTOGAMEBOT']
-collection = db['anime_characters_lol']
-user_collection = db['user_collection_lmaoooo']  # Collection storing user collections with a 'characters' array
-
-
-@app.route('/proxy-image/<path:url>')
-def proxy_image(url):
-    telegraph_url = f"https://telegra.ph/{url}"
-    try:
-        response = requests.get(telegraph_url, stream=True)
-        response.raise_for_status()
-        return Response(response.content, mimetype=response.headers['Content-Type'])
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': 'Image not found or could not be retrieved'}), 404
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network">
+        <h1>Blade Network</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="#search">Search</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>        
+        <section id="search">
+            <h2>Search Characters</h2>
+            <form id="multi-search-form">
+                <input type="text" id="name-query" placeholder="Search by name">
+                <input type="text" id="anime-query" placeholder="Search by anime">
+                <input type="text" id="rarity-query" placeholder="Search by rarity">
+                <input type="text" id="id-query" placeholder="Search by ID">
+                <button type="submit">Search</button>
+            </form>
+            <div id="applied-filters"></div>
+            <div id="search-results" class="character-grid"></div>
+            <div class="pagination">
+                <button id="prev-page" disabled>Previous</button>
+                <button id="next-page">Next</button>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Blade Network</p>
+    </footer>
     
-# Serve homepage
-@app.route('/')
-def home():
-    return send_from_directory('frontend/static', 'index.html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('frontend/static', filename)
-
-# Search waifus by name, anime, rarity, or ID
-@app.route('/waifus/search', methods=['GET'])
-def search_waifus():
-    name_query = request.args.get('name', '')
-    anime_query = request.args.get('anime', '')
-    rarity_query = request.args.get('rarity', '')
-    id_query = request.args.get('id', '')
-
-    query_filters = {}
-    if name_query:
-        query_filters['name'] = {'$regex': name_query, '$options': 'i'}
-    if anime_query:
-        query_filters['anime'] = {'$regex': anime_query, '$options': 'i'}
-    if rarity_query:
-        query_filters['rarity'] = {'$regex': rarity_query, '$options': 'i'}
-    if id_query:
-        query_filters['id'] = {'$regex': id_query, '$options': 'i'}
-
-    waifus = list(collection.find(query_filters))
-    results = [{
-        'character_name': waifu['name'],
-        'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'),
-        'id': waifu.get('id', 'N/A')
-    } for waifu in waifus]
-    return jsonify({'results': results})
-
-@app.route('/waifus', methods=['GET'])
-def get_characters():
-    try:
-        page = int(request.args.get('page', 1))
-        size = int(request.args.get('size', 15))
-        skip = (page - 1) * size
-        limit = size
-
-        total_count = collection.count_documents({})
-        has_next_page = (total_count > page * size)
-
-        waifus = list(collection.find().skip(skip).limit(limit))
-        results = [{
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': f"/proxy-image/{waifu['img_url'].replace('https://telegra.ph/', '')}",
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        } for waifu in waifus]
-
-        return jsonify({'results': results, 'hasNextPage': has_next_page})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# Get specific waifu by character name
-@app.route('/waifus/<string:character_name>', methods=['GET'])
-def get_waifu(character_name):
-    waifu = collection.find_one({'name': {'$regex': character_name, '$options': 'i'}})
-    if waifu:
-        return jsonify({
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        })
-    else:
-        return jsonify({'error': 'Waifu not found'}), 404
-
-# Search user by ID and get their characters array
-@app.route('/user/search', methods=['GET'])
-def search_user_collection():
-    user_id = request.args.get('user_id', '')
-    if user_id:
-        user = user_collection.find_one({'user_id': user_id})
-        if user:
-            characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
-            return jsonify({
-                'user_id': user_id,
-                'characters': characters
-            })
-        else:
-            return jsonify({'error': 'User not found'}), 404
-    else:
-        return jsonify({'error': 'User ID is required'}), 400
-
-# Serve user's collection via URL
-@app.route('/user/<string:user_id>/collection', methods=['GET'])
-def get_user_collection(user_id):
-    user = user_collection.find_one({'user_id': user_id})
-    if user:
-        characters = user.get('characters', [])  # Assuming 'characters' is an array in user collection
-        return jsonify({
-            'user_id': user_id,
-            'characters': characters
-        })
-    else:
-        return jsonify({'error': 'User not found'}), 404
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    <!-- Popup Modal -->
+    <div id="image-popup" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="popup-image" src="" alt="Popup Image">
+        </div>
+    </div>
+    
+    <script src="scripts.js"></script>
+</body>
+</html>
