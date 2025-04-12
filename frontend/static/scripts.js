@@ -44,20 +44,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 const loadCharacters = async (page) => {
-    searchResultsDiv.innerHTML = '<div class="loading">Loading...</div>';
+    searchResultsDiv.innerHTML = 'Loading...';
     const nameQuery = document.getElementById('name-query').value.trim();
     const animeQuery = document.getElementById('anime-query').value.trim();
     const rarityQuery = document.getElementById('rarity-query').value.trim();
     const idQuery = document.getElementById('id-query').value.trim();
 
     try {
-        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}&page=${page}`);
+        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
         let data = await response.json();
+
+        // Sort results in descending order by ID
+        data.results.sort((a, b) => b.id - a.id);
 
         if (data.results && data.results.length > 0) {
             searchResultsDiv.innerHTML = data.results.map(item => `
                 <div class="character-item">
-                    <img src="${item.media_url}" alt="${item.character_name}" loading="lazy">
+                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
                     <h3>${item.character_name}</h3>
                     <p>Anime: ${item.anime_name}</p>
                     <p>Rarity: ${item.rarity}</p>
