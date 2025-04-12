@@ -59,20 +59,10 @@ def search_waifus():
     waifus = list(collection.find(query_filters))
     results = [{
         'character_name': waifu['name'],
-
-
         'anime_name': waifu['anime'],
-
-
         'image_url': waifu['img_url'],
-
-
-        'rarity': waifu.get('rarity', 'Unknown'),
-
-
+        'rarity': waifu.get('rarity', 'Unknown'0,
         'id': waifu.get('id', 'N/A')
-
-
     } for waifu in waifus]
 
     return jsonify({'results': results})
