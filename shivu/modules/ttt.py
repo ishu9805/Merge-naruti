@@ -292,5 +292,3 @@ async def handle_surrender(client: Client, callback_query: CallbackQuery):
     del active_games[game_id]
     await callback_query.answer()
 
-print("Bot is running...")
-app.run()
