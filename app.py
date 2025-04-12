@@ -4,10 +4,6 @@ import requests
 from flask import Flask, jsonify, send_from_directory, request, Response
 
 
-
-# Other routes...
-
-
 app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
 
@@ -61,11 +57,12 @@ def search_waifus():
         'character_name': waifu['name'],
         'anime_name': waifu['anime'],
         'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'0,
+        'rarity': waifu.get('rarity', 'Unknown'),
         'id': waifu.get('id', 'N/A')
     } for waifu in waifus]
-
     return jsonify({'results': results})
+
+
 
 @app.route('/waifus', methods=['GET'])
 def get_characters():
