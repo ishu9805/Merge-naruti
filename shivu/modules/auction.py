@@ -259,7 +259,7 @@ async def place_bid(client, message):
     )
 
     await message.send_message(
-        chat_id= -1002610579411,
+        -1002610579411,
         f"New Bid: {bid_amount} by @{message.from_user.username}\n"
         f"Current Highest Bidder: @{message.from_user.username}",
     )
