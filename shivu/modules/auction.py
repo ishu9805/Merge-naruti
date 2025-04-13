@@ -165,7 +165,7 @@ async def end_auction(client, message):
     await client.send_message(
         message.chat.id,
         f"The auction for {active_auction['waifu_name']} has ended.\n\n"
-        f"last highest bidder send message to @alone_x_hater"
+        f"last highest bidder send message to @anime_arts_21"
     )
     await auction_collection.delete_one({"_id": active_auction["_id"]})
 
@@ -259,7 +259,7 @@ async def place_bid(client, message):
     )
 
     await message.send_message(
-        -1002610579411,
+        chat_id= -1002610579411,
         f"New Bid: {bid_amount} by @{message.from_user.username}\n"
         f"Current Highest Bidder: @{message.from_user.username}",
     )
