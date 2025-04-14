@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, PARTNER
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
@@ -39,7 +39,7 @@ BEACH_PARTY_LINK = "https://t.me/+GI1fWK_cYnA3OTFl"
 SUMMER_RARITY = "🌤 Summer"
 VACATION_COOLDOWN = timedelta(days=7)
 MAX_CLAIM_USERS = 100  # Default maximum claims
-
+OWNER_ID = ["7378476666"]
 # Runtime storage
 summer_claim_locks = {}
 claimed_users_count = 0
@@ -81,7 +81,7 @@ async def summer_claim(client, message: t.Message):
                 await message.reply_text(
                     "🧴 **Oops!**\n\n"
                     "You need to apply some *bot sunscreen* first!\n"
-                    "Send /start in DM to protect yourself from errors!"
+                    "Send [start](https://t.me/Fancy_Waifu_Husbando_Bot?start=start) in DM to protect yourself from errors!"
                 )
                 return
             
@@ -127,8 +127,6 @@ async def summer_claim(client, message: t.Message):
             ]
             
             # If user has slock:true character, get another one
-            if has_slock:
-                pipeline[0]['$match']['slock'] = True
             
             summer_treasure = await collection.aggregate(pipeline).to_list(length=1)
             
@@ -163,8 +161,6 @@ async def summer_claim(client, message: t.Message):
                 f"📺 Anime: {character['anime']}\n"
             )
             
-            if has_slock:
-                caption += "\n⭐ Bonus: You received a special slock character!\n"
             
             caption += f"\n⛱ *Come back in 1 week for another beach adventure!*"
             
