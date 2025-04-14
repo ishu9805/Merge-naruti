@@ -37,7 +37,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 SUNNY_CHAT_ID = -1002610579411
 BEACH_PARTY_LINK = "https://t.me/+GI1fWK_cYnA3OTFl"
 SUMMER_RARITY = "🌤 Summer"
-VACATION_COOLDOWN = timedelta(days=7)
+VACATION_COOLDOWN1 = timedelta(days=7)
 MAX_CLAIM_USERS = 100  # Default maximum claims
 OWNER_ID = ["7378476666"]
 # Runtime storage
@@ -100,8 +100,8 @@ async def summer_claim(client, message: t.Message):
                 last_visit = last_dip.replace(tzinfo=None)
                 since_last = datetime.utcnow() - last_visit
                 
-                if since_last < VACATION_COOLDOWN:
-                    remaining = VACATION_COOLDOWN - since_last
+                if since_last < VACATION_COOLDOWN1:
+                    remaining = VACATION_COOLDOWN1 - since_last
                     days = remaining.days
                     hours, remainder = divmod(remaining.seconds, 3600)
                     minutes = remainder // 60
