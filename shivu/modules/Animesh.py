@@ -61,7 +61,7 @@ async def get_anime(client, message: Message):
         )
         await message.reply(response, disable_web_page_preview=True)
     else:
-        await message.reply(f"No link found for '{anime_name}'. Ask an admin @anime_arts_21 to add it with /addfilter.")
+        await message.send_message(chat_id=7377653906, text= f"'{anime_name}'. addit.")
 
 # Remove filter command
 @app.on_message(filters.command("removefilter") & filters.user([7378476666]))
