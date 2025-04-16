@@ -57,7 +57,7 @@ RARITY_MAPPING = {
 async def is_member(user_id):
     """Check if a user is part of the required group."""
     try:
-        member = await application.bot.get_chat_member(-1002610579411, user_id)
+        member = await application.bot.get_chat_member("-1002610579411", user_id)
         return member.status in ['member', 'administrator', 'creator']
     except Exception:
         return False
@@ -69,13 +69,14 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if not await is_member(user_id):
         group_link = "https://t.me/+GI1fWK_cYnA3OTFl"  # Replace with the actual group invite link
         messages = (
-            "You need to be a member of our exclusive group to use this command.\n"
+            "You need to be a member of our exclusive group to use this command."
         )
         reply_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
         await message.reply_text(messages, reply_markup=reply_markup)
         return
+        
     if not user:
         message = 'You Have Not Guessed any Characters Yet..'
         if update.message:
