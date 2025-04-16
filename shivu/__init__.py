@@ -49,7 +49,7 @@ ban_collectionps = dbps['bans']
 main_countps = dbps['counts']
 user_countps = dbps['ucount']
 banned_collectionps = dbps['banned']
-
+anime_collection = dbps['anime']
 
 
     
