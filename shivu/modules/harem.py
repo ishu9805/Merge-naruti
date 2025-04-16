@@ -73,7 +73,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         reply_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
-        await message.reply_text(messages, reply_markup=reply_markup)
+        await update.message.reply_text(messages, reply_markup=reply_markup)
         return
         
     if not user:
