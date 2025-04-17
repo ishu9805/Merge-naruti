@@ -61,7 +61,7 @@ rarity_map = {
     5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
     8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
     12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
-    15: "🎭 Cosplay Master 🎭", 17: "🎖 Apex Lot ( AUCTION )", 16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨", 18: "Echhi"
+    15: "🎭 Cosplay Master 🎭", 17: "🎖 Apex Lot ( AUCTION )", 16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨", 18: "🍑 Echhi"
 }
 # Function to find the next available ID for a character
 
