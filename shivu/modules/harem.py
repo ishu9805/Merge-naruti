@@ -66,7 +66,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
     #user_info = await user_count.find_one({'user_id': user_id})
-    if not await is_member(user_id):
+    """if not await is_member(user_id):
         group_link = "https://t.me/+GI1fWK_cYnA3OTFl"  # Replace with the actual group invite link
         messages = "You need to be a member of our exclusive group to use this command."
         
@@ -74,7 +74,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
         await update.message.reply_text(messages, reply_markup=reply_markup)
-        return
+        return"""
         
     if not user:
         message = 'You Have Not Guessed any Characters Yet..'
