@@ -9,7 +9,7 @@ from shivu import (
     user_collectionps as user_collection,
     user_totals_collectionps as user_totals_collection,
     shivuups as app,
-    SUPPORT_CHAT_ID,
+    
     OWNER_ID
 )
 
@@ -17,7 +17,7 @@ from shivu import (
 message_counts = defaultdict(int)
 lock = asyncio.Lock()
 BATCH_SIZE = 100  # Update DB every 100 messages
-
+SUPPORT_CHAT_ID = -1002545997671
 # Task milestones configuration
 TASK_MILESTONES = {
     300: {
