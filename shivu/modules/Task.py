@@ -183,7 +183,7 @@ async def claim_limited(client, message):
         return await message.reply("❌ You need 800 messages to claim this reward!")
     
     # Check grab requirements
-    passed, msg = await check_grab_requirements(user_id, 800)
+    passed, msg = await check_grab_requirements(user_id, 200)
     if not passed:
         return await message.reply(msg)
     
