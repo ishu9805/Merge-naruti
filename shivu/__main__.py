@@ -495,10 +495,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
         
         # Set the app
         # Set the appropriate inline query
-        if rarity == "🎗️ 𝘼𝙣𝙞𝙢𝙖𝙩𝙚𝙙":
-            inline_query = f"collection.vid.{user_id}"
-        else:
-            inline_query = f"collection.img.{user_id}"
+        if rarity == "🟡 Legendary":
+            await user_collection.update_one(
+            {'id': user_id},
+            {'$inc': {'grab': 1}},  # Increment grab count by 1
+            upsert=True
+            )
+            
+        inline_query = f"collection.img.{user_id}"
         
         keyboard = InlineKeyboardMarkup(
             [[
