@@ -20,40 +20,82 @@ BATCH_SIZE = 100  # Update DB every 100 messages
 SUPPORT_CHAT_ID = -1002545997671
 # Task milestones configuration
 TASK_MILESTONES = {
-    300: {
-        'type': 'special',
-        'rarity': '💮 Special Edition',
-        'message': "🎉 300 messages! Claim your 💮 Special Edition with /special_claim"
-    },
-    800: {
-        'type': 'limited', 
-        'rarity': '🔮 Limited Edition',
-        'message': "🌟 800 messages! Choose 🔮 Limited Edition with /limited_claim",
-        'grab_required': 2  # 2 legendary grabs required
-    },
-    2000: {
-        'type': 'referral',
-        'rarities': ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'],
-        'message': "🏆 2000 messages! Get referral code with /referral_claim"
-    },
-    3500: {
-        'type': 'ultimate',
-        'rarity': '💎 Ultimate Edition',
-        'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim",
-        'grab_required': 15  # 15 legendary grabs required
-    },
-    4000: {
-        'type': 'celestial',
-        'rarity': '🎐 Celestial',
-        'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim"
-    }
-}
+
 
 async def get_user_count(user_id):
     """Get combined in-memory + database count"""
     async with lock:
         in_memory = message_counts.get(user_id, 0)
-    user_data = await user_totals_collection.find_one({'user_id': user_id})
+    user_data = await user_totals_collection.# Updated TASK_MILESTONES with all required keys
+TASK_MILESTONES = {
+    300: {
+        'type': 'special',
+        'rarity': '💮 Special Edition',
+        'message': "🎉 300 messages! Claim your 💮 Special Edition with /special_claim",
+        'grab_required': 0  # Explicitly set for all milestones
+    },
+    800: {
+        'type': 'limited', 
+        'rarity': '🔮 Limited Edition',
+        'message': "🌟 800 messages! Choose 🔮 Limited Edition with /limited_claim",
+        'grab_required': 2
+    },
+    2000: {
+        'type': 'referral',
+        'rarity': 'Referral Rewards',  # Added rarity field
+        'rarities': ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'],
+        'message': "🏆 2000 messages! Get referral code with /referral_claim",
+        'grab_required': 0
+    },
+    3500: {
+        'type': 'ultimate',
+        'rarity': '💎 Ultimate Edition',
+        'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim",
+        'grab_required': 15
+    },
+    4000: {
+        'type': 'celestial',
+        'rarity': '🎐 Celestial',
+        'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim",
+        'grab_required': 0
+    }
+}
+
+# Updated task_command to handle missing keys safely
+@app.on_message(filters.command("task"))
+async def task_command(client, message):
+    user_id = message.from_user.id
+    total = await get_user_count(user_id)
+    grab_count = await get_grab_count(user_id)
+    
+    response = [
+        "📊 **Your Task Progress**",
+        f"💬 Messages: {total}",
+        f"⚡ Legendary Grabs: {grab_count}",
+        "",
+        "🎯 **Milestone Rewards**:"
+    ]
+    
+    for milestone, data in sorted(TASK_MILESTONES.items()):
+        status = "✅" if total >= milestone else "◻️"
+        remaining = max(0, milestone - total)
+        
+        # Safely get rarity with default
+        rarity = data.get('rarity', 'Reward')
+        
+        # Handle both grab and non-grab milestones
+        if 'grab_required' in data and data['grab_required'] > 0:
+            grab_status = "✅" if grab_count >= data['grab_required'] else "❌"
+            response.append(
+                f"{status} {rarity} at {milestone} messages ({remaining} left) "
+                f"& {grab_status} {data['grab_required']} grabs needed"
+            )
+        else:
+            response.append(
+                f"{status} {rarity} at {milestone} messages ({remaining} left)"
+            )
+    
+    await message.reply_text("\n".join(response))find_one({'user_id': user_id})
     db_count = user_data.get('count', 0) if user_data else 0
     return db_count + in_memory
 
@@ -124,36 +166,6 @@ async def count_messages(client, message):
                         await client.send_message(user_id, data['message'])
                     break
 
-@app.on_message(filters.command("task"))
-async def task_command(client, message):
-    user_id = message.from_user.id
-    total = await get_user_count(user_id)
-    grab_count = await get_grab_count(user_id)
-    
-    response = [
-        "📊 **Your Task Progress**",
-        f"💬 Messages: {total}",
-        f"⚡ Legendary Grabs: {grab_count}",
-        "",
-        "🎯 **Milestone Rewards**:"
-    ]
-    
-    for milestone, data in TASK_MILESTONES.items():
-        status = "✅" if total >= milestone else "◻️"
-        remaining = max(0, milestone - total)
-        
-        if 'grab_required' in data:
-            grab_status = "✅" if grab_count >= data['grab_required'] else "❌"
-            response.append(
-                f"{status} {data['rarity']} at {milestone} messages ({remaining} left) "
-                f"& {grab_status} {data['grab_required']} grabs needed"
-            )
-        else:
-            response.append(
-                f"{status} {data['rarity']} at {milestone} messages ({remaining} left)"
-            )
-    
-    await message.reply_text("\n".join(response))
 
 @app.on_message(filters.command("mygrabs"))
 async def check_grabs(client, message):
@@ -177,7 +189,7 @@ async def claim_special(client, message):
     total = await get_user_count(user_id)
     
     if total < 300:
-        return await message.reply("❌ You need 300 messages to claim this reward!")
+     return await message.reply("❌ You need 300 messages to claim this reward!")
     
     # Check if already claimed
     user_data = await user_totals_collection.find_one({'user_id': user_id})
