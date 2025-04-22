@@ -34,18 +34,12 @@ TASK_MILESTONES = {
         'message': "🌟 800 messages! Choose 🔮 Limited Edition with /limited_claim",
         'grab_required': 4
     },
-    2000: {
+    240: {
         'type': 'referral',
         'rarity': 'Referral Rewards',  # Added rarity field
         'rarities': ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'],
         'message': "🏆 2000 messages! Get referral code with /referral_claim",
-        'grab_required': 10
-    },
-    3500: {
-        'type': 'ultimate',
-        'rarity': '💎 Ultimate Edition',
-        'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim id [of your choice]",
-        'grab_required': 13
+        'grab_required': 4
     },
     4000: {
         'type': 'celestial',
@@ -222,20 +216,10 @@ async def claim_limited(client, message):
         )
     else:
         # Show list of available Limited Edition characters if no ID provided
-        chars = await collection.find(
-            {'rarity': '🔮 Limited Edition'}
-        ).to_list(length=50)
-        
-        if not chars:
-            return await message.reply("⚠️ No limited characters available!")
-        
-        char_list = "\n".join([f"{c['name']} ({c['anime']}) - ID: `{c['id']}`" for c in chars[:20]])
-        await message.reply_text(
-            f"🔮 Available Limited Edition Characters:\n\n{char_list}\n\n"
-            "Reply with: /limited_claim <character_id>"
-        )
+        await message.reply("provide id too")
 
-@app.on_message(filters.command("ultimate_claim"))
+
+@app.on_message(filters.command("uclaim"))
 async def claim_ultimate(client, message):
     user_id = message.from_user.id
     total = await get_user_count(user_id)
@@ -283,19 +267,133 @@ async def claim_ultimate(client, message):
         )
     else:
         # Show list of available Ultimate Edition characters if no ID provided
-        chars = await collection.find(
-            {'rarity': '💎 Ultimate Edition'}
-        ).to_list(length=50)
-        
-        if not chars:
-            return await message.reply("⚠️ No ultimate characters available!")
-        
-        char_list = "\n".join([f"{c['name']} ({c['anime']}) - ID: `{c['id']}`" for c in chars[:20]])
-        await message.reply_text(
-            f"💎 Available Ultimate Edition Characters:\n\n{char_list}\n\n"
-            "Reply with: /ultimate_claim <character_id>"
-        )
+        await message.reply("provide id too")
 
+
+@app.on_message(filters.command("rclaim"))
+async def referral_claim(client, message):
+    try:
+        user_id = message.from_user.id
+        total = await get_user_count(user_id)
+        
+        if total < 2000:
+            return await message.reply("❌ You need 2000 messages to claim referral rewards!")
+        
+        user_data = await user_totals_collection.find_one({'user_id': user_id})
+        if user_data and user_data.get('claimed_2000'):
+            return await message.reply("⚠️ You've already claimed your referral code!")
+
+        # Check if user provided a character ID
+        if len(message.command) > 1:
+            char_id = message.command[1]
+            # Check if it's a valid seasonal character
+            seasonal_rarities = TASK_MILESTONES[2000]['rarities']
+            char = await collection.find_one({
+                'id': char_id,
+                'rarity': {'$in': seasonal_rarities}
+            })
+            
+            if not char:
+                return await message.reply("❌ Invalid ID or not a seasonal character!")
+        else:
+            # Show list of available seasonal characters if no ID provided
+            await message.reply("provide id too")
+
+        # Generate unique referral code
+        referral_code = generate_referral_code()
+        
+        # Update user data with referral code and claimed character
+        await asyncio.gather(
+            user_collection.update_one(
+                {'id': user_id},
+                {'$push': {'characters': char}},
+                upsert=True
+            ),
+            user_totals_collection.update_one(
+                {'user_id': user_id},
+                {'$set': {
+                    'claimed_2000': True,
+                    'referral_code': referral_code,
+                    'referral_count': 0
+                }},
+                upsert=True
+            )
+        )
+        
+        await message.reply_photo(
+            char['img_url'],
+            caption=f"🎁 Referral Reward Claimed!\n\n"
+                   f"🔖 Your Referral Code: `{referral_code}`\n"
+                   f"Share this code with friends to earn bonuses!\n\n"
+                   f"Selected Character:\n{char['name']}\n{char['rarity']}\n{char['anime']}"
+        )
+        
+    except Exception as e:
+        await message.reply("⚠️ An error occurred while processing your claim.")
+        print(f"Error in referral_claim: {e}")
+
+@app.on_message(filters.command("cclaim") & filters.private)
+async def celestial_claim(client, message):
+    try:
+        user_id = message.from_user.id
+        total = await get_user_count(user_id)
+        
+        if total < 4000:
+            return await message.reply("❌ You need 4000 messages to claim this celestial reward!")
+        
+        user_data = await user_totals_collection.find_one({'user_id': user_id})
+        if user_data and user_data.get('claimed_4000'):
+            return await message.reply("⚠️ You've already claimed your celestial reward!")
+
+        # Check if user provided a character ID
+        if len(message.command) > 1:
+            char_id = message.command[1]
+            char = await collection.find_one({
+                'id': char_id,
+                'rarity': '🎐 Celestial'
+            })
+            
+            if not char:
+                return await message.reply("❌ Invalid ID or not a celestial character!")
+        else:
+            # Show list of available celestial characters if no ID provided
+            chars = await collection.find(
+                {'rarity': '🎐 Celestial'}
+            ).to_list(length=50)
+            
+            if not chars:
+                return await message.reply("⚠️ No celestial characters available!")
+            
+            char_list = "\n".join([f"{c['name']} ({c['anime']}) - ID: `{c['id']}`" for c in chars[:20]])
+            return await message.reply_text(
+                f"✨ Available Celestial Characters:\n\n{char_list}\n\n"
+                "Reply with: /celestial_claim <character_id>"
+            )
+
+        # Update user data with claimed character
+        await asyncio.gather(
+            user_collection.update_one(
+                {'id': user_id},
+                {'$push': {'characters': char}},
+                upsert=True
+            ),
+            user_totals_collection.update_one(
+                {'user_id': user_id},
+                {'$set': {'claimed_4000': True}},
+                upsert=True
+            )
+        )
+        
+        await message.reply_photo(
+            char['img_url'],
+            caption=f"✨ Celestial Reward Claimed!\n\n"
+                   f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
+                   f"This rare celestial character is yours forever!"
+        )
+        
+    except Exception as e:
+        await message.reply("⚠️ An error occurred while claiming your celestial reward.")
+        print(f"Error in celestial_claim: {e}")
 # ... [Keep all your existing referral, celestial, and exchange commands] ...
 
 # Character grab detection handler
