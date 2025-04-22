@@ -22,13 +22,13 @@ SUPPORT_CHAT_ID = -1002545997671
 
 # Updated TASK_MILESTONES with all required keys
 TASK_MILESTONES = {
-    300: {
+    160: {
         'type': 'special',
         'rarity': '💮 Special Edition',
         'message': "🎉 300 messages! Claim your 💮 Special Edition with /special_claim",
         'grab_required': 2  # Explicitly set for all milestones
     },
-    800: {
+    200: {
         'type': 'limited', 
         'rarity': '🔮 Limited Edition',
         'message': "🌟 800 messages! Choose 🔮 Limited Edition with /limited_claim",
