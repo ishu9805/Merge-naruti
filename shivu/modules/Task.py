@@ -174,12 +174,12 @@ async def claim_special(client, message):
         caption=f"🎁 Reward Claimed!\n\n{char[0]['name']}\n{char[0]['rarity']}\n{char[0]['anime']}"
     )
 
-@app.on_message(filters.command("limited_claim"))
+@app.on_message(filters.command("lclaim"))
 async def claim_limited(client, message):
     user_id = message.from_user.id
     total = await get_user_count(user_id)
     
-    if total < 800:
+    if total < 200:
         return await message.reply("❌ You need 800 messages to claim this reward!")
     
     # Check grab requirements
