@@ -19,14 +19,8 @@ lock = asyncio.Lock()
 BATCH_SIZE = 100  # Update DB every 100 messages
 SUPPORT_CHAT_ID = -1002545997671
 # Task milestones configuration
-TASK_MILESTONES = {
 
-
-async def get_user_count(user_id):
-    """Get combined in-memory + database count"""
-    async with lock:
-        in_memory = message_counts.get(user_id, 0)
-    user_data = await user_totals_collection.# Updated TASK_MILESTONES with all required keys
+# Updated TASK_MILESTONES with all required keys
 TASK_MILESTONES = {
     300: {
         'type': 'special',
@@ -95,7 +89,14 @@ async def task_command(client, message):
                 f"{status} {rarity} at {milestone} messages ({remaining} left)"
             )
     
-    await message.reply_text("\n".join(response))find_one({'user_id': user_id})
+    await message.reply_text("\n".join(response))
+
+
+async def get_user_count(user_id):
+    """Get combined in-memory + database count"""
+    async with lock:
+        in_memory = message_counts.get(user_id, 0)
+    user_data = await user_totals_collection.find_one({'user_id': user_id})
     db_count = user_data.get('count', 0) if user_data else 0
     return db_count + in_memory
 
@@ -178,7 +179,7 @@ async def check_grabs(client, message):
         "",
         "🎯 **Milestone Requirements**:",
         f"- 2 grabs needed for 800 messages reward ({'✅' if grab_count >= 2 else '❌'})",
-        f"- 15 grabs needed for 3500 messages reward ({'✅' if grab_count >= 15 else '❌'})"
+        f"- 15 grabs reeded for 3500 messages reward ({'✅' if grab_count >= 15 else '❌'})"
     ]
     
     await message.reply_text("\n".join(response))
@@ -189,7 +190,7 @@ async def claim_special(client, message):
     total = await get_user_count(user_id)
     
     if total < 300:
-     return await message.reply("❌ You need 300 messages to claim this reward!")
+        return await message.reply("❌ You need 300 messages to claim this reward!")
     
     # Check if already claimed
     user_data = await user_totals_collection.find_one({'user_id': user_id})
@@ -360,5 +361,4 @@ async def detect_grabs(client, message):
             {'$inc': {'grab': 1}},
             upsert=True
         )
-
 
