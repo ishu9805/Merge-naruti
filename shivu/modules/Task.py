@@ -91,9 +91,7 @@ async def update_counts():
                 await user_totals_collection.bulk_write(bulk_ops)
                 message_counts.clear()
 
-@app.on_startup()
-async def startup():
-    asyncio.create_task(update_counts())
+
 
 @app.on_message(filters.text & filters.group & filters.chat(SUPPORT_CHAT_ID))
 async def count_messages(client, message):
@@ -339,7 +337,7 @@ async def claim_ultimate(client, message):
 # ... [Keep all your existing referral, celestial, and exchange commands] ...
 
 # Character grab detection handler
-@app.on_message(filters.text & filters.group & filters.chat(SUPPORT_CHAT_ID))
+#@app.on_message(filters.text & filters.group & filters.chat(SUPPORT_CHAT_ID))
 async def detect_grabs(client, message):
     # This assumes your system has a way to detect when a legendary character is grabbed
     # Modify this according to how your character collection system works
@@ -351,5 +349,4 @@ async def detect_grabs(client, message):
             upsert=True
         )
 
-if __name__ == "__main__":
-    app.run()
+
