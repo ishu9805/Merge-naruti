@@ -26,22 +26,22 @@ TASK_MILESTONES = {
         'type': 'special',
         'rarity': '💮 Special Edition',
         'message': "🎉 300 messages! Claim your 💮 Special Edition with /special_claim",
-        'grab_required': 0  # Explicitly set for all milestones
+        'grab_required': 2  # Explicitly set for all milestones
     },
     800: {
         'type': 'limited', 
         'rarity': '🔮 Limited Edition',
         'message': "🌟 800 messages! Choose 🔮 Limited Edition with /limited_claim",
-        'grab_required': 2
+        'grab_required': 4
     },
     2000: {
         'type': 'referral',
         'rarity': 'Referral Rewards',  # Added rarity field
         'rarities': ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'],
         'message': "🏆 2000 messages! Get referral code with /referral_claim",
-        'grab_required': 0
+        'grab_required': 4
     },
-    3500: {
+    3000: {
         'type': 'ultimate',
         'rarity': '💎 Ultimate Edition',
         'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim",
@@ -51,7 +51,7 @@ TASK_MILESTONES = {
         'type': 'celestial',
         'rarity': '🎐 Celestial',
         'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim",
-        'grab_required': 0
+        'grab_required': 15
     }
 }
 
