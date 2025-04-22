@@ -133,12 +133,12 @@ async def check_grabs(client, message):
     
     await message.reply_text("\n".join(response))
 
-@app.on_message(filters.command("special_claim"))
+@app.on_message(filters.command("sclaim"))
 async def claim_special(client, message):
     user_id = message.from_user.id
     total = await get_user_count(user_id)
     
-    if total < 300:
+    if total < 160:
         return await message.reply("❌ You need 300 messages to claim this reward!")
     
     # Check if already claimed
