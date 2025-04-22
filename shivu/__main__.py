@@ -27,6 +27,7 @@ from shivu import (
 from shivu import user_countps as user_count, chat_dataps as chat_data
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins
+from shivu.modules.Task import update_counts
 from shivu.modules.top import create_indexes
 from shivu.modules.Hprofile import upgrade_chat_data
 from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
@@ -707,7 +708,7 @@ def main() -> None:
     # Use asyncio.create_task to run the bot in the background
     
     
-    asyncio.gather(update_total_characters_for_all_users(), create_indexes(), upgrade_chat_data())
+    asyncio.gather(update_total_characters_for_all_users(), create_indexes(), upgrade_chat_data(), update_counts())
     application.add_error_handler(error_handler)
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
    
