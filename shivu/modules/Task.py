@@ -39,19 +39,19 @@ TASK_MILESTONES = {
         'rarity': 'Referral Rewards',  # Added rarity field
         'rarities': ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'],
         'message': "🏆 2000 messages! Get referral code with /referral_claim",
-        'grab_required': 4
+        'grab_required': 10
     },
-    3000: {
+    3500: {
         'type': 'ultimate',
         'rarity': '💎 Ultimate Edition',
         'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim",
-        'grab_required': 15
+        'grab_required': 13
     },
     4000: {
         'type': 'celestial',
         'rarity': '🎐 Celestial',
         'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim",
-        'grab_required': 15
+        'grab_required': 17
     }
 }
 
@@ -64,7 +64,7 @@ async def task_command(client, message):
     
     response = [
         "📊 **Your Task Progress**",
-        f"💬 Messages: {total}",
+        f"💬 Messages: {total} [GROUP](https://t.me/+F93IEsHpc2hkNDc1)",
         f"⚡ Legendary Grabs: {grab_count}",
         "",
         "🎯 **Milestone Rewards**:"
@@ -114,58 +114,7 @@ async def check_grab_requirements(user_id, milestone):
         return False, f"❌ You need {required} legendary grabs (you have {grab_count}) to claim this reward!"
     return True, ""
 
-async def update_counts():
-    """Periodically update counts in database"""
-    while True:
-        await asyncio.sleep(60)  # Update every minute
-        async with lock:
-            if not message_counts:
-                continue
-                
-            bulk_ops = [
-                UpdateOne(
-                    {'user_id': uid},
-                    {'$inc': {'count': cnt}},
-                    upsert=True
-                ) for uid, cnt in message_counts.items() if cnt > 0
-            ]
-            
-            if bulk_ops:
-                await user_totals_collection.bulk_write(bulk_ops)
-                message_counts.clear()
 
-
-
-@app.on_message(filters.text & filters.group & filters.chat(SUPPORT_CHAT_ID))
-async def count_messages(client, message):
-    user_id = message.from_user.id
-    
-    async with lock:
-        message_counts[user_id] += 1
-        
-        # Immediate update if batch size reached
-        if message_counts[user_id] >= BATCH_SIZE:
-            await user_totals_collection.update_one(
-                {'user_id': user_id},
-                {'$inc': {'count': message_counts[user_id]}},
-                upsert=True
-            )
-            message_counts[user_id] = 0
-            
-            # Check for milestones after bulk update
-            user_data = await user_totals_collection.find_one({'user_id': user_id})
-            total = user_data.get('count', 0) if user_data else 0
-            
-            for milestone, data in TASK_MILESTONES.items():
-                if total == milestone:
-                    # Check grab requirements if needed
-                    if 'grab_required' in data:
-                        grab_count = await get_grab_count(user_id)
-                        if grab_count >= data['grab_required']:
-                            await client.send_message(user_id, data['message'])
-                    else:
-                        await client.send_message(user_id, data['message'])
-                    break
 
 
 @app.on_message(filters.command("mygrabs"))
