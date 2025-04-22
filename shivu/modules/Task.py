@@ -44,13 +44,13 @@ TASK_MILESTONES = {
     3500: {
         'type': 'ultimate',
         'rarity': '💎 Ultimate Edition',
-        'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim",
+        'message': "🚀 3500 messages! Claim 💎 Ultimate Edition with /ultimate_claim id [of your choice]",
         'grab_required': 13
     },
     4000: {
         'type': 'celestial',
         'rarity': '🎐 Celestial',
-        'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim",
+        'message': "✨ 4000 messages! Claim 🎐 Celestial with /celestial_claim id [choice]",
         'grab_required': 17
     }
 }
