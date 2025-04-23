@@ -113,12 +113,12 @@ async def check_grab_requirements(user_id, milestone):
 async def unified_claim(client, message):
     if len(message.command) < 2:
         return await message.reply(
-            "❌ Please specify a milestone to claim!\n"
-            "Available milestones:\n"
-            "• /claim 300 - 💮 Special Edition (automatic)\n"
-            "• /claim 700 [id] - 🔮 Limited Edition\n"
-            "• /claim 2000 [id] - 🎁 WVHC Edition\n"
-            "• /claim 3500 [id] - 🎐 Celestial Edition"
+            "❌ First complete the /task to claim!\n"
+            "Available milestones:\n\n"
+            "• /nclaim 300 - 💮 Special Edition (automatic)\n"
+            "• /nclaim 700 [id] - 🔮 Limited Edition (choice)\n"
+            "• /nclaim 2000 [id] - 🎁 WVHC Edition (choice)\n"
+            "• /nclaim 3500 [id] - 🎐 Celestial Edition (choice)"
         )
     
     try:
@@ -225,6 +225,10 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
             f"❌ Character not found or not {rarity}!\n"
             f"Use /list{milestone} to see available options."
         )
+    sup = char.get('slock')
+
+    if sup == 'True':
+        break 
     
     # Add confirmation step
     confirm_buttons = InlineKeyboardMarkup([
