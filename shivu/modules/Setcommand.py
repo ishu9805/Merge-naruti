@@ -1,27 +1,11 @@
 from pyrogram import Client, filters
 from pyrogram.types import BotCommand
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
-from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
-    shivuups as app,
-    applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
-)
+from shivu import shivuups as app
 
 @app.on_message(filters.command("setcommand") & filters.user([7378476666]))
 async def set_commands(client, message):
     commands = [
+        BotCommand("task", "📝 Complete tasks for rewards"),
         BotCommand("guess", "🎯 Catch a character"),
         BotCommand("gift", "🎁 Gift a character to someone"),
         BotCommand("trade", "🤝 Trade characters with others"),
@@ -32,7 +16,6 @@ async def set_commands(client, message):
         BotCommand("nhmode", "🔄 Toggle bot mode"),
         BotCommand("fav", "❤️ Add a character to your favorites"),
         BotCommand("check", "🔍 Look up a character by ID"),
-        BotCommand("total", "📊 Check total characters collected"),
         BotCommand("rarities", "💎 View characters by rarity"),
         BotCommand("daily", "🗓️ Claim your daily coins"),
         BotCommand("weekly", "📅 Claim your weekly coins"),
@@ -41,7 +24,6 @@ async def set_commands(client, message):
         BotCommand("convert", "💰 Convert coins into tokens"),
         BotCommand("tconvert", "💎 Convert tokens into coins"),
         BotCommand("shopmenu", "🛒 Browse premium characters in the shop"),
-        BotCommand("stats", "📈 Check your overall stats"),
         BotCommand("balance", "💵 View your current balance"),
         BotCommand("cointop", "👑 See the top coin holders"),
         BotCommand("tokentop", "🏅 See the top token holders"),
@@ -49,12 +31,14 @@ async def set_commands(client, message):
         BotCommand("dailycode", "📦 Generate a daily coin code"),
         BotCommand("credeem", "🎫 Redeem your coin code"),
         BotCommand("hclaim", "🎁 Claim your daily special reward"),
-        BotCommand("bid", "⚡ Participate in an auction")
+        
+        #BotCommand("work", "💼 Earn coins by working"),
+        #BotCommand("supportgroup", "🆘 Get help from support group"),
+        BotCommand("nclaim", "🤑 Claim your earnings")
     ]
 
     try:
         await client.set_bot_commands(commands)
-        await message.reply_text("✅ Bot commands have been beautifully updated! Check the menu.")
+        await message.reply_text("✅ Bot commands have been updated successfully!")
     except Exception as e:
         await message.reply_text(f"❌ Failed to set commands: {e}")
-
