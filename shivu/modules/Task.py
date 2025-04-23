@@ -228,8 +228,8 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     
     # Add confirmation step
     confirm_buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"confirm_{milestone}_{char_id}")],
-        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_claim")]
+        [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"tttconfirm_{milestone}_{char_id}")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="tcancel_claim")]
     ])
     
     await message.reply_photo(
@@ -241,7 +241,7 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     )
 
 # Callback handler for confirmation
-@app.on_callback_query(filters.regex(r"^confirm_(\d+)_(.+)$"))
+@app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+)$"))
 async def confirm_claim(client, callback_query):
     try:
         milestone = int(callback_query.matches[0].group(1))
