@@ -225,11 +225,11 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
             f"❌ Character not found or not {rarity}!\n"
             f"Use /list{milestone} to see available options."
         )
-    sup = char.get('slock')
 
+
+    sup = char.get('slock')
     if sup == 'True':
-        break 
-    
+        return await message.reply("❌ This character is locked and cannot be claimed!")
     # Add confirmation step
     confirm_buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"tttconfirm_{milestone}_{char_id}")],
