@@ -175,7 +175,16 @@ async def unified_claim(client, message):
             await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
         elif milestone == 2000:
             char_id = message.command[2]
-            await handle_id_claim(client, message, user_id, milestone, char_id, ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'])
+            if len(message.command) < 4:
+                return await message.reply(
+                    "❌ Please specify WVHC variant!\n"
+                    "Usage: /nclaim 2000 [ID] [VARIANT]\n"
+                    "Available variants:\n"
+                    "• ❄️ Winter\n• 💝 Valentine\n"
+                    "• 🎃 Halloween\n• 🎄 Christmas"
+                )
+                selected_rarity = ' '.join(message.command[3:])
+                await handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity)
         elif milestone == 3500:
             char_id = message.command[2]
             await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
@@ -186,6 +195,47 @@ async def unified_claim(client, message):
         logging.error(f"Claim error: {str(e)}")
         await message.reply("❌ An error occurred. Please try again later.")
 
+
+
+async def handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity):
+    """Special handler for WVHC seasonal variants"""
+    valid_rarities = ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas']
+    
+    if selected_rarity not in valid_rarities:
+        return await message.reply(
+            "❌ Invalid WVHC variant! Choose from:\n"
+            "• ❄️ Winter\n• 💝 Valentine\n"
+            "• 🎃 Halloween\n• 🎄 Christmas"
+        )
+    
+    char = await collection.find_one({
+        'id': char_id,
+        'rarity': selected_rarity
+    })
+    
+    if not char:
+        return await message.reply(
+            f"❌ Character {char_id} not found as {selected_rarity} variant!\n"
+            "Use /list2000 to see available options."
+        )
+    
+    sup = char.get('slock')
+    if sup == 'True':
+        return await message.reply("❌ This character is locked and cannot be claimed!")
+    
+    # Rest of the claim processing remains same as handle_id_claim
+    confirm_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"tttconfirm_{milestone}_{char_id}_{selected_rarity}")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="tcancel_claim")]
+    ])
+    
+    await message.reply_photo(
+        char['img_url'],
+        caption=f"⚠️ Confirm {selected_rarity} Claim:\n\n"
+                f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
+                "Are you sure?",
+        reply_markup=confirm_buttons
+    )
 async def handle_automatic_claim(client, message, user_id, milestone, rarity):
     """Handle automatic claims (no ID needed)"""
     char = await collection.aggregate([
@@ -244,16 +294,42 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
         reply_markup=confirm_buttons
     )
 
+@app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+)_(.+)$"))
+async def confirm_claim(client, callback_query):
+    try:
+        milestone = int(callback_query.matches[0].group(1))
+        char_id = callback_query.matches[0].group(2)
+        selected_rarity = callback_query.matches[0].group(3)
+        user_id = callback_query.from_user.id
+        
+        # For WVHC, use the selected_rarity from callback data
+        if milestone == 2000:
+            rarity = selected_rarity
+        else:
+            rarity = TASK_MILESTONES[milestone]['rarity']
+        
+        char = await collection.find_one({
+            'id': char_id,
+            'rarity': rarity
+        })
+
 # Callback handler for confirmation
 @app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+)$"))
 async def confirm_claim(client, callback_query):
     try:
         milestone = int(callback_query.matches[0].group(1))
         char_id = callback_query.matches[0].group(2)
+        selected_rarity = callback_query.matches[0].group(3)
         user_id = callback_query.from_user.id
         
         # Get the appropriate rarity for this milestone
         rarity = TASK_MILESTONES[milestone]['rarity']
+
+        if milestone == 2000:
+            rarity = selected_rarity
+        else:
+            rarity = TASK_MILESTONES[milestone]['rarity']
+
         
         char = await collection.find_one({
             'id': char_id,
@@ -290,17 +366,6 @@ async def confirm_claim(client, callback_query):
         await callback_query.answer("Failed to process claim!", show_alert=True)
 
 # List commands for each milestone
-@app.on_message(filters.command("list700"))
-async def list_limited_chars(client, message):
-    await list_available_chars(client, message, '🔮 Limited Edition')
-
-@app.on_message(filters.command("list2000"))
-async def list_wvhc_chars(client, message):
-    await list_available_chars(client, message, 'WVHC')
-
-@app.on_message(filters.command("list3500"))
-async def list_celestial_chars(client, message):
-    await list_available_chars(client, message, '🎐 Celestial')
 
 async def list_available_chars(client, message, rarity):
     chars = await collection.find(
