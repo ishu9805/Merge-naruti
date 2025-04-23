@@ -294,24 +294,6 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
         reply_markup=confirm_buttons
     )
 
-@app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+)_(.+)$"))
-async def confirm_claim(client, callback_query):
-    try:
-        milestone = int(callback_query.matches[0].group(1))
-        char_id = callback_query.matches[0].group(2)
-        selected_rarity = callback_query.matches[0].group(3)
-        user_id = callback_query.from_user.id
-        
-        # For WVHC, use the selected_rarity from callback data
-        if milestone == 2000:
-            rarity = selected_rarity
-        else:
-            rarity = TASK_MILESTONES[milestone]['rarity']
-        
-        char = await collection.find_one({
-            'id': char_id,
-            'rarity': rarity
-        })
 
 # Callback handler for confirmation
 @app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+)$"))
