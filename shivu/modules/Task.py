@@ -175,7 +175,7 @@ async def unified_claim(client, message):
             await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
         elif milestone == 2000:
             char_id = message.command[2]
-            await handle_id_claim(client, message, user_id, milestone, char_id, 'WVHC')
+            await handle_id_claim(client, message, user_id, milestone, char_id, ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas'])
         elif milestone == 3500:
             char_id = message.command[2]
             await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
