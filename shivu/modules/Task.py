@@ -12,6 +12,9 @@ from shivu import (
     
     OWNER_ID
 )
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 
 # Global in-memory counter
 message_counts = defaultdict(int)
@@ -356,10 +359,9 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
                 f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
                 "Are you sure?",
         reply_markup=confirm_buttons
+    )
 
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 @app.on_message(filters.command("reset_task"))
 async def reset_task_command(client, message):
