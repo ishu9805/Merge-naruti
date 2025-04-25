@@ -64,14 +64,12 @@ async def task_command(client, message):
         "🎯 **Milestone Rewards**:"
     ]
     
+    all_completed = True
     for milestone, data in sorted(TASK_MILESTONES.items()):
         status = "✅" if total >= milestone else "◻️"
         remaining = max(0, milestone - total)
-        
-        # Safely get rarity with default
         rarity = data.get('rarity', 'Reward')
         
-        # Handle both grab and non-grab milestones
         if 'grab_required' in data and data['grab_required'] > 0:
             grab_status = "✅" if grab_count >= data['grab_required'] else "❌"
             response.append(
@@ -82,8 +80,19 @@ async def task_command(client, message):
             response.append(
                 f"{status} {rarity} at {milestone} messages ({remaining} left)"
             )
+        
+        # Check if all milestones are completed
+        user_data = await user_totals_collection.find_one({'user_id': user_id})
+        claim_field = f"claimed_{milestone}"
+        if not user_data or not user_data.get(claim_field, False):
+            all_completed = False
+    
+    if all_completed:
+        response.append("\n🎉 You've completed ALL milestones!")
+        response.append("You can reset your tasks with /reset_task to start over")
     
     await message.reply_text("\n".join(response))
+
 
 
 async def get_user_count(user_id):
@@ -347,6 +356,76 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
                 f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
                 "Are you sure?",
         reply_markup=confirm_buttons
+
+
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+@app.on_message(filters.command("reset_task"))
+async def reset_task_command(client, message):
+    user_id = message.from_user.id
+    
+    # Check if user has completed all milestones
+    user_data = await user_totals_collection.find_one({'user_id': user_id})
+    if not user_data:
+        return await message.reply("❌ You haven't started any tasks yet!")
+    
+    all_completed = True
+    for milestone in TASK_MILESTONES:
+        claim_field = f"claimed_{milestone}"
+        if not user_data.get(claim_field, False):
+            all_completed = False
+            break
+    
+    if not all_completed:
+        return await message.reply("⚠️ You haven't completed all milestones yet! Use /task to check your progress.")
+    
+    # Create confirmation buttons
+    confirm_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Confirm Reset", callback_data=f"confirm_reset_{user_id}")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_reset")]
+    ])
+    
+    await message.reply(
+        "⚠️ This will reset ALL your task progress and claimed rewards!\n"
+        "You'll need to complete all milestones again.\n\n"
+        "Are you sure you want to reset?",
+        reply_markup=confirm_buttons
     )
+
+@app.on_callback_query(filters.regex(r"^confirm_reset_(\d+)$"))
+async def confirm_reset(client, callback_query):
+    user_id = int(callback_query.matches[0].group(1))
+    if callback_query.from_user.id != user_id:
+        return await callback_query.answer("This reset confirmation isn't for you!", show_alert=True)
+    
+    # Reset all task progress
+    await user_totals_collection.update_one(
+        {'user_id': user_id},
+        {'$unset': {f'claimed_{milestone}': "" for milestone in TASK_MILESTONES}},
+        upsert=True
+    )
+    
+    # Reset message count (both in DB and memory)
+    async with lock:
+        message_counts[user_id] = 0
+    
+    await user_totals_collection.update_one(
+        {'user_id': user_id},
+        {'$set': {'count': 0}},
+        upsert=True
+    )
+    
+    await callback_query.message.edit_text(
+        "♻️ All your task progress has been reset!\n"
+        "You can now start completing milestones again from scratch."
+    )
+    await callback_query.answer()
+
+@app.on_callback_query(filters.regex(r"^cancel_reset$"))
+async def cancel_reset(client, callback_query):
+    await callback_query.message.edit_text("✅ Task reset cancelled. Your progress remains unchanged.")
+    await callback_query.answer()
+
 
 
