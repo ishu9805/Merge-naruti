@@ -21,13 +21,13 @@ from shivu import (
     ban_collectionps as ban_collection,
     user_countps as user_count, 
     chat_dataps as chat_data,
+    force 
 )
 
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
-JOIN_URL = "https://t.me/naruto_support_chat"
-CHARACTERS_PER_PAGE = 10
 
+CHARACTERS_PER_PAGE = 10
 # Lock dictionary to track command processing
 claim_lock = {}
 
@@ -88,7 +88,7 @@ async def hclaim(_, message: t.Message):
          return
         
     if not await is_member(user_id):
-        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        group_link = force  # Replace with the actual group invite link
         messages = (
             "You need to be a member of our exclusive group to use this command.\n"
             "Join now and explore the amazing features awaiting you!\n\n"
