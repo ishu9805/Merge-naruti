@@ -21,6 +21,7 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
+
 import asyncio
 import logging
 from pyrogram import filters
@@ -33,7 +34,15 @@ from pyrogram.errors import (
     ChannelPrivate,
     ChatAdminRequired
 )
-
+from . import dev_filter
+from shivu import (
+    collection,
+    top_global_groups_collection,
+    group_user_totals_collection,
+    user_collection,
+    user_totals_collection,
+    shivuu as app
+)
 
 # Configurable settings
 MESSAGE_DELAY = 2  # Delay after every 7 messages
@@ -160,11 +169,10 @@ async def update_progress(progress_message, stats, additional_text=""):
         logger.error(f"Error updating progress: {e}")
 
 async def broadcast_to_users(client, stats, progress_message, replied_message):
-    user_cursor = client.user_collection.find({})
-    total_users = await client.user_collection.count_documents({})
+    total_users = await user_collection.count_documents({})
     processed = 0
     
-    async for user in user_cursor:
+    async for user in user_collection.find({}):
         user_id = user.get('id')
         if not user_id:
             continue
@@ -188,12 +196,11 @@ async def broadcast_to_users(client, stats, progress_message, replied_message):
             await asyncio.sleep(MESSAGE_DELAY)
 
 async def broadcast_to_groups(client, stats, progress_message, replied_message):
-    group_cursor = client.top_global_groups_collection.find({})
-    total_groups = await client.top_global_groups_collection.count_documents({})
+    total_groups = await top_global_groups_collection.count_documents({})
     processed = 0
     unique_group_ids = set()
     
-    async for group in group_cursor:
+    async for group in top_global_groups_collection.find({}):
         group_id = group.get('group_id')
         if not group_id or group_id in unique_group_ids:
             continue
@@ -247,4 +254,4 @@ async def broadcast_command(client, message):
         await progress_message.edit_text(
             f"⚠️ Broadcast interrupted due to an error:\n{str(e)}\n\n"
             + stats.get_report()
-        )
+            )
