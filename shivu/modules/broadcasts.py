@@ -35,14 +35,7 @@ from pyrogram.errors import (
     ChatAdminRequired
 )
 from . import dev_filter
-from shivu import (
-    collection,
-    top_global_groups_collection,
-    group_user_totals_collection,
-    user_collection,
-    user_totals_collection,
-    shivuu as app
-)
+
 
 # Configurable settings
 MESSAGE_DELAY = 2  # Delay after every 7 messages
