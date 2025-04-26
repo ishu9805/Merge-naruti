@@ -21,102 +21,230 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
+import asyncio
+import logging
+from pyrogram import filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.errors import (
+    PeerIdInvalid, 
+    FloodWait, 
+    ChatWriteForbidden, 
+    UserIsBlocked,
+    ChannelPrivate,
+    ChatAdminRequired
+)
+
+
 # Configurable settings
 MESSAGE_DELAY = 2  # Delay after every 7 messages
 PROGRESS_UPDATE_INTERVAL = 25  # Update progress every 25 users/groups
+MAX_RETRIES = 3  # Maximum retry attempts for failed sends
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
+class BroadcastStats:
+    def __init__(self):
+        self.user_success = 0
+        self.group_success = 0
+        self.fail_count = 0
+        self.message_count = 0
+        self.skipped_groups = 0
+
+    def get_report(self):
+        return (
+            f"📊 Broadcast Report:\n"
+            f"✅ Users reached: {self.user_success}\n"
+            f"✅ Groups reached: {self.group_success}\n"
+            f"❌ Failed attempts: {self.fail_count}\n"
+            f"⏩ Skipped groups: {self.skipped_groups}"
+        )
+
+def create_forward_markup(original_chat_id, message_id):
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(
+            "🔗 Forward Message",
+            url=f"https://t.me/c/{str(original_chat_id).replace('-100', '')}/{message_id}"
+        )
+    ]])
+
+async def send_message_with_retry(client, target_id, replied_message, stats):
+    for attempt in range(MAX_RETRIES):
+        try:
+            if replied_message.text:
+                # For text messages, send with forward button
+                sent_msg = await client.send_message(
+                    target_id,
+                    replied_message.text,
+                    reply_markup=create_forward_markup(
+                        replied_message.chat.id,
+                        replied_message.id
+                    )
+                )
+            else:
+                media_caption = replied_message.caption or ""
+                markup = create_forward_markup(
+                    replied_message.chat.id,
+                    replied_message.id
+                )
+                
+                if replied_message.document:
+                    sent_msg = await client.send_document(
+                        target_id,
+                        replied_message.document.file_id,
+                        caption=media_caption,
+                        reply_markup=markup
+                    )
+                elif replied_message.photo:
+                    sent_msg = await client.send_photo(
+                        target_id,
+                        replied_message.photo.file_id,
+                        caption=media_caption,
+                        reply_markup=markup
+                    )
+                elif replied_message.video:
+                    sent_msg = await client.send_video(
+                        target_id,
+                        replied_message.video.file_id,
+                        caption=media_caption,
+                        reply_markup=markup
+                    )
+                else:
+                    # For other media types, just forward
+                    sent_msg = await client.forward_messages(
+                        target_id,
+                        replied_message.chat.id,
+                        replied_message.id
+                    )
+            
+            stats.message_count += 1
+            return True
+            
+        except FloodWait as e:
+            wait_time = e.value
+            logger.warning(f"FloodWait for {target_id}, waiting {wait_time} seconds (attempt {attempt + 1})")
+            await asyncio.sleep(wait_time)
+            continue
+            
+        except (PeerIdInvalid, ChatWriteForbidden, UserIsBlocked, ChannelPrivate):
+            logger.info(f"Message not sent to {target_id} (invalid/blocked/private)")
+            return False
+            
+        except ChatAdminRequired:
+            logger.info(f"Admin required in {target_id}, skipping")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error sending to {target_id} (attempt {attempt + 1}): {str(e)}")
+            if attempt == MAX_RETRIES - 1:
+                return False
+            await asyncio.sleep(1)
+    
+    return False
+
+async def update_progress(progress_message, stats, additional_text=""):
+    try:
+        text = (
+            f"📢 Broadcast in progress...\n"
+            f"{additional_text}\n"
+            f"✅ Users sent: {stats.user_success}\n"
+            f"✅ Groups sent: {stats.group_success}\n"
+            f"❌ Failed attempts: {stats.fail_count}"
+        )
+        await progress_message.edit_text(text)
+    except Exception as e:
+        logger.error(f"Error updating progress: {e}")
+
+async def broadcast_to_users(client, stats, progress_message, replied_message):
+    user_cursor = client.user_collection.find({})
+    total_users = await client.user_collection.count_documents({})
+    processed = 0
+    
+    async for user in user_cursor:
+        user_id = user.get('id')
+        if not user_id:
+            continue
+            
+        success = await send_message_with_retry(client, user_id, replied_message, stats)
+        if success:
+            stats.user_success += 1
+        else:
+            stats.fail_count += 1
+            
+        processed += 1
+        if processed % PROGRESS_UPDATE_INTERVAL == 0:
+            await update_progress(
+                progress_message,
+                stats,
+                f"📤 Broadcasting to users... ({processed}/{total_users})"
+            )
+        
+        # Add delay after every 7 messages
+        if processed % 7 == 0:
+            await asyncio.sleep(MESSAGE_DELAY)
+
+async def broadcast_to_groups(client, stats, progress_message, replied_message):
+    group_cursor = client.top_global_groups_collection.find({})
+    total_groups = await client.top_global_groups_collection.count_documents({})
+    processed = 0
+    unique_group_ids = set()
+    
+    async for group in group_cursor:
+        group_id = group.get('group_id')
+        if not group_id or group_id in unique_group_ids:
+            continue
+            
+        unique_group_ids.add(group_id)
+        success = await send_message_with_retry(client, group_id, replied_message, stats)
+        if success:
+            stats.group_success += 1
+        else:
+            stats.fail_count += 1
+            
+        processed += 1
+        if processed % PROGRESS_UPDATE_INTERVAL == 0:
+            await update_progress(
+                progress_message,
+                stats,
+                f"📤 Broadcasting to groups... ({processed}/{total_groups})"
+            )
+        
+        # Add delay after every 7 messages
+        if processed % 7 == 0:
+            await asyncio.sleep(MESSAGE_DELAY)
+
 @app.on_message(filters.command("broadcast") & dev_filter)
-async def broadcast(_, message):
+async def broadcast_command(client, message):
     replied_message = message.reply_to_message
     if not replied_message:
         await message.reply_text("❌ Please reply to a message to broadcast it.")
         return
 
     # Send initial progress message
-    progress_message = await message.reply_text("📢 Starting the broadcast. Sending the message to all users and groups...")
+    progress_message = await message.reply_text("📢 Starting broadcast... Gathering recipients...")
 
-    success_count = 0
-    fail_count = 0
-    message_count = 0
-    user_success = 0  # Define user_success here
-    group_success = 0  # Define group_success here
+    stats = BroadcastStats()
 
-    # Function to send the message
-    async def send_message(target_id):
-        nonlocal success_count, fail_count, message_count
-        try:
-            if replied_message.text:
-                x = message.reply_to_message.id
-                y = message.chat.id
-                await app.forward_messages(target_id, y, x)
-            else:
-                media_caption = replied_message.caption if replied_message.caption else ""
-                if replied_message.document:
-                    await app.send_document(target_id, replied_message.document.file_id, caption=media_caption)
-                elif replied_message.photo:
-                    await app.send_photo(target_id, replied_message.photo.file_id, caption=media_caption)
-                elif replied_message.video:
-                    await app.send_video(target_id, replied_message.video.file_id, caption=media_caption)
+    try:
+        # Broadcast to users
+        await update_progress(progress_message, stats, "🔄 Starting user broadcast...")
+        await broadcast_to_users(client, stats, progress_message, replied_message)
 
-            success_count += 1
-            message_count += 1
-        except (PeerIdInvalid, ChatWriteForbidden, UserIsBlocked):
-            fail_count += 1
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            await send_message(target_id)  # Retry after waiting
-        except Exception as e:
-            logger.error(f"Error sending to {target_id}: {e}")
-            fail_count += 1
+        # Broadcast to groups
+        await update_progress(progress_message, stats, "🔄 Starting group broadcast...")
+        await broadcast_to_groups(client, stats, progress_message, replied_message)
 
-        # Introduce a delay after every 7 messages
-        if message_count % 7 == 0:
-            await asyncio.sleep(MESSAGE_DELAY)
-
-    # Function to update progress
-    async def update_progress():
-        nonlocal user_success, group_success  # Access outer scope variables
+        # Final report
         await progress_message.edit_text(
-            f"📢 Broadcast in progress...\n"
-            f"✅ Users sent: {user_success}\n"
-            f"✅ Groups sent: {group_success}\n"
-            f"❌ Failed attempts: {fail_count}"
+            stats.get_report() + "\n\n🌟 Broadcast completed!"
         )
-
-    # Send to users
-    user_cursor = user_collection.find({})
-    async for user in user_cursor:
-        user_id = user.get('id')
-        if user_id:
-            await send_message(user_id)
-            user_success += 1
-
-            # Update progress every PROGRESS_UPDATE_INTERVAL users
-            if user_success % PROGRESS_UPDATE_INTERVAL == 0:
-                await update_progress()
-
-    # Send to groups
-    group_cursor = top_global_groups_collection.find({})
-    unique_group_ids = set()
-    async for group in group_cursor:
-        group_id = group.get('group_id')
-        if group_id and group_id not in unique_group_ids:
-            unique_group_ids.add(group_id)
-            await send_message(group_id)
-            group_success += 1
-
-            # Update progress every PROGRESS_UPDATE_INTERVAL groups
-            if group_success % PROGRESS_UPDATE_INTERVAL == 0:
-                await update_progress()
-
-    # Final report
-    await progress_message.edit_text(
-        f"✅ Broadcast completed!\n"
-        f"✅ Users sent: {user_success}\n"
-        f"✅ Groups sent: {group_success}\n"
-        f"❌ Failed attempts: {fail_count}"
-    )
+    except Exception as e:
+        logger.error(f"Broadcast failed: {e}")
+        await progress_message.edit_text(
+            f"⚠️ Broadcast interrupted due to an error:\n{str(e)}\n\n"
+            + stats.get_report()
+        )
