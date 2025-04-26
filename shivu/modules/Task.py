@@ -402,20 +402,15 @@ async def confirm_reset(client, callback_query):
         return await callback_query.answer("This reset confirmation isn't for you!", show_alert=True)
     
     # Reset all task progress
-    await user_totals_collection.update_one(
-        {'user_id': user_id},
-        {'$unset': {f'claimed_{milestone}': "" for milestone in TASK_MILESTONES}},
-        upsert=True
-    )
+    
     
     # Reset message count (both in DB and memory)
     async with lock:
         message_counts[user_id] = 0
     
-    await user_totals_collection.update_one(
-        {'user_id': user_id},
-        {'$set': {'count': 0}},
-        upsert=True
+    await user_totals_collection.delete_one(
+        {'user_id': user_id}
+        
     )
     
     await callback_query.message.edit_text(
