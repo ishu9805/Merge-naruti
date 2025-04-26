@@ -30,6 +30,7 @@ from shivu import (
     ban_collectionps as ban_collection,
     user_countps as user_count, 
     chat_dataps as chat_data,
+    force 
 )
 # Assuming these are defined elsewhere in your code
 #from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection, required_group_id
@@ -236,7 +237,7 @@ async def bonus_coins(client: Client, message: Message):
 
     # Check if the user is a member of the required group
     if not await is_member(user_id):
-        group_link = "https://t.me/blade_x_community"  # Replace with the actual group invite link
+        group_link = force  # Replace with the actual group invite link
         messages = (
             "You need to be a member of our exclusive group to use this command.\n"
             "Join now and explore the amazing features awaiting you!\n\n"
