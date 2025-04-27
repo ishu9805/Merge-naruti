@@ -372,17 +372,7 @@ async def reset_task_command(client, message):
     if not user_data:
         return await message.reply("❌ You haven't started any tasks yet!")
     
-    all_completed = True
-    for milestone in TASK_MILESTONES:
-        claim_field = f"claimed_{milestone}"
-        if not user_data.get(claim_field, False):
-            all_completed = False
-            break
     
-    if not all_completed:
-        return await message.reply("⚠️ You haven't completed all milestones yet! Use /task to check your progress.")
-    
-    # Create confirmation buttons
     confirm_buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("✅ Confirm Reset", callback_data=f"confirm_reset_{user_id}")],
         [InlineKeyboardButton("❌ Cancel", callback_data="cancel_reset")]
