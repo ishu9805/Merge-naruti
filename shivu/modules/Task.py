@@ -402,7 +402,11 @@ async def confirm_reset(client, callback_query):
         {'user_id': user_id}
         
     )
-    
+    await user_collection.update_one(
+        {'id': user_id},
+        {"$unset": {"grab": ""}}
+        
+    )
     await callback_query.message.edit_text(
         "♻️ All your task progress has been reset!\n"
         "You can now start completing milestones again from scratch."
