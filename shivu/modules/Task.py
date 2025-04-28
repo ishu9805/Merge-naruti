@@ -14,7 +14,7 @@ from shivu import (
 )
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
+from shivu.modules.lock import command_lock as cmd
 
 # Global in-memory counter
 message_counts = defaultdict(int)
@@ -52,7 +52,7 @@ TASK_MILESTONES = {
     }
 }
 
-# Updated task_command to handle missing keys safely
+@cmd # Updated task_command to handle missing keys safely
 @app.on_message(filters.command("task"))
 async def task_command(client, message):
     user_id = message.from_user.id
@@ -122,7 +122,7 @@ async def check_grab_requirements(user_id, milestone):
 
 
 
-# Updated unified_claim function with proper WVHC handling
+@cmd # Updated unified_claim function with proper WVHC handling
 @app.on_message(filters.command("nclaim"))
 async def unified_claim(client, message):
     if len(message.command) < 2:
