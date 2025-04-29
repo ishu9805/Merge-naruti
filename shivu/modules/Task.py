@@ -387,7 +387,7 @@ async def reset_task_command(client, message):
     )
 
 
-@cmd
+
 @app.on_callback_query(filters.regex(r"^confirm_reset_(\d+)$"))
 async def confirm_reset(client, callback_query):
     user_id = int(callback_query.matches[0].group(1))
