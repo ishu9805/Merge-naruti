@@ -209,6 +209,7 @@ async def unified_claim(client, message):
         await message.reply("❌ An error occurred. Please try again later.")
 
 # Updated callback handler for WVHC variants
+@cmd
 @app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+?)(?:_(.+))?$"))
 async def confirm_claim(client, callback_query):
     try:
@@ -258,7 +259,7 @@ async def confirm_claim(client, callback_query):
         await callback_query.answer("Failed to process claim!", show_alert=True)
 
     
-
+@cmd
 async def handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity):
     """Special handler for WVHC seasonal variants"""
     valid_rarities = ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas']
@@ -301,8 +302,7 @@ async def handle_wvhc_claim(client, message, user_id, milestone, char_id, select
 
 
 
-
-        
+@cmd
 async def handle_automatic_claim(client, message, user_id, milestone, rarity):
     """Handle automatic claims (no ID needed)"""
     char = await collection.aggregate([
@@ -330,6 +330,7 @@ async def handle_automatic_claim(client, message, user_id, milestone, rarity):
         caption=f"🎉 {rarity} Claimed!\n\n{char[0]['name']}\n{char[0]['rarity']}\n{char[0]['anime']}"
     )
 
+@cmd
 async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     """Handle claims requiring character ID"""
     char = await collection.find_one({
@@ -362,7 +363,7 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     )
 
 
-
+@cmd
 @app.on_message(filters.command("reset_task"))
 async def reset_task_command(client, message):
     user_id = message.from_user.id
