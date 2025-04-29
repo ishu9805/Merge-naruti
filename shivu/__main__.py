@@ -213,10 +213,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🟣 Rare': 7,
         '🟢 Medium': 8,
         '🟡 Legendary': 10,
-        '🟣 Rare': 7,
+        
         #'🟡 Legendary': 10,
         '💮 Special Edition': 2,
-        '🟡 Legendary': 10,
+        '🟡 Legendary': 5,
         '🔮 Limited Edition': 1,
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
