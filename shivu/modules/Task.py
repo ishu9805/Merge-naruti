@@ -132,95 +132,94 @@ async def check_grab_requirements(user_id, milestone):
     return True, ""
 
 
-
-@cmd # Updated unified_claim function with proper WVHC handling
+@cmd
 @app.on_message(filters.command("nclaim"))
 async def unified_claim(client, message):
     user_id = message.from_user.id
-    async with claim_lock(user_id):  # Add this line
-        # Rest of the existing code...
-    if len(message.command) < 2:
-        return await message.reply(
-            "❌ First complete the /task to claim!\n"
-            "Available milestones:\n\n"
-            "• /nclaim 300 - 💮 Special Edition (automatic)\n"
-            "• /nclaim 700 [id] - 🔮 Limited Edition (choice)\n"
-            "• /nclaim 2000 [id] [variant] - 🎁 WVHC Edition (choice)\n"
-            "• /nclaim 3500 [id] - 🎐 Celestial Edition (choice)"
-        )
     
-    try:
-        milestone = int(message.command[1])
-        user_id = message.from_user.id
-        
-        if milestone not in TASK_MILESTONES:
+    async with claim_lock(user_id):
+        if len(message.command) < 2:
             return await message.reply(
-                "❌ Invalid milestone! Available milestones:\n"
-                "• 300 - 💮 Special Edition\n"
-                "• 700 - 🔮 Limited Edition\n"
-                "• 2000 - 🎁 WVHC Edition\n"
-                "• 3500 - 🎐 Celestial Edition"
+                "❌ First complete the /task to claim!\n"
+                "Available milestones:\n\n"
+                "• /nclaim 300 - 💮 Special Edition (automatic)\n"
+                "• /nclaim 700 [id] - 🔮 Limited Edition (choice)\n"
+                "• /nclaim 2000 [id] [variant] - 🎁 WVHC Edition (choice)\n"
+                "• /nclaim 3500 [id] - 🎐 Celestial Edition (choice)"
             )
         
-        # Check ID requirements
-        if milestone != 300 and len(message.command) < 3:
-            return await message.reply(
-                f"❌ Please provide character ID for this reward!\n"
-                f"Usage: /nclaim {milestone} [character_id]\n"
-                f"Check available characters with /list{milestone}"
-            )
-        
-        # Get user progress
-        total_messages = await get_user_count(user_id)
-        grab_count = await get_grab_count(user_id)
-        required_grabs = TASK_MILESTONES[milestone].get('grab_required', 0)
-        
-        # Check requirements
-        if total_messages < milestone:
-            return await message.reply(
-                f"❌ You need {milestone} messages to claim this reward! "
-                f"You have {total_messages}/{milestone}."
-            )
-        
-        if grab_count < required_grabs:
-            return await message.reply(
-                f"❌ You need {required_grabs} legendary grabs for this reward! "
-                f"You have {grab_count}/{required_grabs}."
-            )
-        
-        # Check if already claimed
-        claim_field = f"claimed_{milestone}"
-        user_data = await user_totals_collection.find_one({'user_id': user_id})
-        if user_data and user_data.get(claim_field):
-            return await message.reply("⚠️ You've already claimed this reward!")
-        
-        # Handle claims based on milestone
-        if milestone == 300:
-            await handle_automatic_claim(client, message, user_id, milestone, '💮 Special Edition')
-        elif milestone == 700:
-            char_id = message.command[2]
-            await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
-        elif milestone == 2000:
-            char_id = message.command[2]
-            if len(message.command) < 4:
-                return await message.reply(
-                    "❌ Please specify WVHC variant!\n"
-                    "Usage: /nclaim 2000 [ID] [VARIANT]\n"
-                    "Available variants:\n"
-                    "• ❄️ Winter\n• 💝 Valentine\n"
-                    "• 🎃 Halloween\n• 🎄 Christmas"
-                )
-            selected_rarity = ' '.join(message.command[3:])
-            await handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity)
-        elif milestone == 3500:
-            char_id = message.command[2]
-            await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
+        try:
+            milestone = int(message.command[1])
             
-    except ValueError:
-        await message.reply("❌ Please enter a valid number (300, 700, 2000, or 3500)")
-    except Exception as e:
-        logging.error(f"Claim error: {str(e)}")
-        await message.reply("❌ An error occurred. Please try again later.")
+            if milestone not in TASK_MILESTONES:
+                return await message.reply(
+                    "❌ Invalid milestone! Available milestones:\n"
+                    "• 300 - 💮 Special Edition\n"
+                    "• 700 - 🔮 Limited Edition\n"
+                    "• 2000 - 🎁 WVHC Edition\n"
+                    "• 3500 - 🎐 Celestial Edition"
+                )
+            
+            # Check ID requirements
+            if milestone != 300 and len(message.command) < 3:
+                return await message.reply(
+                    f"❌ Please provide character ID for this reward!\n"
+                    f"Usage: /nclaim {milestone} [character_id]\n"
+                    f"Check available characters with /list{milestone}"
+                )
+            
+            # Get user progress
+            total_messages = await get_user_count(user_id)
+            grab_count = await get_grab_count(user_id)
+            required_grabs = TASK_MILESTONES[milestone].get('grab_required', 0)
+            
+            # Check requirements
+            if total_messages < milestone:
+                return await message.reply(
+                    f"❌ You need {milestone} messages to claim this reward! "
+                    f"You have {total_messages}/{milestone}."
+                )
+            
+            if grab_count < required_grabs:
+                return await message.reply(
+                    f"❌ You need {required_grabs} legendary grabs for this reward! "
+                    f"You have {grab_count}/{required_grabs}."
+                )
+            
+            # Check if already claimed
+            claim_field = f"claimed_{milestone}"
+            user_data = await user_totals_collection.find_one({'user_id': user_id})
+            if user_data and user_data.get(claim_field):
+                return await message.reply("⚠️ You've already claimed this reward!")
+            
+            # Handle claims based on milestone
+            if milestone == 300:
+                await handle_automatic_claim(client, message, user_id, milestone, '💮 Special Edition')
+            elif milestone == 700:
+                char_id = message.command[2]
+                await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
+            elif milestone == 2000:
+                if len(message.command) < 4:
+                    return await message.reply(
+                        "❌ Please specify WVHC variant!\n"
+                        "Usage: /nclaim 2000 [ID] [VARIANT]\n"
+                        "Available variants:\n"
+                        "• ❄️ Winter\n• 💝 Valentine\n"
+                        "• 🎃 Halloween\n• 🎄 Christmas"
+                    )
+                char_id = message.command[2]
+                selected_rarity = ' '.join(message.command[3:])
+                await handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity)
+            elif milestone == 3500:
+                char_id = message.command[2]
+                await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
+                
+        except ValueError:
+            await message.reply("❌ Please enter a valid number (300, 700, 2000, or 3500)")
+        except Exception as e:
+            logging.error(f"Claim error for user {user_id}: {str(e)}", exc_info=True)
+            await message.reply("❌ An error occurred. Please try again later.")
+
 
 # Updated callback handler for WVHC variants
 @app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+?)(?:_(.+))?$"))
