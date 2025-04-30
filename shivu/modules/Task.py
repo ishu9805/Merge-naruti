@@ -228,60 +228,60 @@ async def confirm_claim(client, callback_query):
         user_id = callback_query.from_user.id
         async with claim_lock(user_id):
     
-        milestone = int(callback_query.matches[0].group(1))
-        char_id = callback_query.matches[0].group(2)
-        variant_part = callback_query.matches[0].group(3)
-        user_id = callback_query.from_user.id
+            milestone = int(callback_query.matches[0].group(1))
+            char_id = callback_query.matches[0].group(2)
+            variant_part = callback_query.matches[0].group(3)
+            
         
-        # For WVHC, use the variant from callback data
-        if milestone == 2000 and variant_part:
-            rarity = variant_part.replace('_', ' ')
-        else:
-            rarity = TASK_MILESTONES[milestone]['rarity']
+            # For WVHC, use the variant from callback data
+            if milestone == 2000 and variant_part:
+                rarity = variant_part.replace('_', ' ')
+            else:
+                rarity = TASK_MILESTONES[milestone]['rarity']
         
-        char = await collection.find_one({
-            'id': char_id,
-            'rarity': rarity
-        })
+            char = await collection.find_one({
+                'id': char_id,
+                'rarity': rarity
+            })
         
-        if not char:
-            await callback_query.answer("Character no longer available!", show_alert=True)
-            return await callback_query.message.edit_reply_markup()
+            if not char:
+                await callback_query.answer("Character no longer available!", show_alert=True)
+                return await callback_query.message.edit_reply_markup()
 
 
-        user_data = await user_totals_collection.find_one({'user_id': user_id})
-        claim_field = f"claimed_{milestone}"
-        if user_data and user_data.get(claim_field):
-            await callback_query.answer("Already claimed!", show_alert=True)
-            return await callback_query.message.edit_reply_markup()
+            user_data = await user_totals_collection.find_one({'user_id': user_id})
+            claim_field = f"claimed_{milestone}"
+            if user_data and user_data.get(claim_field):
+                await callback_query.answer("Already claimed!", show_alert=True)
+                return await callback_query.message.edit_reply_markup()
             
             # Re-check message count
-        total_messages = await get_user_count(user_id)
-        if total_messages < milestone:
-            await callback_query.answer("Message count no longer sufficient!", show_alert=True)
-            return await callback_query.message.edit_reply_markup()
+            total_messages = await get_user_count(user_id)
+            if total_messages < milestone:
+                await callback_query.answer("Message count no longer sufficient!", show_alert=True)
+                return await callback_query.message.edit_reply_markup()
 
         
         # Process the claim
-        await user_collection.update_one(
-            {'id': user_id},
-            {'$push': {'characters': char}},
-            upsert=True
-        )
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$push': {'characters': char}},
+                upsert=True
+            )
         
-        await user_totals_collection.update_one(
-            {'user_id': user_id},
-            {'$set': {f'claimed_{milestone}': True}},
-            upsert=True
-        )
+            await user_totals_collection.update_one(
+                {'user_id': user_id},
+                {'$set': {f'claimed_{milestone}': True}},
+                upsert=True
+            )
         
-        await callback_query.message.edit_caption(
-            f"🎉 {rarity} Claimed!\n\n"
-            f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
-            "✅ Successfully added to your collection!",
-            reply_markup=None
-        )
-        await callback_query.answer()
+            await callback_query.message.edit_caption(
+                f"🎉 {rarity} Claimed!\n\n"
+                f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
+                "✅ Successfully added to your collection!",
+                reply_markup=None
+            )
+            await callback_query.answer()
         
     except Exception as e:
         logging.error(f"Confirmation error: {str(e)}")
