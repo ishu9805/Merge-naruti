@@ -4,7 +4,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from . import collection, user_collection, sudo_filter, app
 from .block import block_dec, temp_block
-from .lock import command_lock as cmd 
 
 async def exchange_command(client: Client, message: Message, args: list[str]) -> None:
     user_id = message.from_user.id
@@ -13,15 +12,16 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
     tz = pytz.timezone('Asia/Kolkata')
     now = datetime.datetime.now(tz)
 
-    if now.weekday() != 5:
-        await message.reply_text("The /exchange command is only available on Saturdays.")
+    # Allow exchanges on both Saturday (5) and Sunday (6)
+    if now.weekday() not in [5, 6]:
+        await message.reply_text("The /exchange command is only available on weekends (Saturday and Sunday).")
         return
 
     start_time = tz.localize(datetime.datetime.combine(now.date(), datetime.time(5, 30)))
     end_time = tz.localize(datetime.datetime.combine(now.date(), datetime.time(0, 30))) + datetime.timedelta(days=1)
 
     if not (start_time <= now <= end_time):
-        await message.reply_text("The /exchange command is only available between 5:30 am and 12:30 midnight on Saturdays.")
+        await message.reply_text("The /exchange command is only available between 5:30 am and 12:30 midnight on weekends.")
         return
 
     user_data = await user_collection.find_one({'id': user_id})
@@ -48,8 +48,9 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
                 }
             )
 
-    if exchange_count >= 3:
-        await message.reply_text("You've already used all 3 of your weekly exchanges.")
+    # Increased limit to 5 exchanges per week
+    if exchange_count >= 5:
+        await message.reply_text("You've already used all 5 of your weekly exchanges.")
         return
 
     if len(args) != 2:
@@ -98,7 +99,7 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
     )
 
     updated_exchange_count = exchange_count + 1
-    remaining_exchanges = 3 - updated_exchange_count
+    remaining_exchanges = 5 - updated_exchange_count
 
     # Update exchange count and last_exchange
     await user_collection.update_one(
@@ -111,7 +112,6 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
 
 @app.on_message(filters.command("exchange"))
 @block_dec
-@cmd
 async def handle_exchange_command(client: Client, message: Message):
     args = message.text.split()[1:]
     await exchange_command(client, message, args)
