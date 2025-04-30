@@ -15,6 +15,17 @@ from shivu import (
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu.modules.lock import command_lock as cmd
+# Add this at the top with other imports
+from contextlib import contextmanager
+
+# Create a user claim lock
+claim_locks = defaultdict(asyncio.Lock)
+
+@contextmanager
+async def claim_lock(user_id):
+    async with claim_locks[user_id]:
+        yield
+
 
 # Global in-memory counter
 message_counts = defaultdict(int)
@@ -125,6 +136,9 @@ async def check_grab_requirements(user_id, milestone):
 @cmd # Updated unified_claim function with proper WVHC handling
 @app.on_message(filters.command("nclaim"))
 async def unified_claim(client, message):
+    user_id = message.from_user.id
+    async with claim_lock(user_id):  # Add this line
+        # Rest of the existing code...
     if len(message.command) < 2:
         return await message.reply(
             "❌ First complete the /task to claim!\n"
@@ -209,10 +223,12 @@ async def unified_claim(client, message):
         await message.reply("❌ An error occurred. Please try again later.")
 
 # Updated callback handler for WVHC variants
-@cmd
 @app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+?)(?:_(.+))?$"))
 async def confirm_claim(client, callback_query):
     try:
+        user_id = callback_query.from_user.id
+        async with claim_lock(user_id):
+    
         milestone = int(callback_query.matches[0].group(1))
         char_id = callback_query.matches[0].group(2)
         variant_part = callback_query.matches[0].group(3)
@@ -232,6 +248,20 @@ async def confirm_claim(client, callback_query):
         if not char:
             await callback_query.answer("Character no longer available!", show_alert=True)
             return await callback_query.message.edit_reply_markup()
+
+
+        user_data = await user_totals_collection.find_one({'user_id': user_id})
+        claim_field = f"claimed_{milestone}"
+        if user_data and user_data.get(claim_field):
+            await callback_query.answer("Already claimed!", show_alert=True)
+            return await callback_query.message.edit_reply_markup()
+            
+            # Re-check message count
+        total_messages = await get_user_count(user_id)
+        if total_messages < milestone:
+            await callback_query.answer("Message count no longer sufficient!", show_alert=True)
+            return await callback_query.message.edit_reply_markup()
+
         
         # Process the claim
         await user_collection.update_one(
@@ -259,7 +289,7 @@ async def confirm_claim(client, callback_query):
         await callback_query.answer("Failed to process claim!", show_alert=True)
 
     
-@cmd
+
 async def handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity):
     """Special handler for WVHC seasonal variants"""
     valid_rarities = ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas']
@@ -302,7 +332,7 @@ async def handle_wvhc_claim(client, message, user_id, milestone, char_id, select
 
 
 
-@cmd
+
 async def handle_automatic_claim(client, message, user_id, milestone, rarity):
     """Handle automatic claims (no ID needed)"""
     char = await collection.aggregate([
@@ -330,7 +360,7 @@ async def handle_automatic_claim(client, message, user_id, milestone, rarity):
         caption=f"🎉 {rarity} Claimed!\n\n{char[0]['name']}\n{char[0]['rarity']}\n{char[0]['anime']}"
     )
 
-@cmd
+
 async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     """Handle claims requiring character ID"""
     char = await collection.find_one({
