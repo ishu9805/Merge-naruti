@@ -269,7 +269,7 @@ async def unified_claim(client, message):
 async def confirm_claim(client, callback_query):
     try:
         user_id = callback_query.from_user.id
-        async with claim_lock(user_id):
+        async with claim_locks(user_id):
     
             milestone = int(callback_query.matches[0].group(1))
             char_id = callback_query.matches[0].group(2)
@@ -329,7 +329,8 @@ async def confirm_claim(client, callback_query):
     except Exception as e:
         logging.error(f"Confirmation error: {str(e)}")
         await callback_query.answer("Failed to process claim!", show_alert=True)
-
+    finally:
+        await release_user_lock(user_id)
     
 
 async def handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity):
