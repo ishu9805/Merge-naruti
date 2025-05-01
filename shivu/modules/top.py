@@ -47,7 +47,7 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 # Configuration
-TARGET_CHAT_ID = -1002399891190  # Move to environment variables in production
+TARGET_CHAT_ID = -7469481988 # Move to environment variables in production
 ALLOWED_USER_IDS = 7378476666
 
 
