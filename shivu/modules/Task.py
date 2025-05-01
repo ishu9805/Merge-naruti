@@ -19,12 +19,37 @@ from shivu.modules.lock import command_lock as cmd
 from contextlib import contextmanager
 
 # Create a user claim lock
+# Improved claim lock implementation
 claim_locks = defaultdict(asyncio.Lock)
 
-@contextmanager
-async def claim_lock(user_id):
-    async with claim_locks[user_id]:
-        yield
+async def acquire_user_lock(user_id):
+    """Acquire a lock for specific user with timeout"""
+    try:
+        await asyncio.wait_for(claim_locks[user_id].acquire(), timeout=30)
+        return True
+    except asyncio.TimeoutError:
+        return False
+
+async def release_user_lock(user_id):
+    """Release lock for user if acquired"""
+    if claim_locks[user_id].locked():
+        claim_locks[user_id].release()
+
+async def unified_claim(client, message):
+    user_id = message.from_user.id
+    
+    # Acquire lock with timeout
+    if not await acquire_user_lock(user_id):
+        return await message.reply("❌ System busy. Please try again later.")
+    
+    try:
+        # Rest of your claim processing logic...
+        
+    except Exception as e:
+        logging.error(f"Claim error for user {user_id}: {str(e)}", exc_info=True)
+        await message.reply("❌ An error occurred during claim. Please try again.")
+    finally:
+        await release_user_lock(user_id)
 
 
 # Global in-memory counter
