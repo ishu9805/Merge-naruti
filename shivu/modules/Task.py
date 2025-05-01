@@ -51,7 +51,7 @@ SUPPORT_CHAT_ID = -1002606804832
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[5
+    handlers=[
         logging.FileHandler("shivu_claims.log"),
         logging.StreamHandler()
     ]
