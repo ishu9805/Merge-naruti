@@ -51,7 +51,7 @@ SUPPORT_CHAT_ID = -1002606804832
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
+    handlers=[5
         logging.FileHandler("shivu_claims.log"),
         logging.StreamHandler()
     ]
@@ -381,7 +381,7 @@ async def handle_wvhc_claim(client, message, user_id, milestone, char_id, select
                 reply_markup=confirm_buttons
     )
 
-@app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+?)(?:_(.+))?$"))
+#@app.on_callback_query(filters.regex(r"^tttconfirm_(\d+)_(.+?)(?:_(.+))?$"))
 async def confirm_claim(client, callback_query):
     user_id = callback_query.from_user.id
     
@@ -447,7 +447,7 @@ async def confirm_claim(client, callback_query):
             del pending_claims[user_id]
         await callback_query.answer("Failed to process claim!", show_alert=True)
 
-@app.on_callback_query(filters.regex(r"^tcancel_claim$"))
+#@app.on_callback_query(filters.regex(r"^tcancel_claim$"))
 async def cancel_claim(client, callback_query):
     user_id = callback_query.from_user.id
     if user_id in pending_claims:
@@ -480,7 +480,7 @@ async def reset_task_command(client, message):
         reply_markup=confirm_buttons
     )
 
-@app.on_callback_query(filters.regex(r"^confirm_reset_(\d+)$"))
+#@app.on_callback_query(filters.regex(r"^confirm_reset_(\d+)$"))
 async def confirm_reset(client, callback_query):
     user_id = int(callback_query.matches[0].group(1))
     if callback_query.from_user.id != user_id:
@@ -507,7 +507,7 @@ async def confirm_reset(client, callback_query):
     )
     await callback_query.answer()
 
-@app.on_callback_query(filters.regex(r"^cancel_reset$"))
+#@app.on_callback_query(filters.regex(r"^cancel_reset$"))
 async def cancel_reset(client, callback_query):
     await callback_query.message.edit_text("✅ Task reset cancelled. Your progress remains unchanged.")
     await callback_query.answer()
@@ -537,7 +537,7 @@ async def clean_pending_command(client, message):
         reply_markup=confirm_buttons
     )
 
-@app.on_callback_query(filters.regex(r"^clean_confirm_(\d+)$"))
+#@app.on_callback_query(filters.regex(r"^clean_confirm_(\d+)$"))
 async def clean_confirm(client, callback_query):
     user_id = int(callback_query.matches[0].group(1))
     if callback_query.from_user.id != user_id:
