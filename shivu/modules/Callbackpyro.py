@@ -34,7 +34,7 @@ from shivu import (
 async def callback_query_handler(client, callback_query):
     try:
         data = callback_query.data
-        if data.startwith("tttconfirm_"):
+        """if data.startwith("tttconfirm_"):
             await confirm_claim(client, callback_query)
         elif data.startwith("animelist_"):
             await anime_letter_callback(client, callback_query)
@@ -47,7 +47,7 @@ async def callback_query_handler(client, callback_query):
         elif data.startwith("confirm_reset"):
             await confirm_reset(client, callback_query)
         elif data.startwith("cancel_reset"):
-            await cancel_reset(client, callback_query)
+            await cancel_reset(client, callback_query)"""
         
         elif data.startswith("approve_pfp"):
             await approve_profile_media(client, callback_query)
