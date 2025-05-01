@@ -8,6 +8,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 from shivu.modules.fav import button
+from shivu.modules.Task import confirm_claim, cancel_claim, confirm_reset, cancel_reset
 from shivu.modules.Pfp import approve_profile_media, reject_profile_media
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
@@ -32,7 +33,16 @@ from shivu import (
 async def callback_query_handler(client, callback_query):
     try:
         data = callback_query.data
-        if data.startswith("approve_pfp"):
+        if data.startwith("tttconfirm_"):
+            await confirm_claim(client, callback_query)
+        elif data.startwith("tcancel_claim"):
+            await cancel_claim(client, callback_query)
+        elif data.startwith("confirm_reset"):
+            await confirm_reset(client, callback_query)
+        elif data.startwith("cancel_reset"):
+            await cancel_reset(client, callback_query)
+        
+        elif data.startswith("approve_pfp"):
             await approve_profile_media(client, callback_query)
         elif data.startswith("reject_pfp"):
             await reject_profile_media(client, callback_query)
