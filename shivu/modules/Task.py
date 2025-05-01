@@ -35,21 +35,7 @@ async def release_user_lock(user_id):
     if claim_locks[user_id].locked():
         claim_locks[user_id].release()
 
-async def unified_claim(client, message):
-    user_id = message.from_user.id
-    
-    # Acquire lock with timeout
-    if not await acquire_user_lock(user_id):
-        return await message.reply("❌ System busy. Please try again later.")
-    
-    try:
-        # Rest of your claim processing logic...
-        
-    except Exception as e:
-        logging.error(f"Claim error for user {user_id}: {str(e)}", exc_info=True)
-        await message.reply("❌ An error occurred during claim. Please try again.")
-    finally:
-        await release_user_lock(user_id)
+
 
 
 # Global in-memory counter
@@ -157,13 +143,19 @@ async def check_grab_requirements(user_id, milestone):
     return True, ""
 
 
+
 @cmd
 @app.on_message(filters.command("nclaim"))
 async def unified_claim(client, message):
     user_id = message.from_user.id
     
-    async with claim_lock(user_id):
+    # Acquire lock with timeout
+    if not await acquire_user_lock(user_id):
+        return await message.reply("🚫 The system is currently processing your previous request. Please wait a moment and try again.")
+    
+    try:
         if len(message.command) < 2:
+            await release_user_lock(user_id)  # Release early for user feedback
             return await message.reply(
                 "❌ First complete the /task to claim!\n"
                 "Available milestones:\n\n"
@@ -177,6 +169,7 @@ async def unified_claim(client, message):
             milestone = int(message.command[1])
             
             if milestone not in TASK_MILESTONES:
+                await release_user_lock(user_id)
                 return await message.reply(
                     "❌ Invalid milestone! Available milestones:\n"
                     "• 300 - 💮 Special Edition\n"
@@ -185,8 +178,9 @@ async def unified_claim(client, message):
                     "• 3500 - 🎐 Celestial Edition"
                 )
             
-            # Check ID requirements
+            # Check ID requirements for non-300 milestones
             if milestone != 300 and len(message.command) < 3:
+                await release_user_lock(user_id)
                 return await message.reply(
                     f"❌ Please provide character ID for this reward!\n"
                     f"Usage: /nclaim {milestone} [character_id]\n"
@@ -200,12 +194,14 @@ async def unified_claim(client, message):
             
             # Check requirements
             if total_messages < milestone:
+                await release_user_lock(user_id)
                 return await message.reply(
                     f"❌ You need {milestone} messages to claim this reward! "
                     f"You have {total_messages}/{milestone}."
                 )
             
             if grab_count < required_grabs:
+                await release_user_lock(user_id)
                 return await message.reply(
                     f"❌ You need {required_grabs} legendary grabs for this reward! "
                     f"You have {grab_count}/{required_grabs}."
@@ -215,9 +211,10 @@ async def unified_claim(client, message):
             claim_field = f"claimed_{milestone}"
             user_data = await user_totals_collection.find_one({'user_id': user_id})
             if user_data and user_data.get(claim_field):
+                await release_user_lock(user_id)
                 return await message.reply("⚠️ You've already claimed this reward!")
             
-            # Handle claims based on milestone
+            # Process different claim types
             if milestone == 300:
                 await handle_automatic_claim(client, message, user_id, milestone, '💮 Special Edition')
             elif milestone == 700:
@@ -225,12 +222,11 @@ async def unified_claim(client, message):
                 await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
             elif milestone == 2000:
                 if len(message.command) < 4:
+                    await release_user_lock(user_id)
                     return await message.reply(
                         "❌ Please specify WVHC variant!\n"
-                        "Usage: /nclaim 2000 [ID] [VARIANT]\n"
-                        "Available variants:\n"
-                        "• ❄️ Winter\n• 💝 Valentine\n"
-                        "• 🎃 Halloween\n• 🎄 Christmas"
+                        "Available variants: ❄️ Winter, 💝 Valentine, 🎃 Halloween, 🎄 Christmas\n"
+                        f"Usage: /nclaim 2000 {message.command[2]} [variant]"
                     )
                 char_id = message.command[2]
                 selected_rarity = ' '.join(message.command[3:])
@@ -240,10 +236,20 @@ async def unified_claim(client, message):
                 await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
                 
         except ValueError:
+            await release_user_lock(user_id)
             await message.reply("❌ Please enter a valid number (300, 700, 2000, or 3500)")
         except Exception as e:
-            logging.error(f"Claim error for user {user_id}: {str(e)}", exc_info=True)
-            await message.reply("❌ An error occurred. Please try again later.")
+            logging.error(f"Claim processing error for user {user_id}: {str(e)}", exc_info=True)
+            await message.reply("❌ An error occurred while processing your claim. Please try again later.")
+            await release_user_lock(user_id)
+            
+    except Exception as e:
+        logging.error(f"Unexpected error in unified_claim for user {user_id}: {str(e)}", exc_info=True)
+        await message.reply("⚠️ A system error occurred. Please try again later.")
+    finally:
+        await release_user_lock(user_id)
+            
+            
 
 
 # Updated callback handler for WVHC variants
