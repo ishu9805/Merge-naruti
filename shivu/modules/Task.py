@@ -1,3 +1,4 @@
+import logging
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from collections import defaultdict
@@ -21,6 +22,17 @@ from contextlib import contextmanager
 # Create a user claim lock
 # Improved claim lock implementation
 claim_locks = defaultdict(asyncio.Lock)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("shivu_claims.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 async def acquire_user_lock(user_id):
     """Acquire a lock for specific user with timeout"""
