@@ -49,7 +49,7 @@ async def callback_query_handler(client, callback_query):
         elif data.startwith("cancel_reset"):
             await cancel_reset(client, callback_query)"""
         
-        elif data.startswith("approve_pfp"):
+        if data.startswith("approve_pfp"):
             await approve_profile_media(client, callback_query)
         elif data.startswith("reject_pfp"):
             await reject_profile_media(client, callback_query)
