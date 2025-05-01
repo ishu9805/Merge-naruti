@@ -46,7 +46,7 @@ async def animelist_command(client, message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-@app.on_callback_query(filters.regex(r"^animelist_([A-Z])_(\d+)$"))
+#@app.on_callback_query(filters.regex(r"^animelist_([A-Z])_(\d+)$"))
 async def anime_letter_callback(client, callback_query):
     """Handle letter selection with pagination"""
     user_id = callback_query.from_user.id
@@ -100,7 +100,7 @@ async def anime_letter_callback(client, callback_query):
     )
     await callback_query.answer()
 
-@app.on_callback_query(filters.regex(r"^anime_select_(.+)$"))
+#@app.on_callback_query(filters.regex(r"^anime_select_(.+)$"))
 async def anime_selection_callback(client, callback_query):
     """Handle anime selection"""
     user_id = callback_query.from_user.id
@@ -125,7 +125,7 @@ async def anime_selection_callback(client, callback_query):
     )
     await callback_query.answer()
 
-@app.on_callback_query(filters.regex(r"^back_to_az$"))
+#@app.on_callback_query(filters.regex(r"^back_to_az$"))
 async def back_to_az_callback(client, callback_query):
     """Return to A-Z selection"""
     user_id = callback_query.from_user.id
