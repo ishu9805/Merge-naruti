@@ -334,13 +334,13 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
 
 async def handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity):
     """Special handler for WVHC seasonal variants"""
-    valid_rarities = ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas']
+    valid_rarities = ['❄️ Winter', '💝 Valentine', '🎃 Halloween', '🎄 Christmas Special']
     
     if selected_rarity not in valid_rarities:
         return await message.reply(
             "❌ Invalid WVHC variant! Choose from:\n"
             "• ❄️ Winter\n• 💝 Valentine\n"
-            "• 🎃 Halloween\n• 🎄 Christmas"
+            "• 🎃 Halloween\n• 🎄 Christmas Special"
         )
     
     char = await collection.find_one({
