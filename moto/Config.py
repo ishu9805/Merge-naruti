@@ -14,6 +14,7 @@ SUPPORT_CHATps = "naruto_support_chat"
 UPDATE_CHAT = "blade_x_community"
 UPDATE_CHATps = "blade_x_community"
 BOT_USERNAME = "Fancy_Waifu_Husbando_Bot"
+force = "https://t.me/+tPb91_B1UMczYzhk"
 CHARA_CHANNEL_ID = "-1002117539029"
 api_id = 22792918
 api_hash = "ff10095d2bb96d43d6eb7a7d9fc85f81"
