@@ -63,8 +63,8 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
             )
 
     # Increased limit to 5 exchanges per week
-    if exchange_count >= 5:
-        await message.reply_text("You've already used all 5 of your weekly exchanges.")
+    if exchange_count >= 2:
+        await message.reply_text("You've already used all 2 of your weekly exchanges.")
         return
 
     if len(args) != 2:
