@@ -6,6 +6,19 @@ from shivu import collectionps as collection, user_collectionps as user_collecti
 from . import sudo_filter
 from .block import block_dec, temp_block
 
+
+
+# List of prohibited rarities that cannot be exchanged
+PROHIBITED_RARITIES = [
+    "💸 Premium Edition",
+    "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
+    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    "🍑 Echhi",
+    "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    "🎭 Cosplay Master 🎭",
+    "🎖 Apex Lot ( AUCTION )"
+]
+
 async def exchange_command(client: Client, message: Message, args: list[str]) -> None:
     user_id = message.from_user.id
     if temp_block(user_id):
@@ -77,8 +90,22 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
         await message.reply_text("Couldn't find the character you want. Please check the ID and try again.")
         return
 
-    if desired_character.get('rarity') in ['💋 Aura', '❄️ Winter']:
-        await message.reply_text("Sorry, you can't exchange for Aura or Winter rarity characters.")
+    # Check if desired character is in prohibited rarities
+    if desired_character.get('rarity') in PROHIBITED_RARITIES:
+        prohibited_list = "\n".join(PROHIBITED_RARITIES)
+        await message.reply_text(
+            f"Sorry, you can't exchange for these rarities:\n{prohibited_list}\n"
+            f"The character you want is {desired_character['rarity']} rarity."
+        )
+        return
+
+    # Check if rarities match
+    if character_to_exchange.get('rarity') != desired_character.get('rarity'):
+        await message.reply_text(
+            "You can only exchange characters of the same rarity.\n"
+            f"Your character: {character_to_exchange['rarity']}\n"
+            f"Desired character: {desired_character['rarity']}"
+        )
         return
 
     index_to_remove = next((i for i, char in enumerate(user_characters) if char['id'] == your_character_id), None)
@@ -108,7 +135,11 @@ async def exchange_command(client: Client, message: Message, args: list[str]) ->
         {'$set': {'exchange_count': updated_exchange_count, 'last_exchange': now}}
     )
 
-    await message.reply_text(f"✅ Exchange successful! You got {desired_character['name']}!")
+    await message.reply_text(
+        f"✅ Exchange successful!\n"
+        f"You exchanged {character_to_exchange['name']} ({character_to_exchange['rarity']})\n"
+        f"For {desired_character['name']} ({desired_character['rarity']})"
+    )
     await message.reply_text(f"You have {remaining_exchanges} exchanges left this week.")
 
 @app.on_message(filters.command("exchange"))
