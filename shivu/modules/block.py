@@ -51,7 +51,7 @@ async def block_cwf(_, m: Message):
     if user_id in dic1:
         if current_time - dic1[user_id] <= 1:
             dic2[user_id] = dic2.get(user_id, 0) + 1
-            if dic2[user_id] >= 15:
+            if dic2[user_id] >= 35:
                 t_block[user_id] = current_time
                 dic2[user_id] = 0
                 #txt = "."
