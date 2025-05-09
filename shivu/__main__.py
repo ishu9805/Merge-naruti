@@ -533,190 +533,6 @@ async def spawn_summer_character(update: Update, context: CallbackContext) -> No
     )
     
 
-
-@block_dec_ptb
-async def guess(update: Update, context: CallbackContext) -> None:
-    chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
-    message_id = update.message.message_id
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    
-    await asyncio.sleep(0)
-    if chat_id not in last_characters:
-        return
-
-    if chat_id in first_correct_guesses:
-        return
-
-    guess = ' '.join(context.args).lower() if context.args else ''
-    
-    if "()" in guess or "&" in guess.lower():
-        await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
-        return
-
-    name_parts = last_characters[chat_id]['name'].lower().split()
-
-    character = last_characters[chat_id]
-    if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
-        first_correct_guesses[chat_id] = user_id
-        rarity = character.get("rarity", "")
-        random_reaction = random.choice(reaction_list)
-        # Check if message is deleted before setting reaction
-        if update.message is not None:
-            try:
-                await update.message.set_reaction(random_reaction)
-            except Exception as e:
-                # Log the error and notify in the message if reaction fails
-                print(f"Failed to set reaction: {e}")
-                await update.message.reply_text("🎉 Reaction not set due to a group limitation.")
-        
-        # Set the app
-        # Set the appropriate inline query
-        if rarity == "🟡 Legendary":
-            await user_collection.update_one(
-            {'id': user_id},
-            {'$inc': {'grab': 1}},  # Increment grab count by 1
-            upsert=True
-            )
-            
-        inline_query = f"collection.img.{user_id}"
-        
-        keyboard = InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton(
-                    "View Collection",
-                    switch_inline_query_current_chat=inline_query
-                )
-            ]]
-        )
-        await update.message.reply_text("🎉 Congrats! You've earned 40 dazzling coins for guessing correctly! 💰")
-        await update.message.reply_text(
-            f'<b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> 🎊 You guessed the character!\n\n'
-            f'🍁 Name: <b>{last_characters[chat_id]["name"]}</b>\n'
-            f'⛩ Anime: <b>{last_characters[chat_id]["anime"]}</b>\n'
-            f'🎐 Rarity: <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
-            f'This character is now in your harem! Use /mycollection to see your harem.',
-            parse_mode='HTML',
-            reply_markup=keyboard
-        )
-        await add_coins(int(user_id), 40)
-        
-        await user_collection.update_one(
-            {"id": user_id},
-            {"$inc": {"total_characters": 1, "daily_top": 1, "weekly_top": 1, "monthly_top": 1}},
-            upsert=True
-        )
-                
-        await chat_data.update_one(
-            {'chat_id': chat_id, 'user_id': user_id},
-            {'$inc': {'total_characters': 1}, '$set': {'last_updated': datetime.datetime.now()}},
-            upsert=True  # Create a new document if it doesn't exist
-        )
-        
-        
-        
-        user = await user_collection.find_one({'id': user_id})
-        if user:
-            update_fields = {}
-            if hasattr(update.effective_user, 'username') and update.effective_user.username != user.get('username'):
-                update_fields['username'] = update.effective_user.username
-            if update.effective_user.first_name != user.get('first_name'):
-                update_fields['first_name'] = update.effective_user.first_name
-            if update_fields:
-                await user_collection.update_one({'id': user_id}, {'$set': update_fields})
-            
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': last_characters[chat_id]}})
-      
-        elif hasattr(update.effective_user, 'username'):
-            await user_collection.insert_one({
-                'id': user_id,
-                'username': update.effective_user.username,
-                'first_name': update.effective_user.first_name,
-                'characters': [last_characters[chat_id]],
-            })
-
-        
-        group_user_total = await group_user_totals_collection.find_one({'user_id': user_id, 'group_id': chat_id})
-        if group_user_total:
-            update_fields = {}
-            if hasattr(update.effective_user, 'username') and update.effective_user.username != group_user_total.get('username'):
-                update_fields['username'] = update.effective_user.username
-            if update.effective_user.first_name != group_user_total.get('first_name'):
-                update_fields['first_name'] = update.effective_user.first_name
-            if update_fields:
-                await group_user_totals_collection.update_one({'user_id': user_id, 'group_id': chat_id}, {'$set': update_fields})
-            
-            await group_user_totals_collection.update_one({'user_id': user_id, 'group_id': chat_id}, {'$inc': {'count': 1}})
-      
-        else:
-            await group_user_totals_collection.insert_one({
-                'user_id': user_id,
-                'group_id': chat_id,
-                'username': update.effective_user.username,
-                'first_name': update.effective_user.first_name,
-                'count': 1,
-            })
-
-
-    
-        group_info = await top_global_groups_collection.find_one({'group_id': chat_id})
-        if group_info:
-            update_fields = {}
-            if update.effective_chat.title != group_info.get('group_name'):
-                update_fields['group_name'] = update.effective_chat.title
-            if update_fields:
-                await top_global_groups_collection.update_one({'group_id': chat_id}, {'$set': update_fields})
-            
-            await top_global_groups_collection.update_one({'group_id': chat_id}, {'$inc': {'count': 1}})
-      
-        else:
-            await top_global_groups_collection.insert_one({
-                'group_id': chat_id,
-                'group_name': update.effective_chat.title,
-                'count': 1,
-            })
-
-
-    else:
-        await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
-
-   
-
-"""async def fav(update: Update, context: CallbackContext) -> None:
-    user_id = update.effective_user.id
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        return
-    await asyncio.sleep(0)
-    if not context. args:
-        await update.message.reply_text('🚨 Please provide the character ID to proceed.')
-        return
-
-    character_id = context.args[0]
-    user = await user_collection.find_one({'id': user_id})
-
-    if not user:
-        await update.message.reply_text("🎉 Start guessing characters to build your collection!")
-        return
-
-    character = next((c for c in user['characters'] if c['id'] == character_id), None)
-    if not character:
-        await update.message.reply_text('❌ This character is not in your collection.')
-        return
-
-    user['favorites'] = [character_id]
-    await user_collection.update_one({'id': user_id}, {'$set': {'favorites': user['favorites']}})
-
-    await update.message.reply_text(f'🌟 {character["name"]} has been added to your favorites!')"""
-
-
-
-"""async def show_message_count(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text(f"Message")
-    chat_id = str(update.effective_chat.id)
-    count = message_counters.get(chat_id, 0)
-    await update.message.reply_text(f"Message count for this group: {count}")
-    """
     
 sad = ["7316432912", "7378476666"]
 
@@ -742,6 +558,136 @@ async def slock(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f"🔒 Character {character_id} has been locked and won't spawn anymore.")
     else:
         await update.message.reply_text(f"❌ Character {character_id} not found.")
+
+
+@block_dec_ptb
+async def guess(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    is_banned = await ban_collection.find_one({"user_id": user_id})
+    
+    if is_banned:
+        return
+
+    if chat_id not in last_characters and chat_id not in current_amv_character:
+        return
+
+    if chat_id in first_correct_guesses:
+        return
+
+    guess = ' '.join(context.args).lower() if context.args else ''
+    
+    if "()" in guess or "&" in guess.lower():
+        await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
+        return
+
+    # Check if it's a regular character or AMV character
+    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
+        # Handle AMV character guess
+        character = current_amv_character[chat_id]
+        name_parts = character['name'].lower().split()
+    else:
+        # Handle regular character guess
+        if chat_id not in last_characters:
+            return
+        character = last_characters[chat_id]
+        name_parts = character['name'].lower().split()
+
+    if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
+        first_correct_guesses[chat_id] = user_id
+        rarity = character.get("rarity", "")
+        
+        # Set random reaction
+        try:
+            random_reaction = random.choice(reaction_list)
+            await update.message.set_reaction(random_reaction)
+        except Exception as e:
+            print(f"Couldn't set reaction: {e}")
+
+        # Special reward for AMV characters
+        if rarity == "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣":
+            reward = 1000 # Higher reward for AMV characters
+            await current_amv_character[chat_id].update({"claimed": True})
+        else:
+            reward = 40
+
+        await add_coins(user_id, reward)
+        
+        # Prepare the response
+        inline_query = f"collection.img.{user_id}"
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                "View Collection",
+                switch_inline_query_current_chat=inline_query
+            )
+        ]])
+
+        response_text = (
+            f'<b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> 🎊 You guessed the character!\n\n'
+            f'🍁 Name: <b>{character["name"]}</b>\n'
+            f'⛩ Anime: <b>{character["anime"]}</b>\n'
+            f'🎐 Rarity: <b>{character["rarity"]}</b>\n\n'
+            f'This character is now in your harem! Use /mycollection to see your harem.'
+        )
+
+        await update.message.reply_text(f"🎉 Congrats! You've earned {reward} dazzling coins for guessing correctly! 💰")
+        await update.message.reply_text(
+            response_text,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+
+        # Update user collection
+        await update_user_collection(user_id, character, chat_id)
+        
+    else:
+        await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
+
+
+async def update_user_collection(user_id: int, character: dict, chat_id: int):
+    """Helper function to update user collection"""
+    # Update user's collection
+    await user_collection.update_one(
+        {"id": user_id},
+        {
+            "$push": {"characters": character},
+            "$inc": {
+                "total_characters": 1,
+                "daily_top": 1,
+                "weekly_top": 1,
+                "monthly_top": 1
+            },
+            "$set": {
+                "username": update.effective_user.username,
+                "first_name": update.effective_user.first_name
+            }
+        },
+        upsert=True
+    )
+    
+    # Update group user totals
+    await group_user_totals_collection.update_one(
+        {"user_id": user_id, "group_id": chat_id},
+        {
+            "$inc": {"count": 1},
+            "$set": {
+                "username": update.effective_user.username,
+                "first_name": update.effective_user.first_name
+            }
+        },
+        upsert=True
+    )
+    
+    # Update global group stats
+    await top_global_groups_collection.update_one(
+        {"group_id": chat_id},
+        {
+            "$inc": {"count": 1},
+            "$set": {"group_name": update.effective_chat.title}
+        },
+        upsert=True
+    )
+
 
 @block_dec_ptb
 async def unlock(update: Update, context: CallbackContext) -> None:
