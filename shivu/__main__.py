@@ -42,6 +42,8 @@ valentine_spawn_thresholds = {}
 amv_spawn_thresholds = {} # Store random thresholds for Valentine spawn
 summer_spawn_thresholds = {}
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
+current_amv_character = {}  # Tracks AMV characters per chat
+amv_claim_limit = 1  #
 
 """server = Flask(__name__)
 @server.route("/")
@@ -171,27 +173,33 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             amv_spawn_thresholds[chat_id] = random.randint(3000, 5000)
             
 
+
 async def spawn_amv_character(update: Update, context: CallbackContext) -> None:
     """Spawn a special AMV character"""
-    
-    
     chat_id = update.effective_chat.id
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
-
+    
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
         
-    amv_chars = await collection.find({"rarity": "🎗️ AMV Edition"}).to_list(length=None)
+    # Get only AMV characters that aren't locked
+    amv_chars = [c for c in all_characters if c.get('rarity') == "🎗️ �𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣" and not c.get('slock', False)]
+    
     if not amv_chars:
-        await message.reply_text("nahhh")
+        print("No AMV characters available to spawn")
         return
 
-    available_chars = [
-        char for char in amv_chars 
-        if await user_collection.count_documents({"id": user_id, "characters.id": char["id"]}) < character_claim_limit
-    ]
+    # Filter characters that haven't reached global claim limit
+    available_chars = []
+    for char in amv_chars:
+        # Check how many users have claimed this character
+        claim_count = await user_collection.count_documents({
+            "characters.id": char["id"]
+        })
+        if claim_count < amv_claim_limit:
+            available_chars.append(char)
 
     if not available_chars:
+        print("All AMV characters have reached claim limit")
         return
 
     char = random.choice(available_chars)
@@ -199,27 +207,35 @@ async def spawn_amv_character(update: Update, context: CallbackContext) -> None:
         "name": char["name"],
         "anime": char["anime"],
         "rarity": char["rarity"],
-        "full_document": char,
-        "claimed": False,
+        "id": char["id"],
+        "img_url": char.get("img_url"),
+        "vid_url": char.get("vid_url"),
+        "claimed": False
     }
 
-    if char["rarity"] == "🎗️ AMV Edition":
-        await context.bot.send_video(
-            chat_id=chat_id,
-            video=char["vid_url"],
-            supports_streaming=True,
-            caption="🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
-                    "💎 *Rarity:* AMV Edition (Ultra Rare)\n\n"
-                    "✍️ Guess the character name with `/guess [name]` to claim it!"
-        )
-    else:
-        await update.message.reply_photo(
-            char["img_url"],
-            caption="🌟 **SPECIAL CHARACTER APPEARED!** 🌟\n\n"
-                    f"✨ *Rarity:* {char['rarity']}\n\n"
-                    "✍️ Guess the character name with `/guess [name]` to claim it!"
-        )
-
+    # Send the AMV character with appropriate media
+    caption = ("🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
+              "💎 *Rarity:* AMV Edition (Ultra Rare)\n\n"
+              "✍️ Guess the character name with `/guess [name]` to claim it!")
+    
+    try:
+        if char.get("vid_url"):
+            await context.bot.send_video(
+                chat_id=chat_id,
+                video=char["vid_url"],
+                supports_streaming=True,
+                caption=caption,
+                parse_mode='Markdown'
+            )
+        else:
+            await context.bot.send_photo(
+                chat_id=chat_id,
+                photo=char["img_url"],
+                caption=caption,
+                parse_mode='Markdown'
+            )
+    except Exception as e:
+        print(f"Error sending AMV character: {e}")
 
 
 async def send_image(update: Update, context: CallbackContext) -> None:
