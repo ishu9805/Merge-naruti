@@ -38,7 +38,8 @@ from flask import Flask
 
 
 all_characters = []
-valentine_spawn_thresholds = {}  # Store random thresholds for Valentine spawn
+valentine_spawn_thresholds = {} 
+amv_spawn_thresholds = {} # Store random thresholds for Valentine spawn
 summer_spawn_thresholds = {}
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 
@@ -120,18 +121,22 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize total message count and random threshold for Valentine spawn
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
+            total_message_counts2[chat_id] = 0
+            
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
             summer_spawn_thresholds[chat_id]  = random.randint(1800, 4000)
+            if chat_id == -1002606804832:
+                amv_spawn_thresholds[chat_id] = random.randunt(600, 2000)
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
-
+        total_message_counts2[chat_id] += 1
         # Existing logic for message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
-            if last_user[chat_id]['count'] >= 4:
+            if last_user[chat_id]['count'] >= 6:
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
@@ -159,6 +164,62 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             await spawn_summer_character(update, context)
             summer_spawn_thresholds[chat_id] = random.randint(650, 1000)
             total_message_counts[chat_id] = 0
+
+        if total_message_counts2[chat_id] == amv_spawn_thresholds[chat_id]:
+            await spawn_amv_character(update, context)
+            # Reset the threshold for the next spawn
+            amv_spawn_thresholds[chat_id] = random.randint(3000, 5000)
+            
+
+async def spawn_amv_character(update: Update, context: CallbackContext) -> None:
+    """Spawn a special AMV character"""
+    
+    
+    chat_id = update.effective_chat.id
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
+        
+    amv_chars = await collection.find({"rarity": "🎗️ AMV Edition"}).to_list(length=None)
+    if not amv_chars:
+        await message.reply_text("nahhh")
+        return
+
+    available_chars = [
+        char for char in amv_chars 
+        if await user_collection.count_documents({"id": user_id, "characters.id": char["id"]}) < character_claim_limit
+    ]
+
+    if not available_chars:
+        return
+
+    char = random.choice(available_chars)
+    current_amv_character[chat_id] = {
+        "name": char["name"],
+        "anime": char["anime"],
+        "rarity": char["rarity"],
+        "full_document": char,
+        "claimed": False,
+    }
+
+    if char["rarity"] == "🎗️ AMV Edition":
+        await context.bot.send_video(
+            chat_id=chat_id,
+            video=char["vid_url"],
+            supports_streaming=True,
+            caption="🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
+                    "💎 *Rarity:* AMV Edition (Ultra Rare)\n\n"
+                    "✍️ Guess the character name with `/guess [name]` to claim it!"
+        )
+    else:
+        await update.message.reply_photo(
+            char["img_url"],
+            caption="🌟 **SPECIAL CHARACTER APPEARED!** 🌟\n\n"
+                    f"✨ *Rarity:* {char['rarity']}\n\n"
+                    "✍️ Guess the character name with `/guess [name]` to claim it!"
+        )
+
 
 
 async def send_image(update: Update, context: CallbackContext) -> None:
