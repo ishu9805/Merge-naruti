@@ -251,6 +251,21 @@ async def ul(client, message):
                     f"\n━━━━━━━━━━━━━━━━━━\n"
                 ),
             )
+            await client.send_photo(
+                chat_id=-1002606804832,
+                photo=catbox_url,
+                caption = (
+                f"🌟 **Character Detail** 🌟\n"
+                    f"\n━━━━━━━━━━━━━━━━━━\n"
+                    f"🔹 **Name:** {character_name}\n"
+                    f"🔸 **Anime:** {anime}\n"
+                    f"🔹 **ID:** {available_id}\n"
+                    f"🔸 **Rarity:** {rarity_text}\n"
+                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+                    f"\n━━━━━━━━━━━━━━━━━━\n"
+                ),
+            )
+            
             await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
         
         except Exception as e:
