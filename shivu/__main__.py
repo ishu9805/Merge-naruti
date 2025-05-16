@@ -95,7 +95,7 @@ sent_characters = {}
 first_correct_guesses = {}
 message_counts = {}
 total_message_counts ={}
-
+total_message_counts2 ={}
 for module_name in ALL_MODULES:
     imported_module = importlib.import_module("shivu.modules." + module_name)
 
@@ -123,7 +123,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize total message count and random threshold for Valentine spawn
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            total_message_counts2[chat_id] = 0
+            #total_message_counts2[chat_id] = 0
             
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
             summer_spawn_thresholds[chat_id]  = random.randint(1800, 4000)
@@ -131,7 +131,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                 amv_spawn_thresholds[chat_id] = random.randunt(600, 2000)
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
-        total_message_counts2[chat_id] += 1
+        #total_message_counts2[chat_id] += 1
         # Existing logic for message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
@@ -167,10 +167,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             summer_spawn_thresholds[chat_id] = random.randint(650, 1000)
             total_message_counts[chat_id] = 0
 
-        if total_message_counts2[chat_id] == amv_spawn_thresholds[chat_id]:
+        """if total_message_counts2[chat_id] == amv_spawn_thresholds[chat_id]:
             await spawn_amv_character(update, context)
             # Reset the threshold for the next spawn
-            amv_spawn_thresholds[chat_id] = random.randint(3000, 5000)
+            amv_spawn_thresholds[chat_id] = random.randint(3000, 5000)"""
             
 
 
