@@ -23,7 +23,7 @@ photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 async def join_watcher(_, message):    
     chat = message.chat
     for member in message.new_chat_members:
-        if member.id == app.id:
+        if member.id == 7107840748:
             try:
                 # Try to get chat invite link
                 try:
