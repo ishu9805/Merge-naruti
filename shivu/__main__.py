@@ -658,8 +658,8 @@ async def update_user_collection(user_id: int, character: dict, chat_id: int):
                 "monthly_top": 1
             },
             "$set": {
-                "username": update.effective_user.username,
-                "first_name": update.effective_user.first_name
+                "username": Update.effective_user.username,
+                "first_name": Update.effective_user.first_name
             }
         },
         upsert=True
