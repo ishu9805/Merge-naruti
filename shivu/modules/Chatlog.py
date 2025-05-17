@@ -2,7 +2,7 @@
 
 
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
 from telegram.ext import CallbackContext, ChatMemberHandler, CommandHandler
 from shivu import applicationps as application 
 
@@ -22,7 +22,7 @@ async def log_chat_member(update: Update, context: CallbackContext) -> None:
     bot = context.bot
 
     try:
-        member_count = await bot.get_members_count(chat.id)
+        member_count = await Chat.get_chat_members_count(chat.id)
         by_user = (f"{from_user.first_name} (@{from_user.username})" 
                   if from_user and from_user.username 
                   else from_user.first_name if from_user else "Unknown User")
