@@ -47,7 +47,7 @@ async def join_watcher(_, message):
                 # Send welcome message with random photo
                 await app.send_photo(
                     chat.id,
-                    photo=random.choice(photo),
+                    photo=photo,
                     caption=welcome_msg,
                     reply_markup=keyboard
                 )
@@ -65,7 +65,7 @@ async def join_watcher(_, message):
                 
                 await app.send_photo(
                     LOG_GROUP_ID,
-                    photo=random.choice(photo),
+                    photo=photo,
                     caption=log_msg,
                     reply_markup=InlineKeyboardMarkup([
                         [InlineKeyboardButton("👀 See Group", url=link)] if link != "Private Group" else []
@@ -91,7 +91,7 @@ async def on_left_chat_member(_, message: Message):
             
             await app.send_photo(
                 LOG_GROUP_ID,
-                photo=random.choice(photo),
+                photo=photo,
                 caption=left_msg
             )
         except Exception as e:
