@@ -78,7 +78,7 @@ async def join_watcher(_, message):
 
 @app.on_message(filters.left_chat_member)
 async def on_left_chat_member(_, message: Message):
-    if message.left_chat_member.id == app.id:
+    if message.left_chat_member.id == 7107840748:
         try:
             remove_by = message.from_user.mention if message.from_user else "Unknown User"
             left_msg = (
