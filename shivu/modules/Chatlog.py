@@ -66,10 +66,8 @@ async def join_watcher(_, message):
                 await app.send_photo(
                     LOG_GROUP_ID,
                     photo=photo,
-                    caption=log_msg,
-                    reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton("👀 See Group", url=link)] if link != "Private Group" else []
-                    ])
+                    caption=log_msg
+                    
                 )
                 
             except Exception as e:
