@@ -4,111 +4,106 @@ from shivu import application  # Assuming LOGGER_ID is the ID for logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
 from shivu import application
-LOGGER_ID = -1002165460785 # Assuming LOGGER_ID is the ID for logging
 
-async def leave_all(update: Update, context: CallbackContext) -> None:
-    # Ensure the command is used by an authorized user (optional)
-    authorized_user_id = 7378476666  # Replace with your user ID
-    if update.effective_user.id != authorized_user_id:
-        await update.effective_message.reply_text("🚫 You are not authorized to use this command.")
-        return
 
-    bot = context.bot
-    left_groups = []
-    total_groups = 0
 
-    # Fetch all chats the bot is a member of
-    async for dialog in bot.get_dialogs():
-        chat = dialog.chat
-        if chat.type in ["group", "supergroup"]:
-            total_groups += 1
-            try:
-                # Get the member count
-                member_count = await bot.get_chat_members_count(chat.id)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackContext, ChatMemberHandler, CommandHandler
+from shivu import application
 
-                # Leave the group if members are fewer than 50
-                if member_count < 50:
-                    await bot.leave_chat(chat.id)
-                    left_groups.append((chat.title, chat.id, member_count))
-            except Exception as e:
-                # Log any errors (optional)
-                await bot.send_message(LOGGER_ID, f"Error while processing chat {chat.title} ({chat.id}): {e}")
-
-    # Send a summary to the user
-    if left_groups:
-        summary = (
-            f"🚪 **Left Groups with Less than 50 Members**\n\n"
-            f"💬 *Total Groups Processed:* {total_groups}\n"
-            f"📤 *Groups Left:* {len(left_groups)}\n\n"
-        )
-        for idx, (title, group_id, count) in enumerate(left_groups, start=1):
-            summary += f"{idx}. *{title}* (ID: `{group_id}`) - {count} members\n"
-    else:
-        summary = "✅ The bot is not part of any groups with fewer than 50 members."
-
-    await update.effective_message.reply_text(summary, parse_mode="Markdown")
-
-# Add the handler to the bot
-leave_all_handler = CommandHandler("leaveall", leave_all, block=False)
-application.add_handler(leave_all_handler)
-
+LOGGER_ID = -1002165460785  # Your log channel ID
+AUTHORIZED_USER_IDS = {7378476666}  # Your user ID
+BOT_INVITE_LINK = "https://t.me/Fancy_Waifu_Husbando_Bot?startgroup=true"
+WELCOME_IMAGE_URL = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 
 async def log_chat_member(update: Update, context: CallbackContext) -> None:
-    chat = update.effective_chat
-    my_chat_member = update.my_chat_member
-
-    # Extracting the user who added/removed the bot
-    from_user = my_chat_member.from_user
-    by_user = f"{from_user.first_name} (@{from_user.username or 'No Username'})" if from_user else "Unknown User"
-
-    # Get the total number of members in the group
-    member_count = await context.bot.get_chat_members_count(chat.id)
-
-    # Try to get the group invite link (requires bot admin privileges)
-    invite_link = None
-    if my_chat_member.new_chat_member.status in ["member", "administrator"]:
-        try:
-            invite_link = await context.bot.export_chat_invite_link(chat.id)
-        except Exception:
-            invite_link = "Unable to generate invite link (insufficient permissions)."
-
-    # If bot is added
-    if my_chat_member.new_chat_member.status in ["member", "administrator"]:
-        message = (
-            f"➕ **Bot Added to a Group**\n\n"
-            f"📌 __Group Name:__ {chat.title}\n"
-            f"🆔 __Group ID:__ `{chat.id}`\n"
-            f"👤 __Added By:__ {by_user}\n"
-            f"👥 __Total Members:__ {member_count}\n"
-            f"🔗 __Group Link:__ {invite_link or 'N/A'}"
-        )
-
-        # Auto leave if total members are less than 40
-        if member_count < 5:
-            await context.bot.send_message(
-                chat_id=chat.id,
-                text="🚨 This group does not meet the minimum requirement of 40 members. The bot will now leave.",
-            )
-            await context.bot.leave_chat(chat_id=chat.id)
-
-            # Log the auto-leave action
-            message += f"\n\n🚪 *Action Taken:* Left the group due to insufficient members."
-    
-    # If bot is removed
-    elif my_chat_member.new_chat_member.status == "left":
-        message = (
-            f"➖ **Bot Removed from a Group**\n\n"
-            f"📌 __Group Name:__ {chat.title}\n"
-            f"🆔 __Group ID:__ `{chat.id}`\n"
-            f"👤 __Removed By:__ {by_user}"
-        )
-    else:
-        # No relevant status change
+    """Handler for when bot is added/removed from groups"""
+    if not update.my_chat_member:
         return
 
-    # Send the log message to the logger ID
-    await context.bot.send_message(chat_id=LOGGER_ID, text=message, parse_mode='Markdown')
+    chat = update.effective_chat
+    my_chat_member = update.my_chat_member
+    from_user = my_chat_member.from_user
+    bot = context.bot
 
-# Adding the ChatMemberHandler to handle these events
-chat_member_handler = ChatMemberHandler(log_chat_member, block=False)
-application.add_handler(chat_member_handler)
+    try:
+        member_count = await bot.get_chat_members_count(chat.id)
+        by_user = (f"{from_user.first_name} (@{from_user.username})" 
+                  if from_user and from_user.username 
+                  else from_user.first_name if from_user else "Unknown User")
+
+        # Bot added to group
+        if my_chat_member.new_chat_member.status in ["member", "administrator"]:
+            try:
+                invite_link = await bot.export_chat_invite_link(chat.id)
+            except Exception:
+                invite_link = "No invite link (missing admin rights)"
+
+            # Create inline button
+            keyboard = [
+                [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            # Welcome message to send to the group
+            welcome_text = (
+                f"✨ Hello everyone!\n"
+                f"🤖 I'm {bot.first_name}, a fancy anime bot!\n"
+                f"👤 Added by: {by_user}\n"
+                f"👥 Group Members: {member_count}\n\n"
+                #f"Use /help to see what I can do!"
+            )
+
+            # Log message to send to logger channel
+            log_msg = (
+                f"➕ **Bot Added to Group**\n\n"
+                f"📌 Name: {chat.title}\n"
+                f"🆔 ID: `{chat.id}`\n"
+                f"👤 By: {by_user}\n"
+                f"👥 Members: {member_count}\n"
+                f"🔗 Group Link: {invite_link}"
+            )
+
+            try:
+                # Send photo with caption and button
+                await bot.send_photo(
+                    chat_id=chat.id,
+                    photo=WELCOME_IMAGE_URL,
+                    caption=welcome_text,
+                    reply_markup=reply_markup
+                )
+            except Exception as e:
+                log_msg += f"\n\n⚠️ Failed to send welcome message: {str(e)[:100]}"
+                # Fallback to text message if photo fails
+                try:
+                    await bot.send_message(
+                        chat.id,
+                        welcome_text,
+                        reply_markup=reply_markup
+                    )
+                except Exception as e2:
+                    log_msg += f"\nAlso failed text fallback: {str(e2)[:100]}"
+
+            await bot.send_message(LOGGER_ID, log_msg, parse_mode="Markdown")
+
+        # Bot removed from group
+        elif my_chat_member.new_chat_member.status == "left":
+            log_msg = (
+                f"➖ **Bot Removed from Group**\n\n"
+                f"📌 Name: {chat.title}\n"
+                f"🆔 ID: `{chat.id}`\n"
+                f"👤 By: {by_user}\n"
+                f"👥 Members: {member_count}\n"
+                f"🕒 At: {my_chat_member.date}"
+            )
+            await bot.send_message(LOGGER_ID, log_msg, parse_mode="Markdown")
+
+    except Exception as e:
+        error_msg = (
+            f"⚠️ Error in chat member update:\n"
+            f"Chat: {chat.title if chat else 'Unknown'} ({chat.id if chat else 'N/A'})\n"
+            f"Error: {str(e)[:300]}"
+        )
+        await bot.send_message(LOGGER_ID, error_msg)
+
+# Add handler
+application.add_handler(ChatMemberHandler(log_chat_member, block=False))
