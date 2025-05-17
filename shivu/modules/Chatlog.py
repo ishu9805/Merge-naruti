@@ -4,7 +4,7 @@ from shivu import application  # Assuming LOGGER_ID is the ID for logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
 from shivu import application
-LOGGER_ID = -1002198664660 # Assuming LOGGER_ID is the ID for logging
+LOGGER_ID = -1002165460785 # Assuming LOGGER_ID is the ID for logging
 
 async def leave_all(update: Update, context: CallbackContext) -> None:
     # Ensure the command is used by an authorized user (optional)
@@ -84,7 +84,7 @@ async def log_chat_member(update: Update, context: CallbackContext) -> None:
         )
 
         # Auto leave if total members are less than 40
-        if member_count < 40:
+        if member_count < 5:
             await context.bot.send_message(
                 chat_id=chat.id,
                 text="🚨 This group does not meet the minimum requirement of 40 members. The bot will now leave.",
