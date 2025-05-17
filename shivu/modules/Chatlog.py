@@ -1,15 +1,10 @@
-from telegram import Update
-from telegram.ext import CallbackContext, ChatMemberHandler
-from shivu import application  # Assuming LOGGER_ID is the ID for logging
-from telegram import Update
-from telegram.ext import CallbackContext, CommandHandler
-from shivu import application
+
 
 
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, ChatMemberHandler, CommandHandler
-from shivu import application
+from shivu import applicationps as application 
 
 LOGGER_ID = -1002165460785  # Your log channel ID
 AUTHORIZED_USER_IDS = {7378476666}  # Your user ID
