@@ -564,6 +564,9 @@ async def slock(update: Update, context: CallbackContext) -> None:
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
+    first = update.effective_user.first_name
+    username = update.effective_user.username
+    title = update.effective_chat.title
     is_banned = await ban_collection.find_one({"user_id": user_id})
     
     if is_banned:
@@ -638,13 +641,13 @@ async def guess(update: Update, context: CallbackContext) -> None:
         )
 
         # Update user collection
-        await update_user_collection(user_id, character, chat_id)
+        await update_user_collection(user_id, character, chat_id, username, first, title)
         
     else:
         await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
 
 
-async def update_user_collection(user_id: int, character: dict, chat_id: int):
+async def update_user_collection(user_id: int, character: dict, chat_id: int, username, first, title):
     """Helper function to update user collection"""
     # Update user's collection
     await user_collection.update_one(
@@ -658,8 +661,8 @@ async def update_user_collection(user_id: int, character: dict, chat_id: int):
                 "monthly_top": 1
             },
             "$set": {
-                "username": Update.effective_user.username,
-                "first_name": Update.effective_user.first_name
+                "username": username,
+                "first_name": first
             }
         },
         upsert=True
@@ -671,8 +674,8 @@ async def update_user_collection(user_id: int, character: dict, chat_id: int):
         {
             "$inc": {"count": 1},
             "$set": {
-                "username": update.effective_user.username,
-                "first_name": update.effective_user.first_name
+                "username": username,
+                "first_name": first
             }
         },
         upsert=True
@@ -683,7 +686,7 @@ async def update_user_collection(user_id: int, character: dict, chat_id: int):
         {"group_id": chat_id},
         {
             "$inc": {"count": 1},
-            "$set": {"group_name": update.effective_chat.title}
+            "$set": {"group_name": title}
         },
         upsert=True
     )
