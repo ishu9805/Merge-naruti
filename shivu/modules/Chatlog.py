@@ -42,6 +42,8 @@ async def log_chat_member(update: Update, context: CallbackContext) -> None:
             # Create inline button
             keyboard = [
                 [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)]
+
+            ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             # Welcome message to send to the group
