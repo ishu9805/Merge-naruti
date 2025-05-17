@@ -2,105 +2,98 @@
 
 
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Chat
-from telegram.ext import CallbackContext, ChatMemberHandler, CommandHandler
-from shivu import applicationps as application 
+import random
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+#from config import LOGGER_ID as LOG_GROUP_ID
+from shivu import shivuups as app 
+from pyrogram.errors import RPCError
 
-LOGGER_ID = -1002165460785  # Your log channel ID
+LOG_GROUP_ID = -1002165460785  # Your log channel ID
 AUTHORIZED_USER_IDS = {7378476666}  # Your user ID
 BOT_INVITE_LINK = "https://t.me/Fancy_Waifu_Husbando_Bot?startgroup=true"
-WELCOME_IMAGE_URL = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
+photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 
-async def log_chat_member(update: Update, context: CallbackContext) -> None:
-    """Handler for when bot is added/removed from groups"""
-    if not update.my_chat_member:
-        return
 
-    chat = update.effective_chat
-    my_chat_member = update.my_chat_member
-    from_user = my_chat_member.from_user
-    bot = context.bot
 
-    try:
-        member_count = await Chat.get_member_count(chat.id)
-        by_user = (f"{from_user.first_name} (@{from_user.username})" 
-                  if from_user and from_user.username 
-                  else from_user.first_name if from_user else "Unknown User")
+# Bot invite link
+#BOT_INVITE_LINK = "https://t.me/Fancy_Waifu_Husbando_Bot?startgroup=true"
 
-        # Bot added to group
-        if my_chat_member.new_chat_member.status in ["member", "administrator"]:
+@app.on_message(filters.new_chat_members, group=2)
+async def join_watcher(_, message):    
+    chat = message.chat
+    for member in message.new_chat_members:
+        if member.id == app.id:
             try:
-                invite_link = await bot.export_chat_invite_link(chat.id)
-            except Exception:
-                invite_link = "No invite link (missing admin rights)"
-
-            # Create inline button
-            keyboard = [
-                [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)]
-
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            # Welcome message to send to the group
-            welcome_text = (
-                f"✨ Hello everyone!\n"
-                f"🤖 I'm {bot.first_name}, a fancy anime bot!\n"
-                f"👤 Added by: {by_user}\n"
-                f"👥 Group Members: {member_count}\n\n"
-                #f"Use /help to see what I can do!"
-            )
-
-            # Log message to send to logger channel
-            log_msg = (
-                f"➕ **Bot Added to Group**\n\n"
-                f"📌 Name: {chat.title}\n"
-                f"🆔 ID: `{chat.id}`\n"
-                f"👤 By: {by_user}\n"
-                f"👥 Members: {member_count}\n"
-                f"🔗 Group Link: {invite_link}"
-            )
-
-            try:
-                # Send photo with caption and button
-                await bot.send_photo(
-                    chat_id=chat.id,
-                    photo=WELCOME_IMAGE_URL,
-                    caption=welcome_text,
-                    reply_markup=reply_markup
-                )
-            except Exception as e:
-                log_msg += f"\n\n⚠️ Failed to send welcome message: {str(e)[:100]}"
-                # Fallback to text message if photo fails
+                # Try to get chat invite link
                 try:
-                    await bot.send_message(
-                        chat.id,
-                        welcome_text,
-                        reply_markup=reply_markup
-                    )
-                except Exception as e2:
-                    log_msg += f"\nAlso failed text fallback: {str(e2)[:100]}"
+                    link = await app.export_chat_invite_link(chat.id)
+                except:
+                    link = "Private Group"
+                
+                # Welcome message with button
+                welcome_msg = (
+                    f"✨ Hello {chat.title} members!\n"
+                    f"🤖 I'm {app.me.first_name}, your anime music bot!\n"
+                    f"🎵 Ready to play your favorite tunes!\n\n"
+                    #f"Use /help to see my commands!"
+                )
+                
+                # Create add button
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)]
+                ])
+                
+                # Send welcome message with random photo
+                await app.send_photo(
+                    chat.id,
+                    photo=random.choice(photo),
+                    caption=welcome_msg,
+                    reply_markup=keyboard
+                )
+                
+                # Log to admin channel
+                count = await app.get_chat_members_count(chat.id)
+                log_msg = (
+                    f"📝 Music Bot Added to New Group\n\n"
+                    f"📌 Chat Name: {chat.title}\n"
+                    f"🍂 Chat ID: {chat.id}\n"
+                    f"👤 Added By: {message.from_user.mention if message.from_user else 'Unknown'}\n"
+                    f"👥 Members: {count}\n"
+                    f"🔗 Chat Link: {link}"
+                )
+                
+                await app.send_photo(
+                    LOG_GROUP_ID,
+                    photo=random.choice(photo),
+                    caption=log_msg,
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("👀 See Group", url=link)] if link != "Private Group" else []
+                    ])
+                )
+                
+            except Exception as e:
+                error_msg = f"Error in new chat handler: {str(e)}"
+                await app.send_message(LOG_GROUP_ID, error_msg)
 
-            await bot.send_message(LOGGER_ID, log_msg, parse_mode="Markdown")
-
-        # Bot removed from group
-        elif my_chat_member.new_chat_member.status == "left":
-            log_msg = (
-                f"➖ **Bot Removed from Group**\n\n"
-                f"📌 Name: {chat.title}\n"
-                f"🆔 ID: `{chat.id}`\n"
-                f"👤 By: {by_user}\n"
-                f"👥 Members: {member_count}\n"
-                f"🕒 At: {my_chat_member.date}"
+@app.on_message(filters.left_chat_member)
+async def on_left_chat_member(_, message: Message):
+    if message.left_chat_member.id == app.id:
+        try:
+            remove_by = message.from_user.mention if message.from_user else "Unknown User"
+            left_msg = (
+                f"✫ #Left_Group ✫\n\n"
+                f"📌 Chat Title: {message.chat.title}\n"
+                f"🆔 Chat ID: {message.chat.id}\n"
+                f"👤 Removed By: {remove_by}\n"
+                f"🤖 Bot: @{app.me.username}"
             )
-            await bot.send_message(LOGGER_ID, log_msg, parse_mode="Markdown")
-
-    except Exception as e:
-        error_msg = (
-            f"⚠️ Error in chat member update:\n"
-            f"Chat: {chat.title if chat else 'Unknown'} ({chat.id if chat else 'N/A'})\n"
-            f"Error: {str(e)[:300]}"
-        )
-        await bot.send_message(LOGGER_ID, error_msg)
-
-# Add handler
-application.add_handler(ChatMemberHandler(log_chat_member, block=False))
+            
+            await app.send_photo(
+                LOG_GROUP_ID,
+                photo=random.choice(photo),
+                caption=left_msg
+            )
+        except Exception as e:
+            error_msg = f"Error in left chat handler: {str(e)}"
+            await app.send_message(LOG_GROUP_ID, error_msg)
