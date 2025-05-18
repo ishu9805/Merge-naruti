@@ -118,7 +118,7 @@ async def join_giveaway(client: Client, message: Message):
         giveaway_participants.append(user_id)
         await message.reply(f"✅ **You have successfully joined the elimination giveaway!**\n👥 **Total Participants:** {len(giveaway_participants)}")
         await client.send_message(
-            chat_id=-1002610579411,
+            chat_id=-1002606804832,
             text=(
                 f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
                 f"👥 **Total Participants:** {len(giveaway_participants)}"
@@ -184,7 +184,7 @@ async def elimination_process(client: Client):
                 eliminated_names.append(f"[{user.first_name}](tg://user?id={user_id})")
 
             await client.send_message(
-                chat_id=-1002610579411,
+                chat_id=-1002606804832,
                 text=(
                     f"🚫 **Eliminated Users:** {', '.join(eliminated_names)}\n"
                     f"👥 **Remaining Participants:** {len(giveaway_participants)}"
@@ -204,7 +204,7 @@ async def elimination_process(client: Client):
 
                 # Send the message
                 await client.send_message(
-                    chat_id=-1002610579411,
+                    chat_id=-1002606804832,
                     text=(
                         f"🎉 **Last {len(giveaway_participants)} Participants:**\n"
                         f"{last_five_ids}"
@@ -212,7 +212,7 @@ async def elimination_process(client: Client):
                 )
 
             # Wait for 45 seconds before the next elimination
-            await asyncio.sleep(45)
+            await asyncio.sleep(40)
 
         # Determine the winners (when 2 participants are left)
         if len(giveaway_participants) == 2:
