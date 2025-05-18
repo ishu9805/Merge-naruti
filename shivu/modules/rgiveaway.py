@@ -89,7 +89,7 @@ async def participate_giveaway(client: Client, message: Message):
     giveaway.participants.append(user_id)
     await message.reply(f"✅ **You have successfully joined the giveaway!**\n👥 **Total Participants:** {len(giveaway.participants)}")
     await client.send_message(
-        chat_id=-1002338924488,
+        chat_id=-1002606804832,
         text=(
             f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
             f"👥 **Total Participants:** {len(giveaway.participants)}"
