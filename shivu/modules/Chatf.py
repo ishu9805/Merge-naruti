@@ -9,7 +9,7 @@ from shivu import (
 from typing import Dict, List
 
 # Set up logging
-logging.basicConfig(level=logging.IuNFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Store pagination data in memory
