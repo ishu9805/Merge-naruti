@@ -23,7 +23,7 @@ async def check_frequencies(client: Client, message: Message):
     if str(user_id) not in PARTNER:
         await message.reply_text("❌ You are not authorized to use this command.")
         return
-|
+
     try:
         # Find all chat frequencies that are not 70 or 100
         abnormal_freqs = await user_totals_collection.find({
