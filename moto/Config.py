@@ -2,7 +2,7 @@
     # Get this value from my.telegram.org/app
 OWNER_ID = 7378476666
 PARTNER =  "7378476666", "7316432912", 
-sudo_users =  "7378476666", "7316432912"
+sudo_users =  "7378476666"
 GROUP_ID = -1002198664660
 LOG_CHANNEL = -1002455650183
 #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"
