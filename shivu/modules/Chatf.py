@@ -19,19 +19,24 @@ pagination_data: Dict[int, Dict[str, List]] = {}  # {user_id: {"data": [], "page
 async def check_frequencies(client: Client, message: Message):
     user_id = message.from_user.id
 
-    # Check if user is in the PARTNER list|
+    # Check if user is in the PARTNER list
     if str(user_id) not in PARTNER:
         await message.reply_text("❌ You are not authorized to use this command.")
         return
 
     try:
-        # Find all chat frequencies that are not 70 or 100
+        # Find all chat frequencies that:
+        # 1. Exist (field exists)
+        # 2. Are not 70 or 100
         abnormal_freqs = await user_totals_collection.find({
-            "message_frequency": {"$nin": [70, 100]}
+            "message_frequency": {
+                "$exists": True,
+                "$nin": [70, 100]
+            }
         }).to_list(length=None)
 
         if not abnormal_freqs:
-            await message.reply_text("✅ All chats have default frequencies (70 or 100).")
+            await message.reply_text("✅ All chats either have default frequencies (70 or 100) or no frequency set.")
             return
 
         # Store data for pagination
@@ -65,10 +70,10 @@ async def send_page(client: Client, message: Message, user_id: int):
     page_items = all_data[start_idx:end_idx]
 
     # Build response text
-    response = f"📊 Chats with non-default frequencies (Page {page + 1}/{total_pages}):\n\n"
+    response = f"📊 Chats with custom frequencies (Page {page + 1}/{total_pages}):\n\n"
     for idx, chat in enumerate(page_items, start=start_idx + 1):
         chat_id = chat.get('chat_id', 'Unknown')
-        freq = chat.get('message_frequency', 'Not set')
+        freq = chat['message_frequency']  # We know this exists due to our query
         response += f"{idx}. Chat ID: {chat_id} - Frequency: {freq}\n"
 
     # Build navigation buttons
