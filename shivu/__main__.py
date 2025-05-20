@@ -635,7 +635,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             f'This character is now in your harem! Use /mycollection to see your harem.'
         )
 
-        await update.message.reply_text(f"🎉 Congrats! You've earned {reward} dazzling coins for guessing correctly! 💰")
+        # await update.message.reply_text(f"🎉 Congrats! You've earned {reward} dazzling coins for guessing correctly! 💰")
         await update.message.reply_text(
             response_text,
             parse_mode='HTML',
