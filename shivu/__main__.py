@@ -616,7 +616,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             )
 
         
-        await add_coins(user_id, reward)
+        
         
         # Prepare the response
         inline_query = f"collection.img.{user_id}"
