@@ -608,12 +608,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
             print(f"Couldn't set reaction: {e}")
 
         # Special reward for AMV characters
-        if rarity == "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣":
-            reward = 1000 # Higher reward for AMV characters
-            await current_amv_character[chat_id].update({"claimed": True})
-        else:
-            reward = 40
+        if rarity == "🟡 Legendary":
+            await user_collection.update_one(
+            {'id': user_id},
+            {'$inc': {'grab': 1}},  # Increment grab count by 1
+            upsert=True
+            )
 
+        
         await add_coins(user_id, reward)
         
         # Prepare the response
