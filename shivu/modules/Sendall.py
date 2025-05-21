@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-from shivu import application, collection 
+from shivu import applicationps as application, collectionps as collection
 from pymongo.errors import PyMongoError
 
 # Configuration
