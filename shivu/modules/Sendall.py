@@ -10,7 +10,7 @@ from pymongo.errors import PyMongoError
 #MONGO_URL = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 CHANNEL_ID = -1002692918301 # Replace with your channel ID
 OWNER_ID = 7378476666  # Your Telegram user ID
-DELAY_BETWEEN_MESSAGES = 1  # Seconds between sends
+DELAY_BETWEEN_MESSAGES = 3  # Seconds between sends
 
 # Initialize MongoDB connection
 
