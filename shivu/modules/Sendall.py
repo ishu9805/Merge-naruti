@@ -93,7 +93,8 @@ async def send_character(bot, character):
         await bot.send_video(
             chat_id=CHANNEL_ID,
             video=character['vid_url'],
-            caption=caption
+            caption=caption,
+            supports_streaming=True
         )
     else:
         await bot.send_message(
