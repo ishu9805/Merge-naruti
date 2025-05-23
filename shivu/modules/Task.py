@@ -71,7 +71,9 @@ TASK_MILESTONES = {
         'rarity': '🔮 Limited Edition',
         'message': "🌟 700 messages! Choose 🔮 Limited Edition with /lclaim",
         'grab_required': 4
-    } 
+    }
+
+}
 """
     2000: {
         'type': 'WVHC',
@@ -87,7 +89,7 @@ TASK_MILESTONES = {
         'grab_required': 15
     }
 """
-}
+
 
 async def acquire_user_lock(user_id):
     """Acquire a lock for specific user with timeout"""
