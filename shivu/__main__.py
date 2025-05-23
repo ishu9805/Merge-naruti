@@ -34,6 +34,7 @@ from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_
 import os
 from threading import Thread
 from flask import Flask
+from shivu.modules.lock import ptbcommand_lock as ptbcmd
 
 
 
@@ -561,6 +562,7 @@ async def slock(update: Update, context: CallbackContext) -> None:
 
 
 @block_dec_ptb
+@ptbcmd
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
