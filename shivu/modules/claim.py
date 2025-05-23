@@ -65,6 +65,7 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
         return []
 
 
+
 @cmd
 @app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
@@ -74,11 +75,16 @@ async def hclaim(_, message: t.Message):
     if message.forward_date:
         return
 
-    if user_id in claim_lock:
-        await message.reply_text("Your claim request is already being processed. Please wait.")
+    # Create a unique lock key for this user
+    lock_key = f"hclaim_{user_id}"
+    
+    # Check if command is already being processed for this user
+    if lock_key in claim_lock:
+        await message.reply_text("⏳ Your claim request is already being processed. Please wait.")
         return
 
-      # Set the lock
+    # Set the lock before any processing begins
+    claim_lock[lock_key] = True
     
     try:
         # Check if the user is banned
@@ -87,77 +93,100 @@ async def hclaim(_, message: t.Message):
             await message.reply_text(f"Please start the bot in DM first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
             return
 
-    except Exception as e:
-         return
-        
-    if not await is_member(user_id):
-        group_link = force  # Replace with the actual group invite link
-        messages = (
-            "You need to be a member of our exclusive group to use this command.\n"
-            "Join now and explore the amazing features awaiting you!\n\n"
+        if not await is_member(user_id):
+            group_link = force
+            messages = (
+                "You need to be a member of our exclusive group to use this command.\n"
+                "Join now and explore the amazing features awaiting you!\n\n"
+            )
+            reply_markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
+            )
+            await message.reply_text(messages, reply_markup=reply_markup)
+            return
+
+        # Get user data with atomic operation to prevent race conditions
+        user_data = await user_collection.find_one_and_update(
+            {'id': user_id},
+            {'$setOnInsert': {
+                'id': user_id,
+                'username': message.from_user.username,
+                'characters': [],
+                'last_daily_reward': None
+            }},
+            upsert=True,
+            return_document=True
         )
-        reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
-        )
-        await message.reply_text(messages, reply_markup=reply_markup)
-        return
 
-    claim_lock[user_id] = True 
-    
-    try:
-        user_data = await user_collection.find_one({'id': user_id}) or {
-            'id': user_id,
-            'username': message.from_user.username,
-            'characters': [],
-            'last_daily_reward': None
-        }
-
-        last_claimed_date = user_data.get('last_daily_reward')
-
-        if last_claimed_date:
-            last_claimed_date = last_claimed_date.replace(tzinfo=None)
-            if last_claimed_date.date() == datetime.utcnow().date():
-                remaining_time = timedelta(days=1) - (datetime.utcnow() - last_claimed_date)
-                formatted_time = await format_time_delta(remaining_time)
+        # Check last claim time with timezone awareness
+        last_claimed = user_data.get('last_daily_reward')
+        if last_claimed:
+            last_claimed = last_claimed.replace(tzinfo=None)
+            now = datetime.utcnow()
+            
+            if last_claimed.date() == now.date():
+                remaining = (last_claimed + timedelta(days=1)) - now
+                formatted_time = await format_time_delta(remaining)
                 await message.reply_text(f"⏳ You've already claimed today! Next reward in: `{formatted_time}`")
                 return
 
-        unique_characters = await get_unique_characters(user_id)
+        # Get unique character with transaction to ensure atomicity
+        async with await db.client.start_session() as session:
+            async with session.start_transaction():
+                unique_characters = await get_unique_characters(user_id)
+                
+                if not unique_characters:
+                    await message.reply_text("🚫 No unique characters available right now. Try again later!")
+                    return
 
-        if not unique_characters:
-            return await message.reply_text("🚫 No unique characters found.")
+                # Update all collections in a single transaction
+                await user_collection.update_one(
+                    {'id': user_id},
+                    {
+                        '$push': {'characters': {'$each': unique_characters}},
+                        '$set': {
+                            'last_daily_reward': datetime.utcnow(),
+                            'username': message.from_user.username
+                        }
+                    },
+                    session=session
+                )
+                
+                await user_count.update_one(
+                    {'user_id': user_id},
+                    {'$inc': {'ccount': 1}},
+                    upsert=True,
+                    session=session
+                )
+                
+                for character in unique_characters:
+                    rarity = character['rarity']
+                    await user_count.update_one(
+                        {'user_id': user_id},
+                        {'$inc': {f'rarity_count.{rarity}': 1}},
+                        upsert=True,
+                        session=session
+                    )
 
-        await user_collection.update_one(
-            {'id': user_id},
-            {
-                '$push': {'characters': {'$each': unique_characters}},
-                '$set': {'last_daily_reward': datetime.utcnow()}
-            }
-        )
-        await user_count.update_one(
-            {'user_id': user_id},
-            {'$inc': {'ccount': 1}},
-            upsert=True
-        )
-        
-        
-        
-        
-
+        # Send the reward message after successful transaction
         for character in unique_characters:
-            rarity = character['rarity']
-            await user_count.update_one(
-                {'user_id': user_id},
-                {'$inc': {f'rarity_count.{rarity}': 1}},
-                upsert=True
+            await message.reply_photo(
+                photo=character['img_url'],
+                caption=(
+                    f"🎉 Congratulations {mention}! 🌟\n"
+                    f"✨ *Name*: {character['name']}\n"
+                    f"🧬 *Rarity*: {character['rarity']}\n"
+                    f"📺 *Anime*: {character['anime']}\n"
+                    f"🍀 *Come back tomorrow for another claim!*"
+                )
             )
-            await message.reply_photo(photo=character['img_url'], caption=f"🎉 Congratulations {mention}! 🌟\n✨ *Name*: {character['name']}\n🧬 *Rarity*: {character['rarity']}\n📺 *Anime*: {character['anime']}\n🍀 *Come back tomorrow for another claim!*")
 
     except Exception as e:
-        print(f"Error in hclaim for user {user_id}: {e}")
-        await message.reply_text("An error occurred while processing your claim. Please try again later.")
+        logging.error(f"Error in hclaim for user {user_id}: {str(e)}", exc_info=True)
+        await message.reply_text("⚠️ An error occurred while processing your claim. Please try again later.")
     finally:
-        claim_lock.pop(user_id, None)
+        # Always release the lock when done
+        claim_lock.pop(lock_key, None)
 
 
 @app.on_message(filters.command(["check"]))
