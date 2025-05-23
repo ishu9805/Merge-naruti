@@ -23,6 +23,7 @@ from shivu import (
     chat_dataps as chat_data,
     force 
 )
+from shivu.modules.lock as command_lock as cmd
 
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
@@ -63,6 +64,8 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
         print(f"Error fetching unique characters: {e}")
         return []
 
+
+@cmd
 @app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
