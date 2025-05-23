@@ -71,7 +71,8 @@ TASK_MILESTONES = {
         'rarity': '🔮 Limited Edition',
         'message': "🌟 700 messages! Choose 🔮 Limited Edition with /lclaim",
         'grab_required': 4
-    },
+    } 
+"""
     2000: {
         'type': 'WVHC',
         'rarity': 'Referral Rewards',
@@ -85,6 +86,7 @@ TASK_MILESTONES = {
         'message': "✨ 3500 messages! Claim 🎐 Celestial with /cclaim id [choice]",
         'grab_required': 15
     }
+"""
 }
 
 async def acquire_user_lock(user_id):
@@ -182,8 +184,8 @@ async def unified_claim(client, message):
                 "Available milestones:\n\n"
                 "• /nclaim 300 - 💮 Special Edition (automatic)\n"
                 "• /nclaim 700 [id] - 🔮 Limited Edition (choice)\n"
-                "• /nclaim 2000 [id] [variant] - 🎁 WVHC Edition (choice)\n"
-                "• /nclaim 3500 [id] - 🎐 Celestial Edition (choice)"
+                #"• /nclaim 2000 [id] [variant] - 🎁 WVHC Edition (choice)\n"
+                #"• /nclaim 3500 [id] - 🎐 Celestial Edition (choice)"
             )
         
         try:
@@ -195,8 +197,8 @@ async def unified_claim(client, message):
                     "❌ Invalid milestone! Available milestones:\n"
                     "• 300 - 💮 Special Edition\n"
                     "• 700 - 🔮 Limited Edition\n"
-                    "• 2000 - 🎁 WVHC Edition\n"
-                    "• 3500 - 🎐 Celestial Edition"
+                    #"• 2000 - 🎁 WVHC Edition\n"
+                    #"• 3500 - 🎐 Celestial Edition"
                 )
             
             if milestone != 300 and len(message.command) < 3:
@@ -236,7 +238,7 @@ async def unified_claim(client, message):
             elif milestone == 700:
                 char_id = message.command[2]
                 await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
-            elif milestone == 2000:
+            """elif milestone == 2000:
                 if len(message.command) < 4:
                     await release_user_lock(user_id)
                     return await message.reply(
@@ -249,7 +251,7 @@ async def unified_claim(client, message):
                 await handle_wvhc_claim(client, message, user_id, milestone, char_id, selected_rarity)
             elif milestone == 3500:
                 char_id = message.command[2]
-                await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')
+                await handle_id_claim(client, message, user_id, milestone, char_id, '🎐 Celestial')"""
                 
         except ValueError:
             await release_user_lock(user_id)
