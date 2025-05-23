@@ -23,7 +23,7 @@ from shivu import (
     chat_dataps as chat_data,
     force 
 )
-from shivu.modules.lock as command_lock as cmd
+from shivu.modules.lock import command_lock as cmd
 
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
