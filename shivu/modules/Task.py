@@ -462,8 +462,8 @@ async def cancel_claim(client, callback_query):
     )
     await callback_query.answer("Claim cancelled!", show_alert=True)
 
-@cmd
-@app.on_message(filters.command("reset_task"))
+#@cmd
+#@app.on_message(filters.command("reset_task"))
 async def reset_task_command(client, message):
     user_id = message.from_user.id
     
