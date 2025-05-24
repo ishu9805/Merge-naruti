@@ -66,8 +66,8 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
 
 
 
-@cmd
-@app.on_message(filters.command(["hclaim"]))
+#@cmd
+#@app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
