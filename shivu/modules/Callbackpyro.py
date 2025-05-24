@@ -9,7 +9,7 @@ from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 from shivu.modules.fav import button
 from shivu.modules.Animelist import anime_letter_callback, anime_selection_callback, back_to_az_callback
-from shivu.modules.Task import confirm_claim, cancel_claim, confirm_reset, cancel_reset
+from shivu.modules.Task import confirm_claim, cancel_claim # confirm_reset, cancel_reset
 from shivu.modules.Pfp import approve_profile_media, reject_profile_media
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
