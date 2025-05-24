@@ -300,7 +300,7 @@ async def confirm_claim(client, callback_query):
         rarity = TASK_MILESTONES[milestone]['rarity']
         
         owner_count = await get_character_owners(char_id)
-        if owner_count >= 4:
+        if owner_count <= 4:
             await callback_query.answer("This character is no longer available!", show_alert=True)
             return await callback_query.message.edit_reply_markup()
         
