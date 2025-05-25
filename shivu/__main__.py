@@ -207,7 +207,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
                 available_amvs.append(char)
         
         if not available_amvs:
-            await context.bot.send_message(chat_id=AMV_GROUP_ID, text="hmm")
+            await context.bot.send_message(chat_id=-1002606804832, text="hmm")
             return
 
         character = random.choice(available_amvs)
@@ -228,7 +228,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         }
 
         msg = await context.bot.send_video(
-            chat_id=AMV_GROUP_ID,
+            chat_id=-1002606804832,
             video=character['vid_url'],
             parse_mode='Markdown',
             supports_streaming=True,
