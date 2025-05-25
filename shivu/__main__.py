@@ -218,7 +218,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         sent_characters[AMV_GROUP_ID].append(character.get('id'))
         last_characters[AMV_GROUP_ID] = character
 
-        if chat_id in first_correct_guesses:
+        if AMV_GROUP_ID in first_correct_guesses:
             del first_correct_guesses[AMV_GROUP_ID]
 
         await context.bot.send_message(chat_id=-1002606804832, text="🎗️")
