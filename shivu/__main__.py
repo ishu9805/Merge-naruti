@@ -196,7 +196,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
     try:
-
+        await context.bot.send_message(chat_id=-1002606804832, text="123")
         # Filter characters with available slots
         available_amvs = []
         for char in amv_characters:
