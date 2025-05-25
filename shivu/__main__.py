@@ -196,9 +196,6 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
     try:
-        chat_id = update.effective_chat.id
-        if chat_id != AMV_GROUP_ID:
-            return
 
         # Filter characters with available slots
         available_amvs = []
@@ -210,6 +207,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
                 available_amvs.append(char)
         
         if not available_amvs:
+            await context.bot.send_message(chat_id=AMV_GROUP_ID, text="hmm")
             return
 
         character = random.choice(available_amvs)
@@ -226,8 +224,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         # Store AMV character info
         current_amv_character[chat_id] = {
             "character": character,
-            "claimed": False,
-            "message_id": None
+            "claimed": False
         }
 
         msg = await context.bot.send_video(
@@ -240,7 +237,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
                     "✍️ Guess the character name with /guess [name] to claim it!"
         )
         
-        current_amv_character[chat_id]["message_id"] = msg.message_id
+      
         
     except Exception as e:
         print(f"Error spawning AMV: {e}")
