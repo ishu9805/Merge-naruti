@@ -213,22 +213,22 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         character = random.choice(available_amvs)
         
         if chat_id not in sent_characters:
-            sent_characters[chat_id] = []
+            sent_characters[AMV_GROUP_ID] = []
             
-        sent_characters[chat_id].append(character.get('id'))
-        last_characters[chat_id] = character
+        sent_characters[AMV_GROUP_ID].append(character.get('id'))
+        last_characters[AMV_GROUP_ID] = character
 
         if chat_id in first_correct_guesses:
-            del first_correct_guesses[chat_id]
+            del first_correct_guesses[AMV_GROUP_ID]
 
         # Store AMV character info
-        current_amv_character[chat_id] = {
+        current_amv_character[AMV_GROUP_ID] = {
             "character": character,
             "claimed": False
         }
 
         msg = await context.bot.send_video(
-            chat_id=chat_id,
+            chat_id=AMV_GROUP_ID,
             video=character['vid_url'],
             parse_mode='Markdown',
             supports_streaming=True,
