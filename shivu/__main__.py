@@ -71,7 +71,7 @@ async def preload_characters(context: CallbackContext) -> None:
         amv_characters = await collection.find({"vid_url": {"$exists": True}}).to_list(length=None)
         
         if all_characters:
-            print(f"Preloaded {len(all_characters)} characters with IDs from 1 to 4500.")
+            print(f"Preloaded {len(all_characters)} characters {len(amv_characters)}with IDs from 1 to 4500.")
         else:
             print("No characters found in the specified ID range.")
     except Exception as e:
