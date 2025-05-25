@@ -46,6 +46,16 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
+AMV_GROUP_ID = -1002606804832 # Your main group ID
+ # Spawn every 100 messages
+MAX_AMV_OWNERS = 10  # Global ownership limit
+amv_spawn_counter = 0  # Track message count for AMV spawns
+amv_characters = []  # Stores preloaded AMV characters
+# Add this near your other global variables
+sent_message_info = {}  # {chat_id: {'character_id': str, 'message_count': int}}
+spawned_characters = {}  # {chat_id: {character: dict, message_id: int, task: asyncio.Task}}
+countdown_tasks = {}  
+
 """server = Flask(__name__)
 @server.route("/")
 def home():
@@ -54,10 +64,11 @@ def home():
     
 
 async def preload_characters(context: CallbackContext) -> None:
-    global all_characters
+    global all_characters, amv_characters
     try:
         # Fetch characters with IDs between 1 and 4500
         all_characters = await collection.find({'id': {'$gte': '01', '$lte': '7000'}}).to_list(length=None)
+        amv_characters = await collection.find({"vid_url": {"$exists": True}}).to_list(length=None)
         
         if all_characters:
             print(f"Preloaded {len(all_characters)} characters with IDs from 1 to 4500.")
@@ -97,6 +108,8 @@ first_correct_guesses = {}
 message_counts = {}
 total_message_counts ={}
 total_message_counts2 ={}
+amv_message_count = {}
+
 for module_name in ALL_MODULES:
     imported_module = importlib.import_module("shivu.modules." + module_name)
 
@@ -116,6 +129,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     if temp_block(user_id):
         return
 
+ 
+            
+
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
@@ -129,10 +145,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
             summer_spawn_thresholds[chat_id]  = random.randint(1800, 4000)
             if chat_id == -1002606804832:
-                amv_spawn_thresholds[chat_id] = random.randunt(600, 2000)
+                amv_message_count[chat_id] = 0
+                amv_spawn_thresholds[chat_id] = random.randint(50, 100)
         # Increment total message count for the chat
         total_message_counts[chat_id] += 1
         #total_message_counts2[chat_id] += 1
+        if chat_id == -1002606804832:
+            amv_message_count[chat_id] += 1
         # Existing logic for message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
@@ -168,75 +187,67 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             summer_spawn_thresholds[chat_id] = random.randint(650, 1000)
             total_message_counts[chat_id] = 0
 
-        """if total_message_counts2[chat_id] == amv_spawn_thresholds[chat_id]:
+        if amv_message_count[chat_id] == amv_spawn_thresholds[chat_id]:
             await spawn_amv_character(update, context)
             # Reset the threshold for the next spawn
-            amv_spawn_thresholds[chat_id] = random.randint(3000, 5000)"""
+            amv_spawn_thresholds[chat_id] = random.randint(1400, 2000)
             
 
 
-async def spawn_amv_character(update: Update, context: CallbackContext) -> None:
-    """Spawn a special AMV character"""
-    chat_id = update.effective_chat.id
-    
-    if chat_id not in sent_characters:
-        sent_characters[chat_id] = []
-        
-    # Get only AMV characters that aren't locked
-    amv_chars = [c for c in all_characters if c.get('rarity') == "🎗️ �𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣" and not c.get('slock', False)]
-    
-    if not amv_chars:
-        print("No AMV characters available to spawn")
-        return
+a
 
-    # Filter characters that haven't reached global claim limit
-    available_chars = []
-    for char in amv_chars:
-        # Check how many users have claimed this character
-        claim_count = await user_collection.count_documents({
-            "characters.id": char["id"]
-        })
-        if claim_count < amv_claim_limit:
-            available_chars.append(char)
 
-    if not available_chars:
-        print("All AMV characters have reached claim limit")
-        return
-
-    char = random.choice(available_chars)
-    current_amv_character[chat_id] = {
-        "name": char["name"],
-        "anime": char["anime"],
-        "rarity": char["rarity"],
-        "id": char["id"],
-        "img_url": char.get("img_url"),
-        "vid_url": char.get("vid_url"),
-        "claimed": False
-    }
-
-    # Send the AMV character with appropriate media
-    caption = ("🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
-              "💎 *Rarity:* AMV Edition (Ultra Rare)\n\n"
-              "✍️ Guess the character name with `/guess [name]` to claim it!")
-    
+async def spawn_amv_character(update:Update, context: CallbackContext):
+    """Spawn a limited edition AMV character"""
     try:
-        if char.get("vid_url"):
-            await context.bot.send_video(
-                chat_id=chat_id,
-                video=char["vid_url"],
-                supports_streaming=True,
-                caption=caption,
-                parse_mode='Markdown'
+        # Filter characters with available slots
+        available_amvs = []
+        for char in amv_characters:
+            owners = await user_collection.count_documents(
+                {"characters.id": char['id']}
             )
-        else:
-            await context.bot.send_photo(
-                chat_id=chat_id,
-                photo=char["img_url"],
-                caption=caption,
-                parse_mode='Markdown'
-            )
+            if owners < MAX_AMV_OWNERS:
+                available_amvs.append(char)
+        
+        if not available_amvs:
+            return
+        
+        if chat_id not in sent_characters:
+            sent_characters[AMV_GROUP_ID] = []
+
+    
+
+      
+        sent_characters[AMV_GROUP_ID].append(character.get('id'))
+        last_characters[AMV_GROUP_ID] = character
+
+        if chat_id in first_correct_guesses:
+            del first_correct_guesses[chat_id]
+        # Send AMV with special formatting
+  
+        await context.bot.send_message(chat_id=AMV_GROUP_ID, text=f"🎗️")
+        await asyncio.sleep(2)
+        msg = await context.bot.send_video(
+            chat_id=AMV_GROUP_ID,
+            video=character['vid_url'],
+            
+            parse_mode='Markdown',
+            supports_streaming=True,
+            caption="🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
+                    "💎 *Rarity:* AMV Edition (Ultra Rare)\n\n"
+                    "✍️ Guess the character name with /guess [name] to claim it!"
+        )
+        
+        
+        # Store spawn info with AMV flag
+        last_characters[AMV_GROUP_ID] = {
+            'character': character,
+           \
+            'is_amv': True  # Special flag for AMV
+        }
+        
     except Exception as e:
-        print(f"Error sending AMV character: {e}")
+        print(f"Error spawning AMV: {e}"
 
 
 async def send_image(update: Update, context: CallbackContext) -> None:
@@ -619,15 +630,25 @@ async def guess(update: Update, context: CallbackContext) -> None:
 
         
         
-        
+        if character.get("img_url"):
         # Prepare the response
-        inline_query = f"collection.img.{user_id}"
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                "View Collection",
-                switch_inline_query_current_chat=inline_query
-            )
-        ]])
+            inline_query = f"collection.img.{user_id}"
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton(
+                    "View Collection",
+                    switch_inline_query_current_chat=inline_query
+                )
+            ]])
+        
+        if character.get("vid_url"):
+            inline_query = f"collection.vid.{user_id}"
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton(
+                    "View AMV",
+                    switch_inline_query_current_chat=inline_query
+                )
+            ]])
+
 
         response_text = (
             f'<b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> 🎊 You guessed the character!\n\n'
