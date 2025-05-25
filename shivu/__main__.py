@@ -46,7 +46,7 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
-AMV_GROUP_ID = -1002606804832 # Your main group ID
+AMV_GROUP_ID = "-1002606804832" # Your main group ID
  # Spawn every 100 messages
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
@@ -121,7 +121,6 @@ def escape_markdown(text):
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
 
-@block_dec_ptb
 async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
@@ -129,30 +128,34 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     if temp_block(user_id):
         return
 
- 
-            
-
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
-        # Initialize total message count and random threshold for Valentine spawn
+        # Initialize counters if they don't exist
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            #total_message_counts2[chat_id] = 0
-            
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
-            summer_spawn_thresholds[chat_id]  = random.randint(1800, 4000)
-            if chat_id == -1002606804832:
+            summer_spawn_thresholds[chat_id] = random.randint(1800, 4000)
+            
+            # Special AMV counter for the designated group
+            if chat_id == "-1002606804832":  # AMV_GROUP_ID as string
                 amv_message_count[chat_id] = 0
                 amv_spawn_thresholds[chat_id] = random.randint(50, 100)
-        # Increment total message count for the chat
+
+        # Increment main counter
         total_message_counts[chat_id] += 1
-        #total_message_counts2[chat_id] += 1
-        if chat_id == -1002606804832:
+
+        # Handle AMV group separately
+        if chat_id == "-1002606804832":
             amv_message_count[chat_id] += 1
-        # Existing logic for message frequency
+            if amv_message_count[chat_id] >= amv_spawn_thresholds[chat_id]:
+                await spawn_amv_character(update, context)
+                amv_message_count[chat_id] = 0
+                amv_spawn_thresholds[chat_id] = random.randint(1400, 2000)
+
+        # Check for regular character spawn
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
@@ -161,38 +164,31 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             if last_user[chat_id]['count'] >= 6:
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
-                else:
-                    warned_users[user_id] = time.time()
-                    return
+                warned_users[user_id] = time.time()
+                return
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
-        if chat_id in message_counts:
-            message_counts[chat_id] += 1
-        else:
-            message_counts[chat_id] = 1
+        if chat_id not in message_counts:
+            message_counts[chat_id] = 0
+        message_counts[chat_id] += 1
 
-        if message_counts[chat_id] % message_frequency == 0:
+        # Spawn regular character
+        if message_counts[chat_id] >= message_frequency:
             await send_image(update, context)
             message_counts[chat_id] = 0
 
-        # Check if total message count matches the random threshold
-        if total_message_counts[chat_id] == valentine_spawn_thresholds[chat_id]:
+        # Check for special spawns (Valentine/Summer)
+        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
-            # Reset the threshold for the next spawn
             valentine_spawn_thresholds[chat_id] = random.randint(2000, 5000)
+            total_message_counts[chat_id] = 0  # Reset after special spawn
 
-        if total_message_counts[chat_id] == summer_spawn_thresholds[chat_id]:
+        elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
             await spawn_summer_character(update, context)
             summer_spawn_thresholds[chat_id] = random.randint(650, 1000)
-            total_message_counts[chat_id] = 0
-
-        if amv_message_count[chat_id] == amv_spawn_thresholds[chat_id]:
-            await spawn_amv_character(update, context)
-            # Reset the threshold for the next spawn
-            amv_spawn_thresholds[chat_id] = random.randint(1400, 2000)
+            total_message_counts[chat_id] = 0  # Reset after special spawn
             
-
 
 
 
@@ -777,6 +773,23 @@ async def unlock(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f"❌ Character {character_id} not found or already unlocked.")
 
 
+@block_dec_ptb
+async def check_counters(update: Update, context: CallbackContext):
+    chat_id = str(update.effective_chat.id)
+    user_id = update.effective_user.id
+    if str(user_id) not in sad:
+        return
+
+    if chat_id in total_message_counts:
+        msg = (f"📊 Counters for {chat_id}:\n"
+               f"• Total messages: {total_message_counts[chat_id]}\n"
+               f"• Next Valentine: {valentine_spawn_thresholds[chat_id] - total_message_counts[chat_id]}\n"
+               f"• Next Summer: {summer_spawn_thresholds[chat_id] - total_message_counts[chat_id]}")
+        if chat_id == AMV_GROUP_ID:
+            msg += f"\n• AMV messages: {amv_message_count[chat_id]}/{amv_spawn_thresholds[chat_id]}"
+        await update.message.reply_text(msg)
+
+
 def error_handler(update: Update, context: CallbackContext):
     """Log the error and handle it gracefully."""
     print("An error occurred: %s", context.error)
@@ -790,6 +803,7 @@ def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
+    application.add_handler(CommandHandler(["cqmsg"], check_counters))
     application.add_handler(CommandHandler(["spawn"], now_command))
     application.add_handler(CommandHandler("slock", slock, block=False))
     application.add_handler(CommandHandler("unlock", unlock, block=False))
