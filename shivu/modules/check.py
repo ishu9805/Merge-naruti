@@ -58,7 +58,7 @@ async def hfind(_, message: t.Message):
     waifu_id = message.command[1].strip()
     
     # Show typing indicator
-    await message.reply_chat_action("typing")
+    #await message.reply_chat_action("typing")
     
     waifu = await get_character_info(waifu_id)
     if not waifu:
