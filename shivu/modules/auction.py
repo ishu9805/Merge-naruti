@@ -180,7 +180,7 @@ async def periodic_auction_update(client):
         if auction_data["highest_bidder"]:
             # Send highest bid info
             await client.send_message(
-                -1002610579411,
+                -1002606804832,
                 f"🏷 **Auction Update:**\n\n"
                 f"Highest Bid: {auction_data['highest_bid']}\n"
                 f"Highest Bidder: @{auction_data['highest_bidder']}\n"
@@ -188,7 +188,7 @@ async def periodic_auction_update(client):
             )
         else:
             await client.send_message(
-                -1002610579411,
+                -1002606804832,
                 f"🏷 **Auction Update:**\n\n"
                 f"No bids yet for {auction_data['waifu_name']} ({auction_data['waifu_anime']})\n"
                 f"Starting Bid: {auction_data['starting_bid']}"
@@ -231,7 +231,7 @@ async def place_bid(client, message):
     # Notify the former highest bidder that they have been outbid
     winner_username = active_auction.get("highest_bidder_username", "Unknown")
     await client.send_message(
-        -1002610579411,
+        -1002606804832,
         f"{winner_username} ⚠️ You have been outbid in the auction for {active_auction['waifu_name']} ({active_auction['waifu_anime']}).\n"
         f"The new highest bid is {bid_amount} by @{message.from_user.username}."
     )
@@ -259,7 +259,7 @@ async def place_bid(client, message):
     )
 
     await message.send_message(
-        -1002610579411,
+        -1002606804832,
         f"New Bid: {bid_amount} by @{message.from_user.username}\n"
         f"Current Highest Bidder: @{message.from_user.username}",
     )
