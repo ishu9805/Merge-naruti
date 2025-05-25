@@ -66,8 +66,7 @@ async def hfind(_, message: t.Message):
     
     # Get ownership data in parallel
     user_ownership_data, _ = await asyncio.gather(
-        get_top_collectors(waifu_id),
-        message.reply_chat_action("upload_photo")
+        get_top_collectors(waifu_id)
     )
     
     global_count = sum(user['count'] for user in user_ownership_data)
