@@ -66,8 +66,8 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
 
 
 
-#@cmd
-#@app.on_message(filters.command(["hclaim"]))
+@cmd
+@app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
@@ -189,7 +189,7 @@ async def hclaim(_, message: t.Message):
         claim_lock.pop(lock_key, None)
 
 
-@app.on_message(filters.command(["check"]))
+#@app.on_message(filters.command(["check"]))
 async def hfind(_, message: t.Message):
     if len(message.command) < 2:
         return await message.reply_text("📌 Please provide the ID 🆔", quote=True)
