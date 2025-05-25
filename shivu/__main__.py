@@ -194,12 +194,16 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             
 
 
-a
 
 
-async def spawn_amv_character(update:Update, context: CallbackContext):
+
+async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
     try:
+        chat_id = update.effective_chat.id
+        if chat_id != AMV_GROUP_ID:
+            return
+
         # Filter characters with available slots
         available_amvs = []
         for char in amv_characters:
@@ -211,26 +215,28 @@ async def spawn_amv_character(update:Update, context: CallbackContext):
         
         if not available_amvs:
             return
+
+        character = random.choice(available_amvs)
         
         if chat_id not in sent_characters:
-            sent_characters[AMV_GROUP_ID] = []
-
-    
-
-      
-        sent_characters[AMV_GROUP_ID].append(character.get('id'))
-        last_characters[AMV_GROUP_ID] = character
+            sent_characters[chat_id] = []
+            
+        sent_characters[chat_id].append(character.get('id'))
+        last_characters[chat_id] = character
 
         if chat_id in first_correct_guesses:
             del first_correct_guesses[chat_id]
-        # Send AMV with special formatting
-  
-        await context.bot.send_message(chat_id=AMV_GROUP_ID, text=f"🎗️")
-        await asyncio.sleep(2)
+
+        # Store AMV character info
+        current_amv_character[chat_id] = {
+            "character": character,
+            "claimed": False,
+            "message_id": None
+        }
+
         msg = await context.bot.send_video(
-            chat_id=AMV_GROUP_ID,
+            chat_id=chat_id,
             video=character['vid_url'],
-            
             parse_mode='Markdown',
             supports_streaming=True,
             caption="🎬 **AMV CHARACTER APPEARED!** 🎬\n\n"
@@ -238,16 +244,12 @@ async def spawn_amv_character(update:Update, context: CallbackContext):
                     "✍️ Guess the character name with /guess [name] to claim it!"
         )
         
-        
-        # Store spawn info with AMV flag
-        last_characters[AMV_GROUP_ID] = {
-            'character': character,
-           \
-            'is_amv': True  # Special flag for AMV
-        }
+        current_amv_character[chat_id]["message_id"] = msg.message_id
         
     except Exception as e:
-        print(f"Error spawning AMV: {e}"
+        print(f"Error spawning AMV: {e}")
+
+
 
 
 async def send_image(update: Update, context: CallbackContext) -> None:
@@ -572,6 +574,28 @@ async def slock(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f"❌ Character {character_id} not found.")
 
 
+async def now_command(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    
+    if user_id != 7378476666:  # Replace with your actual owner ID check
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+    
+    if not context.args or len(context.args) < 1:
+        await update.message.reply_text("Usage: /spawn {char|amv|}")
+        return
+    
+    game_type = context.args[0].lower()
+    
+    if game_type == 'char':
+        await send_image(update, context)
+    elif game_type == 'amv':
+        await spawn_amv_character(update, context)
+    elif game_type == 'summer':
+        await spawn_summer_character(update, context)
+
+
 @block_dec_ptb
 @ptbcmd
 async def guess(update: Update, context: CallbackContext) -> None:
@@ -585,7 +609,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if is_banned:
         return
 
-    if chat_id not in last_characters and chat_id not in current_amv_character:
+    # Check if there's an active AMV character first
+    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
+        character = current_amv_character[chat_id]["character"]
+        is_amv = True
+    elif chat_id in last_characters:
+        character = last_characters[chat_id]
+        is_amv = False
+    else:
         return
 
     if chat_id in first_correct_guesses:
@@ -597,23 +628,21 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
         return
 
-    # Check if it's a regular character or AMV character
-    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
-        # Handle AMV character guess
-        character = current_amv_character[chat_id]
-        name_parts = character['name'].lower().split()
-    else:
-        # Handle regular character guess
-        if chat_id not in last_characters:
-            return
-        character = last_characters[chat_id]
-        name_parts = character['name'].lower().split()
+    name_parts = character['name'].lower().split()
 
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
+        # Check ownership limit for AMV characters
+        if is_amv:
+            waifu_id = character['id']
+            owners = await user_collection.count_documents({"characters.id": waifu_id})
+            if owners >= MAX_AMV_OWNERS:
+                await update.message.reply_text("❌ This AMV character has reached its global ownership limit!")
+                return
+            current_amv_character[chat_id]["claimed"] = True
+
         first_correct_guesses[chat_id] = user_id
         rarity = character.get("rarity", "")
         
-        # Set random reaction
         try:
             random_reaction = random.choice(reaction_list)
             await update.message.set_reaction(random_reaction)
@@ -621,17 +650,33 @@ async def guess(update: Update, context: CallbackContext) -> None:
             print(f"Couldn't set reaction: {e}")
 
         # Special reward for AMV characters
-        if rarity == "🟡 Legendary":
+        if is_amv:
             await user_collection.update_one(
-            {'id': user_id},
-            {'$inc': {'grab': 1}},  # Increment grab count by 1
-            upsert=True
+                {'id': user_id},
+                {'$inc': {'amv_count': 1}},
+                upsert=True
             )
 
-        
-        
+        # Prepare response based on character type
+        if is_amv:
+            response_text = (
+                f'<b><a href="tg://user?id={user_id}">{escape(first)}</a></b> 🎊 You guessed the AMV character!\n\n'
+                f'🎬 Name: <b>{character["name"]}</b>\n'
+                f'📀 Anime: <b>{character["anime"]}</b>\n'
+                f'💎 Rarity: <b>🎗️ AMV Edition (Ultra Rare)</b>\n\n'
+                f'This exclusive character is now in your collection!'
+            )
+        else:
+            response_text = (
+                f'<b><a href="tg://user?id={user_id}">{escape(first)}</a></b> 🎊 You guessed the character!\n\n'
+                f'🍁 Name: <b>{character["name"]}</b>\n'
+                f'⛩ Anime: <b>{character["anime"]}</b>\n'
+                f'🎐 Rarity: <b>{character["rarity"]}</b>\n\n'
+                f'This character is now in your harem!'
+            )
+
+        keyboard = None
         if character.get("img_url"):
-        # Prepare the response
             inline_query = f"collection.img.{user_id}"
             keyboard = InlineKeyboardMarkup([[
                 InlineKeyboardButton(
@@ -639,8 +684,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                     switch_inline_query_current_chat=inline_query
                 )
             ]])
-        
-        if character.get("vid_url"):
+        elif character.get("vid_url"):
             inline_query = f"collection.vid.{user_id}"
             keyboard = InlineKeyboardMarkup([[
                 InlineKeyboardButton(
@@ -649,16 +693,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 )
             ]])
 
-
-        response_text = (
-            f'<b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> 🎊 You guessed the character!\n\n'
-            f'🍁 Name: <b>{character["name"]}</b>\n'
-            f'⛩ Anime: <b>{character["anime"]}</b>\n'
-            f'🎐 Rarity: <b>{character["rarity"]}</b>\n\n'
-            f'This character is now in your harem! Use /mycollection to see your harem.'
-        )
-
-        # await update.message.reply_text(f"🎉 Congrats! You've earned {reward} dazzling coins for guessing correctly! 💰")
         await update.message.reply_text(
             response_text,
             parse_mode='HTML',
