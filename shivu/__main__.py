@@ -790,6 +790,7 @@ def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
+    application.add_handler(CommandHandler(["spawn"], now_command))
     application.add_handler(CommandHandler("slock", slock, block=False))
     application.add_handler(CommandHandler("unlock", unlock, block=False))
     #application.add_handler(CommandHandler("fav", fav, block=False))
