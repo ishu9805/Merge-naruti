@@ -221,11 +221,11 @@ async def place_bid(client, message):
 
     user_coins = user_data.get("coins", 0)
     if user_coins < bid_amount:
-        await message.reply_text("You don't have enough coins for this bid.")
+        await message.reply_text("You don't have enough coins for this bid. do /auction to check highest bid")
         return
 
     if bid_amount <= active_auction["highest_bid"]:
-        await message.reply_text("Your bid must be higher than the current highest bid.")
+        await message.reply_text("Your bid must be higher than the current highest bid.do /auction to check highest bid")
         return
 
     # Notify the former highest bidder that they have been outbid
@@ -258,7 +258,7 @@ async def place_bid(client, message):
         f"Highest Bidder: @{highest_bidder_username}"
     )
 
-    await message.send_message(
+    await client.send_message(
         -1002606804832,
         f"New Bid: {bid_amount} by @{message.from_user.username}\n"
         f"Current Highest Bidder: @{message.from_user.username}",
