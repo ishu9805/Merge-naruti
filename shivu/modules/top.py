@@ -163,35 +163,55 @@ async def reset_monthly_tops():
     """Reset monthly_top for all users at midnight on the last day of the month."""
     await user_collection.update_many({}, {"$set": {"monthly_top": 0}})
     logger.info("Monthly tops reset.")
+
+
 async def reset_all_tasks_daily():
     try:
         logger.info("⏰ Running daily task reset...")
         start_time = time.time()
         
-        update_query = {f"claimed_{milestone}": False for milestone in TASK_MILESTONES.keys()}
+        # Reset all users' milestones and counts
+        update_query = {
+            **{f"claimed_{milestone}": False for milestone in TASK_MILESTONES.keys()},
+            "count": 0,  # Reset message count
+            "grab": 0    # Reset grab count
+        }
         
+        # Update all documents in the collection
         result = await user_totals_collection.update_many(
             {},
             {'$set': update_query}
         )
         
+        # Also reset grab counts in user_collection
+        grab_reset_result = await user_collection.update_many(
+            {},
+            {'$set': {'grab': 0}}
+        )
+        
+        # Clear in-memory counts
         async with lock:
             message_counts.clear()
         
-        logger.info(f"✅ Reset {result.modified_count} users' tasks in {time.time()-start_time:.2f}s")
+        logger.info(
+            f"✅ Reset {result.modified_count} users' tasks and "
+            f"{grab_reset_result.modified_count} users' grab counts "
+            f"in {time.time()-start_time:.2f}s"
+        )
         
+        # Notify support chat
         await app.send_message(
-            "-1002606804832",
+            SUPPORT_CHAT_ID,
             f"🔄 Daily task reset completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-            f"Reset {result.modified_count} users' progress"
+            f"• Reset {result.modified_count} users' tasks\n"
+            f"• Reset {grab_reset_result.modified_count} users' grab counts\n"
+            f"• Cleared in-memory message counters"
         )
         
     except Exception as e:
         logger.error(f"Failed to reset tasks: {str(e)}", exc_info=True)
-        await app.send_message(
-            OWNER_ID,
-            f"❌ Failed to reset tasks: {str(e)}"
-        )
+     
+
 
 scheduler.add_job(reset_all_tasks_daily, 'cron', hour=12, minute=0, timezone="UTC")
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
