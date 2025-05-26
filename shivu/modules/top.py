@@ -193,7 +193,7 @@ async def reset_all_tasks_daily():
             f"❌ Failed to reset tasks: {str(e)}"
         )
 
-scheduler.add_job(reset_all_tasks_daily, 'cron', hour=12, minute=0, timezone="UTC"))
+scheduler.add_job(reset_all_tasks_daily, 'cron', hour=12, minute=0, timezone="UTC")
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
 scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0)  # Every Sunday at midnight
 scheduler.add_job(reset_monthly_tops, 'cron', day='last', hour=0, minute=0)  # Last day of the month at midnight
