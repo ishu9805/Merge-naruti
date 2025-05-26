@@ -57,21 +57,21 @@ async def build_user_links(top_users, offset=0, limit=10):
 @bot.on_message(filters.command(["check"]))
 async def hfind(_, message: t.Message):
     if len(message.command) < 2:
-        return await message.reply_text("📌 Please provide the ID after the command.\nExample: `/check 123`", quote=True)
+        return await message.reply_text("📌 Please provide the ID after the command.\nExample: `/check 123`")
     
     waifu_id = message.command[1].strip()
     offset = 0  # Default offset for pagination
-    limit = 5   # Number of users to show per page
+    limit = 10   # Number of users to show per page
     
     # Check if there's a callback query with offset data
     if len(message.command) > 2 and message.command[2].isdigit():
         offset = int(message.command[2])
     
-    await message.reply_chat_action("typing")
+    #await message.reply_chat_action("typing")
     
     waifu = await get_character_info(waifu_id)
     if not waifu:
-        return await message.reply_text("🔍 No character found with that ID. Please check the ID and try again.", quote=True)
+        return await message.reply_text("🔍 No character found with that ID. Please check the ID and try again.")
     
     try:
         user_ownership_data = await get_top_collectors(waifu_id, limit=50)  # Get more users for pagination
@@ -79,7 +79,7 @@ async def hfind(_, message: t.Message):
         usernames = await build_user_links(user_ownership_data, offset, limit)
     except Exception as e:
         logging.error(f"Error getting collector data: {e}")
-        return await message.reply_text("⚠️ An error occurred while fetching collector data. Please try again later.", quote=True)
+        return await message.reply_text("⚠️ An error occurred while fetching collector data. Please try again later.")
 
     # Prepare caption
     caption = (
@@ -112,8 +112,7 @@ async def hfind(_, message: t.Message):
         if not media_url:
             return await message.reply_text(
                 caption, 
-                reply_markup=reply_markup,
-                quote=True
+                reply_markup=reply_markup
             )
 
         if 'vid_url' in waifu:
@@ -121,23 +120,20 @@ async def hfind(_, message: t.Message):
                 video=media_url,
                 caption=caption,
                 supports_streaming=True,
-                reply_markup=reply_markup,
-                quote=True
+                reply_markup=reply_markup
             )
         else:
             await message.reply_photo(
                 photo=media_url,
                 caption=caption,
-                reply_markup=reply_markup,
-                quote=True
+                reply_markup=reply_markup
             )
         
     except Exception as e:
         logging.error(f"Error sending media for {waifu_id}: {e}")
         await message.reply_text(
             caption, 
-            reply_markup=reply_markup,
-            quote=True
+            reply_markup=reply_markup
         )
 
 @bot.on_callback_query(filters.regex(r"^check_(prev|next)_(\d+)_(\d+)$"))
