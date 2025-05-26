@@ -143,7 +143,7 @@ async def task_command(client, message):
     
     if all_completed:
         response.append("\n🎉 You've completed ALL milestones!")
-        response.append("You can reset your tasks with /reset_task to start over")
+     
     
     await message.reply_text("\n".join(response))
 
