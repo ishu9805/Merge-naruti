@@ -5,6 +5,7 @@ from collections import defaultdict
 import random
 import time
 import asyncio
+from . import sudo_filter as sudo, dev_filter
 from shivu import (
     collectionps as collection,
     user_collectionps as user_collection,
@@ -365,7 +366,7 @@ async def cancel_claim(client, callback_query):
 
 # Admin Commands
 @cmd
-@app.on_message(filters.command("resettask") & filters.user(OWNER_ID))
+@app.on_message(filters.command("resettask") & sudo)
 async def reset_task_command(client, message):
     try:
         if len(message.command) < 2:
@@ -413,7 +414,7 @@ async def reset_task_command(client, message):
 
 
 @cmd
-@app.on_message(filters.command("clearpending") & filters.user(OWNER_ID))
+@app.on_message(filters.command("clearpending") & sudo)
 async def clear_pending_claims(client, message):
     try:
         global pending_claims
