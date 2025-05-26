@@ -163,8 +163,37 @@ async def reset_monthly_tops():
     """Reset monthly_top for all users at midnight on the last day of the month."""
     await user_collection.update_many({}, {"$set": {"monthly_top": 0}})
     logger.info("Monthly tops reset.")
+async def reset_all_tasks_daily():
+    try:
+        logger.info("⏰ Running daily task reset...")
+        start_time = time.time()
+        
+        update_query = {f"claimed_{milestone}": False for milestone in TASK_MILESTONES.keys()}
+        
+        result = await user_totals_collection.update_many(
+            {},
+            {'$set': update_query}
+        )
+        
+        async with lock:
+            message_counts.clear()
+        
+        logger.info(f"✅ Reset {result.modified_count} users' tasks in {time.time()-start_time:.2f}s")
+        
+        await app.send_message(
+            SUPPORT_CHAT_ID,
+            f"🔄 Daily task reset completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Reset {result.modified_count} users' progress"
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to reset tasks: {str(e)}", exc_info=True)
+        await app.send_message(
+            OWNER_ID,
+            f"❌ Failed to reset tasks: {str(e)}"
+        )
 
-# Schedule the tasks
+scheduler.add_job(reset_all_tasks_daily, 'cron', hour=12, minute=0, timezone="UTC"))
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
 scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0)  # Every Sunday at midnight
 scheduler.add_job(reset_monthly_tops, 'cron', day='last', hour=0, minute=0)  # Last day of the month at midnight
