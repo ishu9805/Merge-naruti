@@ -46,7 +46,7 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
-AMV_GROUP_ID = "-1002606804832" # Your main group ID
+AMV_GROUP_ID = -1002606804832 # Your main group ID
  # Spawn every 100 messages
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
@@ -196,8 +196,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
     try:
-       
+        chat_id = update.effective_chat.id
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d")
         # Filter characters with available slots
+
+        if chat_id not in sent_characters:
+            sent_characters[chat_id] = []
+
         available_amvs = []
         for char in amv_characters:
             owners = await user_collection.count_documents(
@@ -218,7 +223,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         sent_characters[AMV_GROUP_ID].append(character.get('id'))
         last_characters[AMV_GROUP_ID] = character
 
-        if AMV_GROUP_ID in first_correct_guesses:
+        if chat_id in first_correct_guesses:
             del first_correct_guesses[AMV_GROUP_ID]
 
         await context.bot.send_message(chat_id=-1002606804832, text="🎗️")
@@ -593,6 +598,8 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_valentine_character(update, context)
     
 
+@block_dec_ptb
+@ptbcmd
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
@@ -604,17 +611,15 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if is_banned:
         return
 
-    # Check if there's an active AMV character (only in AMV group)
-    is_amv = False
-    character = None
-    
-    if chat_id == AMV_GROUP_ID and chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
+    # Check if there's an active AMV character first
+    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
         character = current_amv_character[chat_id]["character"]
         is_amv = True
-    elif chat_id in last_characters:  # Regular character in any group
+    elif chat_id in last_characters:
         character = last_characters[chat_id]
+        is_amv = False
     else:
-        return  # No character to guess
+        return
 
     if chat_id in first_correct_guesses:
         return
@@ -625,25 +630,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
         return
 
-    # More flexible name comparison
     name_parts = character['name'].lower().split()
-    guess_parts = guess.split()
-    
-    # Check if all parts of the name are present in the guess (order doesn't matter)
-    is_correct = all(part in guess_parts for part in name_parts)
 
-    if is_correct:
-        # Special handling for AMV characters
-        if is_amv:
-            waifu_id = character['id']
-            # Check ownership limit
-            owners = await user_collection.count_documents({"characters.id": waifu_id})
-            if owners >= MAX_AMV_OWNERS:
-                await update.message.reply_text("❌ This AMV character has reached its global ownership limit!")
-                return
-            current_amv_character[chat_id]["claimed"] = True
+    if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
+        # Check ownership limit for AMV characters
+
 
         first_correct_guesses[chat_id] = user_id
+        rarity = character.get("rarity", "")
         
         try:
             random_reaction = random.choice(reaction_list)
@@ -651,20 +645,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             print(f"Couldn't set reaction: {e}")
 
-        # Prepare response
-        if is_amv:
+        # Prepare response based on character type
+        if character.get("vid_url"):
             response_text = (
                 f'<b><a href="tg://user?id={user_id}">{escape(first)}</a></b> 🎊 You guessed the AMV character!\n\n'
                 f'🎬 Name: <b>{character["name"]}</b>\n'
                 f'📀 Anime: <b>{character["anime"]}</b>\n'
                 f'💎 Rarity: <b>🎗️ AMV Edition (Ultra Rare)</b>\n\n'
                 f'This exclusive character is now in your collection!'
-            )
-            # Update AMV count
-            await user_collection.update_one(
-                {'id': user_id},
-                {'$inc': {'amv_count': 1}},
-                upsert=True
             )
         else:
             response_text = (
@@ -675,7 +663,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'This character is now in your harem!'
             )
 
-        # Send response and update collections
         keyboard = None
         if character.get("img_url"):
             inline_query = f"collection.img.{user_id}"
@@ -699,7 +686,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML',
             reply_markup=keyboard
         )
-        # After updating user collection
+
         if character.get('rarity') == "🟡 Legendary":
             await user_collection.update_one(
                 {'id': user_id},
@@ -711,7 +698,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
         
     else:
         await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
-
 
 
 async def update_user_collection(user_id: int, character: dict, chat_id: int, username, first, title):
