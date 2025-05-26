@@ -608,25 +608,30 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if is_banned:
         return
 
-    # Check if there's an active AMV character first
-    if chat_id not in last_characters and chat_id not in current_amv_character:
+    # Check if there's an active character to guess
+    if chat_id not in last_characters:
         return
 
     if chat_id in first_correct_guesses:
         return
 
-
+    # Get the current character
+    character = last_characters[chat_id]
     guess = ' '.join(context.args).lower() if context.args else ''
     
     if "()" in guess or "&" in guess.lower():
         await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
         return
 
-    name_parts = last_characters[chat_id]['name'].lower().split()
+    name_parts = character['name'].lower().split()
 
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
-        # Check ownership limit for AMV characters
-
+        # Check ownership limit for AMV characters if this is an AMV
+        if character.get("vid_url"):
+            owners_count = await user_collection.count_documents({"characters.id": character['id']})
+            if owners_count >= MAX_AMV_OWNERS:
+                await update.message.reply_text("❌ This AMV character has reached the maximum number of owners!")
+                return
 
         first_correct_guesses[chat_id] = user_id
         rarity = character.get("rarity", "")
@@ -655,7 +660,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'This character is now in your harem!'
             )
             
-
         keyboard = None
         if character.get("img_url"):
             inline_query = f"collection.img.{user_id}"
@@ -691,6 +695,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         
     else:
         await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
+
 
 
 async def update_user_collection(user_id: int, character: dict, chat_id: int, username, first, title):
