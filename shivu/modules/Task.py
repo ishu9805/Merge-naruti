@@ -304,7 +304,7 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     pending_claims[user_id]['confirmation_message_id'] = sent_msg.id
 
 @cmd
-@app.on_message(filters.command("resetalltasks") & sudo)
+@app.on_message(filters.command("resetalltasks") & sudo_filter)
 async def reset_all_tasks_command(client, message):
     """Reset task progress for all users (Admin only)"""
     try:
