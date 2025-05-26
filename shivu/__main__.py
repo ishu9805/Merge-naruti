@@ -593,8 +593,6 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_valentine_character(update, context)
     
 
-@block_dec_ptb
-@ptbcmd
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
@@ -606,15 +604,17 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if is_banned:
         return
 
-    # Check if there's an active AMV character first
-    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
+    # Check if there's an active AMV character (only in AMV group)
+    is_amv = False
+    character = None
+    
+    if chat_id == AMV_GROUP_ID and chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
         character = current_amv_character[chat_id]["character"]
         is_amv = True
-    elif chat_id in last_characters:
+    elif chat_id in last_characters:  # Regular character in any group
         character = last_characters[chat_id]
-        is_amv = False
     else:
-        return
+        return  # No character to guess
 
     if chat_id in first_correct_guesses:
         return
@@ -625,12 +625,18 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
         return
 
+    # More flexible name comparison
     name_parts = character['name'].lower().split()
+    guess_parts = guess.split()
+    
+    # Check if all parts of the name are present in the guess (order doesn't matter)
+    is_correct = all(part in guess_parts for part in name_parts)
 
-    if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
-        # Check ownership limit for AMV characters
+    if is_correct:
+        # Special handling for AMV characters
         if is_amv:
             waifu_id = character['id']
+            # Check ownership limit
             owners = await user_collection.count_documents({"characters.id": waifu_id})
             if owners >= MAX_AMV_OWNERS:
                 await update.message.reply_text("❌ This AMV character has reached its global ownership limit!")
@@ -638,7 +644,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
             current_amv_character[chat_id]["claimed"] = True
 
         first_correct_guesses[chat_id] = user_id
-        rarity = character.get("rarity", "")
         
         try:
             random_reaction = random.choice(reaction_list)
@@ -646,15 +651,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             print(f"Couldn't set reaction: {e}")
 
-        # Special reward for AMV characters
-        if is_amv:
-            await user_collection.update_one(
-                {'id': user_id},
-                {'$inc': {'amv_count': 1}},
-                upsert=True
-            )
-
-        # Prepare response based on character type
+        # Prepare response
         if is_amv:
             response_text = (
                 f'<b><a href="tg://user?id={user_id}">{escape(first)}</a></b> 🎊 You guessed the AMV character!\n\n'
@@ -662,6 +659,12 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'📀 Anime: <b>{character["anime"]}</b>\n'
                 f'💎 Rarity: <b>🎗️ AMV Edition (Ultra Rare)</b>\n\n'
                 f'This exclusive character is now in your collection!'
+            )
+            # Update AMV count
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$inc': {'amv_count': 1}},
+                upsert=True
             )
         else:
             response_text = (
@@ -672,6 +675,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'This character is now in your harem!'
             )
 
+        # Send response and update collections
         keyboard = None
         if character.get("img_url"):
             inline_query = f"collection.img.{user_id}"
@@ -695,19 +699,19 @@ async def guess(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML',
             reply_markup=keyboard
         )
-        
-        if rarity == "🟡 Legendary":
+        # After updating user collection
+        if character.get('rarity') == "🟡 Legendary":
             await user_collection.update_one(
-            {'id': user_id},
-            {'$inc': {'grab': 1}},  # Increment grab count by 1
-            upsert=True
+                {'id': user_id},
+                {'$inc': {'grab': 1}},
+                upsert=True
             )
-                    
         # Update user collection
         await update_user_collection(user_id, character, chat_id, username, first, title)
         
     else:
         await update.message.reply_text('❌ Oops! Wrong character name. Try again!')
+
 
 
 async def update_user_collection(user_id: int, character: dict, chat_id: int, username, first, title):
