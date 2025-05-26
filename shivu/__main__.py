@@ -216,26 +216,23 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
             return
 
         character = random.choice(available_amvs)
-        
-        if AMV_GROUP_ID not in sent_characters:
-            sent_characters[AMV_GROUP_ID] = []
+
             
-        sent_characters[AMV_GROUP_ID].append(character.get('id'))
-        last_characters[AMV_GROUP_ID] = character
+        sent_characters[chat_id].append(character.get('id'))
+        last_characters[chat_id] = character
 
         if chat_id in first_correct_guesses:
             del first_correct_guesses[AMV_GROUP_ID]
+ 
+        if chat_id in first_correct_guesses:
+        del first_correct_guesses[chat_id]
 
         await context.bot.send_message(chat_id=-1002606804832, text="🎗️")
         await asyncio.sleep(2)
         # Store AMV character info
-        current_amv_character[AMV_GROUP_ID] = {
-            "character": character,
-            "claimed": False
-        }
 
         msg = await context.bot.send_video(
-            chat_id= "-1002606804832",
+            chat_id= chat_id,
             video=character['vid_url'],
             parse_mode='Markdown',
             supports_streaming=True,
@@ -612,17 +609,12 @@ async def guess(update: Update, context: CallbackContext) -> None:
         return
 
     # Check if there's an active AMV character first
-    if chat_id in current_amv_character and not current_amv_character[chat_id]["claimed"]:
-        character = current_amv_character[chat_id]["character"]
-        is_amv = True
-    elif chat_id in last_characters:
-        character = last_characters[chat_id]
-        is_amv = False
-    else:
+    if chat_id not in last_characters and chat_id not in current_amv_character:
         return
 
     if chat_id in first_correct_guesses:
         return
+
 
     guess = ' '.join(context.args).lower() if context.args else ''
     
@@ -662,6 +654,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'🎐 Rarity: <b>{character["rarity"]}</b>\n\n'
                 f'This character is now in your harem!'
             )
+            
 
         keyboard = None
         if character.get("img_url"):
