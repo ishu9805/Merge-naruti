@@ -46,7 +46,7 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
-AMV_GROUP_ID = -1002606804832 # Your main group ID
+AMV_GROUP_ID = "-1002606804832" # Your main group ID
  # Spawn every 100 messages
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
@@ -695,7 +695,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML',
             reply_markup=keyboard
         )
-
+        
+        if rarity == "🟡 Legendary":
+            await user_collection.update_one(
+            {'id': user_id},
+            {'$inc': {'grab': 1}},  # Increment grab count by 1
+            upsert=True
+            )
+                    
         # Update user collection
         await update_user_collection(user_id, character, chat_id, username, first, title)
         
