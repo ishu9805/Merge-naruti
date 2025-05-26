@@ -622,7 +622,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("Nahh You Can't use This Types of words in your guess..❌️")
         return
 
-    name_parts = character['name'].lower().split()
+    name_parts = last_characters[chat_id]['name'].lower().split()
 
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
         # Check ownership limit for AMV characters
