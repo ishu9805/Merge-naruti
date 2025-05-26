@@ -304,7 +304,7 @@ async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
     pending_claims[user_id]['confirmation_message_id'] = sent_msg.id
 
 @cmd
-@app.on_message(filters.command("resetalltasks") & sudo_filter)
+@app.on_message(filters.command("resetalltasks") & sudo)
 async def reset_all_tasks_command(client, message):
     """Reset task progress for all users (Admin only)"""
     try:
@@ -312,7 +312,7 @@ async def reset_all_tasks_command(client, message):
         if len(message.command) == 1 or message.command[1].lower() != "confirm":
             return await message.reply(
                 "⚠️ **Danger Zone** ⚠️\n"
-                "This will reset ALL users' task progress!\n\n"
+                "This will reset ALL users' task progress AND counts!\n\n"
                 "To confirm, use:\n"
                 "/resetalltasks confirm\n\n"
                 "Add 'dryrun' to test first:\n"
@@ -326,18 +326,28 @@ async def reset_all_tasks_command(client, message):
 
         # Prepare the update query
         milestones = list(TASK_MILESTONES.keys())
-        update_query = {f"claimed_{milestone}": False for milestone in milestones}
+        update_query = {
+            **{f"claimed_{milestone}": False for milestone in milestones},
+            "count": 0,
+            "grab": 0
+        }
         
         # Get total user count for progress tracking
         total_users = await user_totals_collection.count_documents({})
         
         if dry_run:
             result = {"modified_count": total_users}
+            grab_result = {"modified_count": total_users}
         else:
             # Batch processing for large collections
             result = await user_totals_collection.update_many(
                 {},
                 {"$set": update_query}
+            )
+            
+            grab_result = await user_collection.update_many(
+                {},
+                {"$set": {"grab": 0}}
             )
             
             # Clear in-memory counts
@@ -348,7 +358,8 @@ async def reset_all_tasks_command(client, message):
         report = (
             f"📊 **Global Task Reset Complete** {'(Dry Run)' if dry_run else ''}\n"
             f"• Total users: {total_users}\n"
-            f"• Reset users: {result.modified_count}\n"
+            f"• Reset tasks: {result.modified_count}\n"
+            f"• Reset grab counts: {grab_result.modified_count}\n"
             f"• Milestones reset: {', '.join(map(str, milestones))}\n"
             f"• In-memory counts cleared: {not dry_run}\n\n"
         )
@@ -356,15 +367,15 @@ async def reset_all_tasks_command(client, message):
         if dry_run:
             report += "ℹ️ This was a dry run - no changes were made"
         else:
-            report += f"✅ Successfully reset all tasks at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            report += f"✅ Successfully reset all data at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
         # Edit original message with results
         await processing_msg.edit_text(report)
         
         # Log to support chat
         await app.send_message(
-            -1002606804832,
-            f"♻️ Global task reset executed by {message.from_user.mention}\n" + report
+            SUPPORT_CHAT_ID,
+            f"♻️ Global reset executed by {message.from_user.mention}\n" + report
         )
 
     except Exception as e:
