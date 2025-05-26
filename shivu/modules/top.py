@@ -181,7 +181,7 @@ async def reset_all_tasks_daily():
         logger.info(f"✅ Reset {result.modified_count} users' tasks in {time.time()-start_time:.2f}s")
         
         await app.send_message(
-            SUPPORT_CHAT_ID,
+            "-1002606804832",
             f"🔄 Daily task reset completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Reset {result.modified_count} users' progress"
         )
