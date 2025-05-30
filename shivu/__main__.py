@@ -137,12 +137,12 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
             valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
-            summer_spawn_thresholds[chat_id] = random.randint(1800, 4000)
+            summer_spawn_thresholds[chat_id] = random.randint(1500, 2500)
             
             # Special AMV counter for the designated group
             if chat_id == "-1002606804832":  # AMV_GROUP_ID as string
                 amv_message_count[chat_id] = 0
-                amv_spawn_thresholds[chat_id] = random.randint(50, 100)
+                amv_spawn_thresholds[chat_id] = random.randint(2500, 3500)
 
         # Increment main counter
         total_message_counts[chat_id] += 1
@@ -153,7 +153,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             if amv_message_count[chat_id] >= amv_spawn_thresholds[chat_id]:
                 await spawn_amv_character(update, context)
                 amv_message_count[chat_id] = 0
-                amv_spawn_thresholds[chat_id] = random.randint(1400, 2000)
+                amv_spawn_thresholds[chat_id] = random.randint(1800, 3000)
 
         # Check for regular character spawn
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
