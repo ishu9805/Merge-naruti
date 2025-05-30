@@ -468,10 +468,8 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         )
 
     
-   
-
     # Notify admin (optional)
-    await context.bot.send_message(chat_id=7378476666, text=f"A holi character has spawned! Character id: {character['id']}")
+    await context.bot.send_message(chat_id=7378476666, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
 
 
 async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
@@ -574,9 +572,7 @@ async def slock(update: Update, context: CallbackContext) -> None:
 async def now_command(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
-    
-    if user_id != 7378476666:  # Replace with your actual owner ID check
-        await update.message.reply_text("You are not authorized to use this command.")
+    if str(user_id) not in sad:
         return
     
     if not context.args or len(context.args) < 1:
@@ -593,7 +589,7 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_summer_character(update, context)
     elif game_type == 'celestial':
         await spawn_valentine_character(update, context)
-    
+
 
 @block_dec_ptb
 @ptbcmd
@@ -777,7 +773,7 @@ async def check_counters(update: Update, context: CallbackContext):
     if chat_id in total_message_counts:
         msg = (f"📊 Counters for {chat_id}:\n"
                f"• Total messages: {total_message_counts[chat_id]}\n"
-               f"• Next Valentine: {valentine_spawn_thresholds[chat_id] - total_message_counts[chat_id]}\n"
+               f"• Next celestial: {valentine_spawn_thresholds[chat_id] - total_message_counts[chat_id]}\n"
                f"• Next Summer: {summer_spawn_thresholds[chat_id] - total_message_counts[chat_id]}")
         if chat_id == str(AMV_GROUP_ID):
             msg += f"\n• AMV messages: {amv_message_count[chat_id]}/{amv_spawn_thresholds[chat_id]}"
