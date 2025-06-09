@@ -27,7 +27,7 @@ from shivu import (
     ban_collectionps as ban_collection,
     user_countps as user_count, 
     chat_dataps as chat_data,
-)
+    dm_collection
 # Logging setup
 import json
 import logging
@@ -120,6 +120,12 @@ async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     
     
+def reset_dm_collection():
+    """Reset the collection every week (call this periodically)"""
+    last_reset = dm_collection.find_one({"_id": "last_reset"})
+    if not last_reset or (datetime.now() - last_reset["date"]) >= timedelta(weeks=1):
+        dm_collection.delete_many({})  # Clear all user entries
+        dm_collection.insert_one({"_id": "last_reset", "date": datetime.now()})
 
 
     
@@ -215,7 +221,8 @@ async def reset_all_tasks_daily():
 
 scheduler.add_job(reset_all_tasks_daily, 'cron', hour=12, minute=0, timezone="UTC")
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
-scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0)  # Every Sunday at midnight
+scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0) 
+scheduler.add_job(reset_dm_collection, 'cron', day_of_week='sun', hour=0, minute=0) # Every Sunday at midnight
 scheduler.add_job(reset_monthly_tops, 'cron', day='last', hour=0, minute=0)  # Last day of the month at midnight
 scheduler.add_job(perform_backup, 'cron', hour=0, minute=0)  # Every day at midnight
         
