@@ -29,7 +29,7 @@ command_locksp = {}
 def must_dm(func):
     @wraps(func)
     async def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
-        reset_users_collection()  # Ensure weekly reset
+        # Ensure weekly reset
 
         user_id = update.effective_user.id
         chat_type = update.effective_chat.type
