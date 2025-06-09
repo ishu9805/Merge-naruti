@@ -9,10 +9,46 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 from typing import Callable, Any
+from functools import wraps
+from telegram import Update
+from telegram.ext import CallbackContext
+from pymongo import MongoClient
+from datetime import datetime, timedelta
+import logging
+from shivu import dm_collection
+
+
+
 
 
 # Global command lock dictionary
 command_locksp = {}
+
+
+# Decorator to enforce DM start
+def must_dm(func):
+    @wraps(func)
+    async def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
+        reset_users_collection()  # Ensure weekly reset
+
+        user_id = update.effective_user.id
+        chat_type = update.effective_chat.type
+
+        # Check if user started the bot in DM
+        if chat_type != "private":
+            user_data = dm_collection.find_one({"user_id": user_id})
+            if not user_data:
+                await update.message.reply_text(
+                    "⚠️ You must **start me in DM first** before using me in groups!\n"
+                    "Click here to start: [NARUTO](https://t.me/fancy_waifu_husbando_bot?start=start)"
+                )
+                return
+
+        # Execute the command if allowed
+        await func(update, context, *args, **kwargs)
+
+    return wrapper
+
 
 def ptbcommand_lock(func: Callable) -> Callable:
     @wraps(func)
