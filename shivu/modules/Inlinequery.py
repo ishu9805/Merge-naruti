@@ -70,7 +70,7 @@ RARITY_MAPPING = {
 async def inlinequery(client, update):
     query = update.query.strip()
     offset = int(update.offset) if update.offset else 0
-    limit = 50
+    limit = 30
     results = []
 
     # Pre-compiled regex patterns for faster matching
@@ -94,98 +94,98 @@ async def inlinequery(client, update):
         return filters
 
     # USER COLLECTION SEARCH - OPTIMIZED
-    if query.startswith(('collection.img.', 'collection.vid.')):
-        start_time = time.time()
-        parts = query.split('.', 3)
-        media_type = parts[1]
-        user_id = parts[2] if len(parts) > 2 and parts[2].isdigit() else None
-        
-        # Get user collection with optimized caching
-        user = None
-        if user_id:
+    if query.startswith('collection.img.') or query.startswith('collection.vid.'):
+        # User collection view
+        parts = query.split('.', 2)
+        user_id = parts[2].split(' ')[0] if len(parts) > 2 else None
+        search_term = ' '.join(parts[2].split(' ')[1:]) if ' ' in parts[2] else None
+
+        if user_id and user_id.isdigit():
             user = user_collection_cache.get(user_id)
             if not user:
-                user = await user_collection.find_one(
-                    {'id': int(user_id)},
-                    projection={'characters': 1, 'id': 1}
-                )
+                user = await user_collection.find_one({'id': int(user_id)})
                 if user:
                     user_collection_cache[user_id] = user
 
-        if user:
-            # Apply media type filter first to reduce dataset
-            media_field = 'img_url' if media_type == 'img' else 'vid_url'
-            pipeline = [
-                {'$match': {'id': user['id']}},
-                {'$unwind': '$characters'},
-                {'$match': {f'characters.{media_field}': {'$exists': True, '$ne': None}}},
-                {'$group': {'_id': '$characters.id', 'char': {'$first': '$characters'}, 'count': {'$sum': 1}}}
-            ]
-            
-            # Parse and apply additional filters
-            filters = await parse_filters(parts[3] if len(parts) > 3 else '')
-            
-            # Build aggregation match stages for filters
-            match_stages = []
-            for filter_type, value in filters.items():
-                if value:
-                    if filter_type == 'id':
-                        match_stages.append({'_id': int(value) if value.isdigit() else 0})
-                    else:
-                        match_stages.append({f'char.{filter_type}': {'$regex': value, '$options': 'i'}})
-            
-            if match_stages:
-                pipeline.insert(2, {'$match': {'$and': match_stages}})
-            
-            # Execute aggregation pipeline
-            aggregated_chars = await user_collection.aggregate(pipeline).to_list(length=None)
-            
-            # Sort by ID descending (newest first)
-            aggregated_chars.sort(key=lambda x: x['_id'], reverse=True)
-            
-            # Process results
-            for char_data in aggregated_chars[offset:offset + limit]:
-                char = char_data['char']
-                count = char_data['count']
-                rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
+            if user:
+                regex = re.compile(search_term, re.IGNORECASE) if search_term else None
                 
-                # Get anime stats with cache
-                anime = char['anime']
-                total_anime_count = anime_count_cache.get(anime)
-                if total_anime_count is None:
-                    total_anime_count = await collection.count_documents({'anime': anime})
-                    anime_count_cache[anime] = total_anime_count
+                # Get all characters first
+                all_characters = user.get('characters', [])
                 
-                # Get user's count for this anime
-                anime_chars = [c for c in user.get('characters', []) if c.get('anime') == anime]
-                user_anime_count = len(anime_chars)
-
-                caption = (
-                    f"Look At <a href='tg://user?id={user['id']}'>{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
-                    f"⌬ {anime} 〔{user_anime_count}/{total_anime_count}〕\n"
-                    f"◈⌠{rarity_emoji}⌡ {char['name']} x{count}\n"
-                    f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n"
-                )
-
-                media_url = char['img_url'] if media_type == 'img' else char['vid_url']
-                result_id = f"{char['id']}_{media_type}_{time.time()}"
-                
-                if media_type == 'img':
-                    results.append(InlineQueryResultPhoto(
-                        photo_url=media_url,
-                        thumb_url=media_url,
-                        id=result_id,
-                        caption=caption
-                    ))
+                # Filter based on media type and search term
+                if query.startswith('collection.img.'):
+                    characters = [
+                        char for char in all_characters
+                        if ('img_url' in char and char['img_url'] and 
+                            (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
+                    ]
                 else:
-                    results.append(InlineQueryResultVideo(
-                        video_url=media_url,
-                        mime_type="video/mp4",
-                        thumb_url=media_url,
-                        id=result_id,
-                        title=f"{char['name']} ({char['anime']})",
-                        caption=caption
-                    ))
+                    characters = [
+                        char for char in all_characters
+                        if ('vid_url' in char and char['vid_url'] and
+                            (not regex or regex.search(char['name']) or regex.search(char['anime']) or regex.search(char['rarity'])))
+                    ]
+
+                # Sort characters by ID in descending order (newest first)
+                characters.sort(key=lambda x: x['id'], reverse=True)
+
+                # Aggregate duplicates while maintaining order
+                aggregated_characters = {}
+                for char in characters:
+                    char_id = char['id']
+                    if char_id in aggregated_characters:
+                        aggregated_characters[char_id]['count'] += 1
+                    else:
+                        aggregated_characters[char_id] = {
+                            'character': char,
+                            'count': 1
+                        }
+
+                # Convert to sorted list (already sorted by ID)
+                sorted_characters = list(aggregated_characters.values())
+
+                # Paginate results
+                for char_data in sorted_characters[offset:offset + limit]:
+                    char = char_data['character']
+                    count = char_data['count']
+                    rarity_emoji = RARITY_MAPPING.get(char['rarity'], '')
+
+                    # Get anime count stats
+                    user_anime_count = sum(1 for c in all_characters if c.get('anime') == char['anime'])
+                    if char['anime'] in anime_count_cache:
+                        total_anime_count = anime_count_cache[char['anime']]
+                    else:
+                        total_anime_count = await collection.count_documents({'anime': char['anime']})
+                        anime_count_cache[char['anime']] = total_anime_count
+
+                    caption = (
+                        f"Look At <a href='tg://user?id={user['id']}'>{escape(user.get('first_name', str(user['id'])))}</a>'s Character\n\n"
+                        f"⌬ {char['anime']} 〔{user_anime_count}/{total_anime_count}〕\n"
+                        f"◈⌠{rarity_emoji}⌡ {char['name']} x{count}\n"
+                        f"**ID**: {char['id']} | **Rarity**: {char['rarity'].split()[1]}\n"
+                    )
+
+                    if query.startswith('collection.img.'):
+                        results.append(
+                            InlineQueryResultPhoto(
+                                photo_url=char['img_url'],
+                                thumb_url=char['img_url'],
+                                id=f"{char['id']}_img_{time.time()}",
+                                caption=caption
+                            )
+                        )
+                    else:
+                        results.append(
+                            InlineQueryResultVideo(
+                                video_url=char['vid_url'],
+                                mime_type="video/mp4",
+                                thumb_url=char['vid_url'],
+                                id=f"{char['id']}_vid_{time.time()}",
+                                title=f"{char['name']} ({char['anime']})",
+                                caption=caption
+                            )
+                        )
 
     # GLOBAL SEARCH - OPTIMIZED
     else:
