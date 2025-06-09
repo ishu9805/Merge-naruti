@@ -29,6 +29,7 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
+from shivu.modules.lock import must_dm
 
 MAX_CAPTION_LENGTH = 1024
 
@@ -62,6 +63,8 @@ async def is_member(user_id):
     except Exception:
         return False
         
+
+@must_dm()
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
