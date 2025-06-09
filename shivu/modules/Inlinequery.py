@@ -187,6 +187,7 @@ async def inlinequery(client, update):
                             )
                         )
 
+
     # GLOBAL SEARCH - OPTIMIZED
     else:
         filters = await parse_filters(query)
@@ -220,13 +221,7 @@ async def inlinequery(client, update):
                     ]}
                 ).sort('id', DESCENDING).to_list(length=None)
 
-        # Process results with optimized ownership count lookup
-        char_ids = [char['id'] for char in characters]
-        ownership_counts = await user_collection.count_documents(
-            {'characters.id': {'$in': char_ids}},
-            limit=100
-        )
-        
+        # Process results with per-character ownership count
         for character in characters[offset:offset + limit]:
             rarity_emoji = RARITY_MAPPING.get(character['rarity'], '')
             
@@ -237,13 +232,23 @@ async def inlinequery(client, update):
                 total_anime_count = await collection.count_documents({'anime': anime})
                 anime_count_cache[anime] = total_anime_count
 
+            # Get ownership count for this specific character
+            char_id = character['id']
+            if char_id in character_user_count_cache:
+                ownership_count = character_user_count_cache[char_id]
+            else:
+                ownership_count = await user_collection.count_documents(
+                    {'characters.id': char_id}
+                )
+                character_user_count_cache[char_id] = ownership_count
+
             caption = (
                 f"✨ **OwO! Check out this waifu!** ✨\n\n"
                 f"🎬 **Anime**: {anime} [{total_anime_count}]\n"
                 f"🆔 **ID**: {character['id']}\n"
                 f"🌟 **Name**: {character['name']}\n"
                 f"🔮 **Rarity**: {character['rarity']}\n"
-                f"👥 **Owned by**: {ownership_counts} users\n"
+                f"👥 **Owned by**: {ownership_count} users\n"
             )
 
             if 'vid_url' in character and character['vid_url']:
