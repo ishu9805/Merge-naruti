@@ -37,6 +37,8 @@ shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
 
 lol = AsyncIOMotorClient(mongo_urlings)
 dbps = lol['NARUTOGAMEBOT']
+dm_collection = dbps["started_users"]
+
 collectionps = dbps['anime_characters_lol']
 user_totals_collectionps = dbps['user_totals_lmaoooo']
 user_collectionps = dbps["user_collection_lmaoooo"]
