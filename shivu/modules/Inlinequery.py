@@ -65,6 +65,7 @@ RARITY_MAPPING = {
     '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️'
 }
 
+
 @app.on_inline_query()
 async def inlinequery(client, update):
     query = update.query.strip()
@@ -81,12 +82,13 @@ async def inlinequery(client, update):
             'id': None
         }
         
-        # Parse structured filters (.rarity. value .anime. value etc)
-        filter_parts = re.split(r'\.(rarity|name|anime|id)\.', query_part)
+        # Improved regex to handle spaces and special characters in filter values
+        pattern = r'\.(rarity|name|anime|id)\.([^\.]+)(?=\s*\.|$)'
+        matches = re.findall(pattern, query_part)
         
-        for i in range(1, len(filter_parts), 2):
-            filter_type = filter_parts[i]
-            filter_value = filter_parts[i+1].split('.')[0].strip()
+        for match in matches:
+            filter_type = match[0]
+            filter_value = match[1].strip()
             if filter_type in filters:
                 filters[filter_type] = filter_value
                 
@@ -98,13 +100,11 @@ async def inlinequery(client, update):
         media_type = parts[1]  # img or vid
         user_id = parts[2] if len(parts) > 2 and parts[2].isdigit() else None
         
-        # Parse any filters after user ID
-        filters = parse_filters('.'.join(parts[3:])) if len(parts) > 3 else {
-            'rarity': None,
-            'name': None,
-            'anime': None,
-            'id': None
-        }
+        # Extract the remaining query after user ID
+        remaining_query = '.'.join(parts[3:]) if len(parts) > 3 else ''
+        
+        # Parse filters from the remaining query
+        filters = parse_filters(remaining_query)
 
         if user_id:
             user = user_collection_cache.get(user_id)
@@ -138,6 +138,8 @@ async def inlinequery(client, update):
                         filtered_characters.append(char)
                 
                 characters = filtered_characters
+                
+      
                 
                 # Sort and process results
                 characters.sort(key=lambda x: x['id'], reverse=True)
