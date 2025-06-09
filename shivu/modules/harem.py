@@ -64,7 +64,7 @@ async def is_member(user_id):
         return False
         
 
-@must_dm()
+@must_dm
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
