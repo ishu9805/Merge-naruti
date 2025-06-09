@@ -73,7 +73,7 @@ async def inlinequery(client, update):
     limit = 50
     results = []
 
-    # Common filter parsing function
+    # Improved filter parsing function
     def parse_filters(query_part):
         filters = {
             'rarity': None,
@@ -82,15 +82,19 @@ async def inlinequery(client, update):
             'id': None
         }
         
-        # Improved regex to handle spaces and special characters in filter values
-        pattern = r'\.(rarity|name|anime|id)\.([^\.]+)(?=\s*\.|$)'
-        matches = re.findall(pattern, query_part)
-        
-        for match in matches:
-            filter_type = match[0]
-            filter_value = match[1].strip()
-            if filter_type in filters:
-                filters[filter_type] = filter_value
+        # New parsing logic that handles spaces better
+        parts = query_part.split('.')
+        i = 0
+        while i < len(parts):
+            part = parts[i].strip()
+            if part in ['rarity', 'name', 'anime', 'id'] and i+1 < len(parts):
+                filter_type = part
+                filter_value = parts[i+1].strip()
+                if filter_type in filters:
+                    filters[filter_type] = filter_value
+                i += 2  # Skip next part as it's the value
+            else:
+                i += 1
                 
         return filters
 
@@ -100,8 +104,8 @@ async def inlinequery(client, update):
         media_type = parts[1]  # img or vid
         user_id = parts[2] if len(parts) > 2 and parts[2].isdigit() else None
         
-        # Extract the remaining query after user ID
-        remaining_query = '.'.join(parts[3:]) if len(parts) > 3 else ''
+        # Reconstruct the remaining query properly
+        remaining_query = ' '.join(parts[3:]) if len(parts) > 3 else ''
         
         # Parse filters from the remaining query
         filters = parse_filters(remaining_query)
@@ -126,11 +130,11 @@ async def inlinequery(client, update):
                 filtered_characters = []
                 for char in characters:
                     match = True
-                    if filters['rarity'] and filters['rarity'].lower() not in char['rarity'].lower():
+                    if filters['rarity'] and not re.search(filters['rarity'], char['rarity'], re.IGNORECASE):
                         match = False
-                    if filters['name'] and filters['name'].lower() not in char['name'].lower():
+                    if filters['name'] and not re.search(filters['name'], char['name'], re.IGNORECASE):
                         match = False
-                    if filters['anime'] and filters['anime'].lower() not in char['anime'].lower():
+                    if filters['anime'] and not re.search(filters['anime'], char['anime'], re.IGNORECASE):
                         match = False
                     if filters['id'] and str(char['id']) != filters['id']:
                         match = False
@@ -138,8 +142,6 @@ async def inlinequery(client, update):
                         filtered_characters.append(char)
                 
                 characters = filtered_characters
-                
-      
                 
                 # Sort and process results
                 characters.sort(key=lambda x: x['id'], reverse=True)
