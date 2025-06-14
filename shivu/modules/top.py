@@ -425,7 +425,7 @@ application.add_handler(CommandHandler('stats', stats, block=False))
 application.add_handler(CommandHandler('TopGroups', global_leaderboard, block=False))
 application.add_handler(CommandHandler('top', leaderboard, block=False))
 application.add_handler(CommandHandler("backup", backup_command))
-    
+application.add_handler(CommandHandler("resetalltasks", reset_all_tasks_daily))
 
 # Add command handlers
 application.add_handler(CommandHandler('dailytop', daily_top_grabbers, block=False))
