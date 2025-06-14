@@ -16,6 +16,57 @@ from shivu import (
     shivuups as app,
     OWNER_ID
 )
+import logging
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from collections import defaultdict
+import asyncio
+import time
+
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from shivu.modules.lock import command_lock as cmd
+
+import logging
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from collections import defaultdict
+import random
+import time
+import asyncio
+from datetime import datetime
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from . import sudo_filter, dev_filter
+from shivu import (
+    collectionps as collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as app,
+    OWNER_ID
+)
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from shivu.modules.lock import command_lock as cmd
+
+import logging
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from collections import defaultdict
+import random
+import time
+import asyncio
+from datetime import datetime
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from . import sudo_filter, dev_filter
+from shivu import (
+    collectionps as collection,
+    user_collectionps as user_collection,
+    user_totals_collectionps as user_totals_collection,
+    shivuups as app,
+    OWNER_ID
+)
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu.modules.lock import command_lock as cmd
@@ -23,11 +74,12 @@ from shivu.modules.lock import command_lock as cmd
 # Initialize global variables
 claim_locks = defaultdict(asyncio.Lock)
 pending_claims = {}
+character_claims = defaultdict(int)  # Tracks global claim counts per character
 message_counts = defaultdict(int)
 lock = asyncio.Lock()
 BATCH_SIZE = 100
 SUPPORT_CHAT_ID = -1002606804832
-MAX_OWNERS = 4  # For limited edition characters
+MAX_OWNERS = 10  # For limited edition characters
 CLAIM_TIMEOUT = 300  # 5 minutes for pending claims
 
 # Configure logging
@@ -50,29 +102,33 @@ TASK_MILESTONES = {
         'type': 'special',
         'rarity': '💮 Special Edition',
         'message': "🎉 300 messages! Claim your 💮 Special Edition with /sclaim",
-        'grab_required': 2
+        'grab_required': 4
     },
     1000: {
         'type': 'limited', 
         'rarity': '🔮 Limited Edition',
         'message': "🌟 1000 messages! Choose 🔮 Limited Edition with /lclaim",
-        'grab_required': 4
+        'grab_required': 7
     }
 }
 
 # Helper Functions
 async def acquire_user_lock(user_id):
+    """Acquire a lock for a user to prevent concurrent claims"""
     try:
         await asyncio.wait_for(claim_locks[user_id].acquire(), timeout=30)
         return True
     except asyncio.TimeoutError:
+        logger.warning(f"Timeout acquiring lock for user {user_id}")
         return False
 
 async def release_user_lock(user_id):
+    """Release the lock for a user"""
     if claim_locks[user_id].locked():
         claim_locks[user_id].release()
 
 async def get_user_count(user_id):
+    """Get total message count for a user (in-memory + database)"""
     async with lock:
         in_memory = message_counts.get(user_id, 0)
     user_data = await user_totals_collection.find_one({'user_id': user_id})
@@ -80,33 +136,59 @@ async def get_user_count(user_id):
     return db_count + in_memory
 
 async def get_grab_count(user_id):
+    """Get total grab count for a user"""
     user_data = await user_collection.find_one({'id': user_id})
     return user_data.get('grab', 0) if user_data else 0
 
-async def get_character_owners(char_id):
-    count = await user_collection.count_documents({
-        'characters.id': char_id
-    })
-    return count
+async def update_character_claims():
+    """Initialize character claim counts from database"""
+    logger.info("Updating character claim counts from database...")
+    async for char in collection.find({}):
+        owners = await user_collection.count_documents({
+            'characters.id': char['id']
+        })
+        character_claims[char['id']] = owners
+    logger.info(f"Updated claim counts for {len(character_claims)} characters")
 
-async def cleanup_pending_claims():
-    while True:
-        await asyncio.sleep(60)  # Run every minute
-        current_time = time.time()
-        expired = [uid for uid, claim in pending_claims.items() 
-                  if current_time - claim['timestamp'] > CLAIM_TIMEOUT]
-        for uid in expired:
-            try:
-                await app.send_message(uid, "⌛ Your pending claim has expired")
-                del pending_claims[uid]
-            except Exception:
-                continue
+async def get_character_claim_count(char_id):
+    """Get current claim count for a character"""
+    if not character_claims:  # First run
+        await update_character_claims()
+    return character_claims.get(char_id, 0)
 
+async def increment_character_claim(char_id):
+    """Increment claim count for a character"""
+    character_claims[char_id] = character_claims.get(char_id, 0) + 1
+    logger.info(f"Incremented claim count for character {char_id} to {character_claims[char_id]}")
+
+
+
+async def validate_claim_requirements(user_id, milestone):
+    """Validate if user meets all requirements for a claim"""
+    if milestone not in TASK_MILESTONES:
+        return False, "❌ Invalid milestone! Available milestones:\n• 300 - 💮 Special Edition\n• 1000 - 🔮 Limited Edition"
+    
+    total_messages = await get_user_count(user_id)
+    if total_messages < milestone:
+        return False, f"❌ You need {milestone} messages to claim this reward! You have {total_messages}/{milestone}."
+    
+    grab_count = await get_grab_count(user_id)
+    required_grabs = TASK_MILESTONES[milestone].get('grab_required', 0)
+    if grab_count < required_grabs:
+        return False, f"❌ You need {required_grabs} legendary grabs for this reward! You have {grab_count}/{required_grabs}."
+    
+    claim_field = f"claimed_{milestone}"
+    user_data = await user_totals_collection.find_one({'user_id': user_id})
+    if user_data and user_data.get(claim_field):
+        return False, "⚠️ You've already claimed this reward!"
+    
+    return True, ""
 
 # Commands
 @cmd
 @app.on_message(filters.command("task"))
 async def task_command(client, message):
+    """Show user's task progress and available rewards"""
     user_id = message.from_user.id
     total = await get_user_count(user_id)
     grab_count = await get_grab_count(user_id)
@@ -143,27 +225,47 @@ async def task_command(client, message):
     
     if all_completed:
         response.append("\n🎉 You've completed ALL milestones!")
-     
     
     await message.reply_text("\n".join(response))
 
 @cmd
-@app.on_message(filters.command("nclaim"))
-async def unified_claim(client, message):
+@app.on_message(filters.command("resetclaim"))
+async def reset_pending_claim(client, message):
+    """Allow users to reset their pending claims"""
     user_id = message.from_user.id
     
+    if user_id not in pending_claims:
+        return await message.reply("ℹ️ You don't have any pending claims to reset.")
+    
+    try:
+        char_id = pending_claims[user_id]['char_id']
+        del pending_claims[user_id]
+        logger.info(f"User {user_id} reset their pending claim for character {char_id}")
+        await message.reply("✅ Your pending claim has been reset. You can now make new claims.")
+    except Exception as e:
+        logger.error(f"Error resetting claim for user {user_id}: {str(e)}")
+        await message.reply("❌ Failed to reset your claim. Please try again later.")
+
+@cmd
+@app.on_message(filters.command("nclaim"))
+async def unified_claim(client, message):
+    """Handle all types of claims through a unified command"""
+    user_id = message.from_user.id
+    
+    # Check for pending claims
     if user_id in pending_claims:
         claim_data = pending_claims[user_id]
         await message.reply(
             f"⚠️ You have a pending {claim_data['rarity']} claim!\n"
             f"Character: {claim_data['char_name']}\n"
-            "Please confirm or cancel it before making new claims."
+            "Please confirm or cancel it with /resetclaim before making new claims."
         )
         return
     
+    # Acquire user lock
     if not await acquire_user_lock(user_id):
         return await message.reply("🚫 The system is currently processing your previous request. Please wait a moment and try again.")
-    
+    00
     try:
         if len(message.command) < 2:
             await release_user_lock(user_id)
@@ -176,217 +278,153 @@ async def unified_claim(client, message):
         
         milestone = int(message.command[1])
         
-        if milestone not in TASK_MILESTONES:
+        # Validate claim requirements
+        is_valid, error_msg = await validate_claim_requirements(user_id, milestone)
+        if not is_valid:
             await release_user_lock(user_id)
-            return await message.reply(
-                "❌ Invalid milestone! Available milestones:\n"
-                "• 300 - 💮 Special Edition\n"
-                "• 1000 - 🔮 Limited Edition\n"
-            )
+            return await message.reply(error_msg)
         
-        if milestone == 1000 and len(message.command) < 3:
-            await release_user_lock(user_id)
-            return await message.reply(
-                f"❌ Please provide character ID for this reward!\n"
-                f"Usage: /nclaim {milestone} [character_id]\n"
-                f"Check available characters with /list{milestone}"
-            )
-        
-        total_messages = await get_user_count(user_id)
-        grab_count = await get_grab_count(user_id)
-        required_grabs = TASK_MILESTONES[milestone].get('grab_required', 0)
-        
-        if total_messages < milestone:
-            await release_user_lock(user_id)
-            return await message.reply(
-                f"❌ You need {milestone} messages to claim this reward! "
-                f"You have {total_messages}/{milestone}."
-            )
-        
-        if grab_count < required_grabs:
-            await release_user_lock(user_id)
-            return await message.reply(
-                f"❌ You need {required_grabs} legendary grabs for this reward! "
-                f"You have {grab_count}/{required_grabs}."
-            )
-        
-        claim_field = f"claimed_{milestone}"
-        user_data = await user_totals_collection.find_one({'user_id': user_id})
-        if user_data and user_data.get(claim_field):
-            await release_user_lock(user_id)
-            return await message.reply("⚠️ You've already claimed this reward!")
-        
+        # Handle different claim types
         if milestone == 300:
             await handle_automatic_claim(client, message, user_id, milestone, '💮 Special Edition')
         elif milestone == 1000:
+            if len(message.command) < 3:
+                await release_user_lock(user_id)
+                return await message.reply(
+                    f"❌ Please provide character ID for this reward!\n"
+                    f"Usage: /nclaim {milestone} [character_id]\n"
+                    f"Check available characters with /list{milestone}"
+                )
             char_id = message.command[2]
             await handle_id_claim(client, message, user_id, milestone, char_id, '🔮 Limited Edition')
+        else:
+            await release_user_lock(user_id)
+            return await message.reply("❌ Invalid milestone! Available: 300 or 1000")
             
     except ValueError:
         await release_user_lock(user_id)
         await message.reply("❌ Please enter a valid number (300 or 1000)")
     except Exception as e:
-        logging.error(f"Claim processing error for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(f"Claim processing error for user {user_id}: {str(e)}", exc_info=True)
         await message.reply("❌ An error occurred while processing your claim. Please try again later.")
         await release_user_lock(user_id)
 
 async def handle_automatic_claim(client, message, user_id, milestone, rarity):
-    char = await collection.aggregate([
-        {'$match': {'rarity': rarity}},
-        {'$sample': {'size': 1}}
-    ]).to_list(length=1)
-    
-    if not char:
-        return await message.reply(f"⚠️ No {rarity} characters available!")
-    
-    await user_collection.update_one(
-        {'id': user_id},
-        {'$push': {'characters': char[0]}},
-        upsert=True
-    )
-    
-    await user_totals_collection.update_one(
-        {'user_id': user_id},
-        {'$set': {f'claimed_{milestone}': True}},
-        upsert=True
-    )
-    
-    await message.reply_photo(
-        char[0]['img_url'],
-        caption=f"🎉 {rarity} Claimed!\n\n{char[0]['name']}\n{char[0]['rarity']}\n{char[0]['anime']}"
-    )
+    """Handle automatic claim for special edition characters"""
+    try:
+        char = await collection.aggregate([
+            {'$match': {'rarity': rarity}},
+            {'$sample': {'size': 1}}
+        ]).to_list(length=1)
+        
+        if not char:
+            await release_user_lock(user_id)
+            return await message.reply(f"⚠️ No {rarity} characters available!")
+        
+        char = char[0]
+        
+        # Check owner count for limited edition
+        if rarity == '🔮 Limited Edition':
+            owner_count = await get_character_claim_count(char['id'])
+            if owner_count >= MAX_OWNERS:
+                await release_user_lock(user_id)
+                return await message.reply("❌ This Limited Edition character has reached maximum claims! Try another one.")
+        
+        # Process the claim
+        await user_collection.update_one(
+            {'id': user_id},
+            {'$push': {'characters': char}},
+            upsert=True
+        )
+        
+        # Update claim count if limited edition
+        if rarity == '🔮 Limited Edition':
+            await increment_character_claim(char['id'])
+        
+        # Mark as claimed
+        await user_totals_collection.update_one(
+            {'user_id': user_id},
+            {'$set': {f'claimed_{milestone}': True}},
+            upsert=True
+        )
+        
+        # Send success message
+        await message.reply_photo(
+            char['img_url'],
+            caption=f"🎉 {rarity} Claimed!\n\n{char['name']}\n{char['rarity']}\n{char['anime']}"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in automatic claim for user {user_id}: {str(e)}")
+        await message.reply("❌ Failed to process automatic claim. Please try again.")
+    finally:
+        await release_user_lock(user_id)
 
 async def handle_id_claim(client, message, user_id, milestone, char_id, rarity):
-    char = await collection.find_one({
-        'id': char_id,
-        'rarity': rarity
-    })
-    
-    if not char:
-        return await message.reply(
-            f"❌ Character not found or not {rarity}!\n"
-            f"Use /list{milestone} to see available options."
-        )
-
-    sup = char.get('slock')
-    if sup == 'True':
-        return await message.reply("❌ This character is locked and cannot be claimed!")
-    
-    owner_count = await get_character_owners(char_id)
-    if owner_count >= MAX_OWNERS:
-        return await message.reply(
-            "❌ This Limited Edition character has already been claimed by 4 users!\n"
-            "Please choose another character."
-        )
-    
-    pending_claims[user_id] = {
-        'char_id': char_id,
-        'milestone': milestone,
-        'char_name': char['name'],
-        'rarity': rarity,
-        'message_id': message.id,
-        'timestamp': time.time()
-    }
-    
-    confirm_buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"confirm_{milestone}_{char_id}")],
-        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_claim")]
-    ])
-    
-    sent_msg = await message.reply_photo(
-        char['img_url'],
-        caption=f"⚠️ Confirm {rarity} Claim:\n\n"
-                f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
-                "Are you sure?",
-        reply_markup=confirm_buttons
-    )
-    
-    pending_claims[user_id]['confirmation_message_id'] = sent_msg.id
-
-@cmd
-@app.on_message(filters.command("resetalltasks") & sudo_filter)
-async def reset_all_tasks_command(client, message):
-    """Reset task progress for all users (Admin only)"""
+    """Handle claim with specific character ID"""
     try:
-        # Confirmation check
-        if len(message.command) == 1 or message.command[1].lower() != "confirm":
+        # Check claim count first
+        claim_count = await get_character_claim_count(char_id)
+        if claim_count >= MAX_OWNERS:
+            await release_user_lock(user_id)
             return await message.reply(
-                "⚠️ **Danger Zone** ⚠️\n"
-                "This will reset ALL users' task progress AND counts!\n\n"
-                "To confirm, use:\n"
-                "/resetalltasks confirm\n\n"
-                "Add 'dryrun' to test first:\n"
-                "/resetalltasks confirm dryrun"
+                "❌ This character has reached the maximum claim limit (4 users).\n"
+                "Please choose another character with /list1000"
             )
 
-        dry_run = "dryrun" in message.command
-        processing_msg = await message.reply(
-            f"🔄 {'Dry run' if dry_run else 'Processing'} global task reset..."
-        )
+        char = await collection.find_one({
+            'id': char_id,
+            'rarity': rarity
+        })
+        
+        if not char:
+            await release_user_lock(user_id)
+            return await message.reply(
+                f"❌ Character not found or not {rarity}!\n"
+                f"Use /list{milestone} to see available options."
+            )
 
-        # Prepare the update query
-        milestones = list(TASK_MILESTONES.keys())
-        update_query = {
-            **{f"claimed_{milestone}": False for milestone in milestones},
-            "count": 0,
-            "grab": 0
+        sup = char.get('slock')
+        if sup == 'True':
+            await release_user_lock(user_id)
+            return await message.reply("❌ This character is locked and cannot be claimed!")
+        
+        # Store pending claim
+        pending_claims[user_id] = {
+            'char_id': char_id,
+            'milestone': milestone,
+            'char_name': char['name'],
+            'rarity': rarity,
+            'message_id': message.id,
+            'timestamp': time.time()
         }
         
-        # Get total user count for progress tracking
-        total_users = await user_totals_collection.count_documents({})
+        # Create confirmation buttons
+        confirm_buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Confirm Claim", callback_data=f"confirm_{milestone}_{char_id}")],
+            [InlineKeyboardButton("❌ Cancel", callback_data="cancel_claim")]
+        ])
         
-        if dry_run:
-            result = {"modified_count": total_users}
-            grab_result = {"modified_count": total_users}
-        else:
-            # Batch processing for large collections
-            result = await user_totals_collection.update_many(
-                {},
-                {"$set": update_query}
-            )
-            
-            grab_result = await user_collection.update_many(
-                {},
-                {"$set": {"grab": 0}}
-            )
-            
-            # Clear in-memory counts
-            async with lock:
-                message_counts.clear()
-
-        # Prepare report
-        report = (
-            f"📊 **Global Task Reset Complete** {'(Dry Run)' if dry_run else ''}\n"
-            f"• Total users: {total_users}\n"
-            f"• Reset tasks: {result.modified_count}\n"
-            f"• Reset grab counts: {grab_result.modified_count}\n"
-            f"• Milestones reset: {', '.join(map(str, milestones))}\n"
-            f"• In-memory counts cleared: {not dry_run}\n\n"
+        # Send confirmation message
+        sent_msg = await message.reply_photo(
+            char['img_url'],
+            caption=f"⚠️ Confirm {rarity} Claim:\n\n"
+                    f"{char['name']}\n{char['rarity']}\n{char['anime']}\n\n"
+                    "Are you sure?",
+            reply_markup=confirm_buttons
         )
         
-        if dry_run:
-            report += "ℹ️ This was a dry run - no changes were made"
-        else:
-            report += f"✅ Successfully reset all data at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-
-        # Edit original message with results
-        await processing_msg.edit_text(report)
+        pending_claims[user_id]['confirmation_message_id'] = sent_msg.id
         
-        # Log to support chat
-        await app.send_message(
-            SUPPORT_CHAT_ID,
-            f"♻️ Global reset executed by {message.from_user.mention}\n" + report
-        )
-
     except Exception as e:
-        logger.error(f"Global reset error: {str(e)}", exc_info=True)
-        error_msg = f"❌ Global reset failed: {str(e)}"
-        await message.reply(error_msg)
-        await app.send_message(OWNER_ID, error_msg)
+        logger.error(f"Error in ID claim for user {user_id}: {str(e)}")
+        await message.reply("❌ Failed to process claim. Please try again.")
+        await release_user_lock(user_id)
 
 # Callback Handlers
 @app.on_callback_query(filters.regex(r"^confirm_(\d+)_(.+)$"))
 async def confirm_claim(client, callback_query):
+    """Handle claim confirmation with global count tracking"""
     user_id = callback_query.from_user.id
     data = callback_query.data
     
@@ -412,13 +450,7 @@ async def confirm_claim(client, callback_query):
                 del pending_claims[user_id]
             return await callback_query.message.delete()
         
-        owner_count = await get_character_owners(char_id)
-        if owner_count >= MAX_OWNERS:
-            await callback_query.answer("This character has reached maximum claims!", show_alert=True)
-            if user_id in pending_claims:
-                del pending_claims[user_id]
-            return await callback_query.message.delete()
-        
+
         # Process the claim
         await user_collection.update_one(
             {'id': user_id},
@@ -426,6 +458,11 @@ async def confirm_claim(client, callback_query):
             upsert=True
         )
         
+        # Update global claim count for limited edition
+        if rarity == '🔮 Limited Edition':
+            await increment_character_claim(char_id)
+        
+        # Mark as claimed
         await user_totals_collection.update_one(
             {'user_id': user_id},
             {'$set': {f'claimed_{milestone}': True}},
@@ -446,13 +483,14 @@ async def confirm_claim(client, callback_query):
         await callback_query.answer("Claim successful!", show_alert=False)
         
     except Exception as e:
-        logging.error(f"Error in confirm_claim: {str(e)}", exc_info=True)
+        logger.error(f"Error in confirm_claim: {str(e)}", exc_info=True)
         await callback_query.answer("Failed to process claim!", show_alert=True)
         if user_id in pending_claims:
             del pending_claims[user_id]
 
 @app.on_callback_query(filters.regex(r"^cancel_claim$"))
 async def cancel_claim(client, callback_query):
+    """Handle claim cancellation"""
     user_id = callback_query.from_user.id
     if user_id in pending_claims:
         del pending_claims[user_id]
@@ -464,6 +502,91 @@ async def cancel_claim(client, callback_query):
         )
         await callback_query.answer("Claim cancelled!", show_alert=False)
     except Exception as e:
-        logging.error(f"Error cancelling claim: {str(e)}")
+        logger.error(f"Error cancelling claim: {str(e)}")
         await callback_query.answer("Failed to cancel claim!", show_alert=True)
+
+
+
+
+
+
+@cmd
+@app.on_message(filters.command("tpending"))
+async def reset_pending_claim(client, message):
+    """Allow users to reset their pending claims"""
+    user_id = message.from_user.id
+    
+    if user_id not in pending_claims:
+        return await message.reply("ℹ️ You don't have any pending claims to reset.")
+    
+    try:
+        # Get pending claim details
+        pending_data = pending_claims[user_id]
+        char_name = pending_data['char_name']
+        rarity = pending_data['rarity']
+        
+        # Create confirmation buttons
+        confirm_buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Yes, reset my claim", callback_data="confirm_nreset")],
+            [InlineKeyboardButton("❌ No, keep it", callback_data="cancel_nreset")]
+        ])
+        
+        # Send confirmation message
+        await message.reply(
+            f"⚠️ Are you sure you want to reset your pending {rarity} claim?\n"
+            f"Character: {char_name}\n\n"
+            "You'll be able to make a new claim after resetting.",
+            reply_markup=confirm_buttons
+        )
+        
+    except Exception as e:
+        logger.error(f"Error preparing reset for user {user_id}: {str(e)}")
+        await message.reply("❌ Failed to process reset request. Please try again later.")
+
+@app.on_callback_query(filters.regex(r"^confirm_nreset$"))
+async def confirm_reset_claim(client, callback_query):
+    """Handle reset confirmation"""
+    user_id = callback_query.from_user.id
+    
+    if user_id not in pending_claims:
+        await callback_query.answer("No pending claim to reset!", show_alert=True)
+        return await callback_query.message.delete()
+    
+    try:
+        # Get pending claim details before deleting
+        pending_data = pending_claims[user_id]
+        char_name = pending_data['char_name']
+        rarity = pending_data['rarity']
+        
+        # Remove the pending claim
+        del pending_claims[user_id]
+        
+        # Update the message
+        await callback_query.message.edit_text(
+            f"✅ Your pending {rarity} claim for {char_name} has been reset.\n"
+            "You can now make a new claim when ready.",
+            reply_markup=None
+        )
+        
+        await callback_query.answer("Claim reset successful!", show_alert=False)
+        logger.info(f"User {user_id} reset their pending claim for {char_name}")
+        
+    except Exception as e:
+        logger.error(f"Error confirming reset for user {user_id}: {str(e)}")
+        await callback_query.answer("Failed to reset claim!", show_alert=True)
+
+@app.on_callback_query(filters.regex(r"^cancel_nreset$"))
+async def cancel_reset_claim(client, callback_query):
+    """Handle reset cancellation"""
+    user_id = callback_query.from_user.id
+    
+    try:
+        await callback_query.message.edit_text(
+            "❌ Reset cancelled. Your pending claim remains active.",
+            reply_markup=None
+        )
+        await callback_query.answer("Reset cancelled", show_alert=False)
+    except Exception as e:
+        logger.error(f"Error cancelling reset for user {user_id}: {str(e)}")
+        await callback_query.answer("Failed to cancel reset!", show_alert=True)
 
