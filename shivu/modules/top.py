@@ -214,7 +214,21 @@ async def reset_all_tasks_daily():
     except Exception as e:
         logger.error(f"Failed to reset tasks: {str(e)}", exc_info=True)
      
+async def task_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for manual backup command"""
+    user = update.effective_user
+    if user.id != ALLOWED_USER_IDS:
+        await update.message.reply_text("You are not authorized to perform backups.")
+        LOGGER.warning(f"Unauthorized backup attempt by user {user.id}")
+        return
 
+    try:
+        # await update.message.reply_text("Starting manual backup process...")
+        await reset_all_tasks_daily()
+        await update.message.reply_text("✅.")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Backup failed: {str(e)}")
+        LOGGER.error(f"Manual backup failed: {e}", exc_info=True)
 
 scheduler.add_job(reset_all_tasks_daily, 'cron', hour=0, minute=0)
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
@@ -425,7 +439,7 @@ application.add_handler(CommandHandler('stats', stats, block=False))
 application.add_handler(CommandHandler('TopGroups', global_leaderboard, block=False))
 application.add_handler(CommandHandler('top', leaderboard, block=False))
 application.add_handler(CommandHandler("backup", backup_command))
-application.add_handler(CommandHandler("resetalltasks", reset_all_tasks_daily))
+application.add_handler(CommandHandler("resetalltasks", task_command))
 
 # Add command handlers
 application.add_handler(CommandHandler('dailytop', daily_top_grabbers, block=False))
