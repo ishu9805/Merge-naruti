@@ -216,7 +216,7 @@ async def reset_all_tasks_daily():
      
 
 
-scheduler.add_job(reset_all_tasks_daily, 'cron', , hour=0, minute=0)
+scheduler.add_job(reset_all_tasks_daily, 'cron', hour=0, minute=0)
 scheduler.add_job(reset_daily_tops, 'cron', hour=0, minute=0)  # Every day at midnight
 scheduler.add_job(reset_weekly_tops, 'cron', day_of_week='sun', hour=0, minute=0) 
 scheduler.add_job(reset_dm_collection, 'cron', day_of_week='sun', hour=0, minute=0) # Every Sunday at midnight
