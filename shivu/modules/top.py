@@ -174,7 +174,7 @@ async def reset_monthly_tops():
 
 async def reset_all_tasks_daily():
     try:
-        logger.info("⏰ Running daily task reset...")
+        LOGGER.info("⏰ Running daily task reset...")
         start_time = time.time()
         
         # Reset all users' milestones and counts
@@ -196,7 +196,7 @@ async def reset_all_tasks_daily():
             {'$set': {'grab': 0}}
         )
         
-        logger.info(
+        LOGGES.info(
             f"✅ Reset {result.modified_count} users' tasks and "
             f"{grab_reset_result.modified_count} users' grab counts "
             f"in {time.time()-start_time:.2f}s"
@@ -212,7 +212,7 @@ async def reset_all_tasks_daily():
         )
         
     except Exception as e:
-        logger.error(f"Failed to reset tasks: {str(e)}", exc_info=True)
+        LOGGER.error(f"Failed to reset tasks: {str(e)}", exc_info=True)
      
 async def task_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for manual backup command"""
