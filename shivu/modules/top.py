@@ -212,7 +212,7 @@ async def reset_all_tasks_daily():
             {'$set': {'grab': 0}}
         )
         
-        LOGGES.info(
+        LOGGER.info(
             f"✅ Reset {result.modified_count} users' tasks and "
             f"{grab_reset_result.modified_count} users' grab counts "
             f"in {time.time()-start_time:.2f}s"
