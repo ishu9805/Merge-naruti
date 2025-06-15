@@ -236,7 +236,7 @@ async def bonus_coins(client: Client, message: Message):
         return
 
     # Check if the user is a member of the required group
-    if not await is_member(user_id):
+    """ if not await is_member(user_id):
         group_link = force  # Replace with the actual group invite link
         messages = (
             "You need to be a member of our exclusive group to use this command.\n"
@@ -246,7 +246,7 @@ async def bonus_coins(client: Client, message: Message):
             [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
         )
         await message.reply_text(messages, reply_markup=reply_markup)
-        return
+        return"""
        
 
     user = await user_collection.find_one({"id": user_id})
