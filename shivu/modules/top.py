@@ -61,6 +61,22 @@ scheduler = AsyncIOScheduler()
 
 
 
+TASK_MILESTONES = {
+    300: {
+        'type': 'special',
+        'rarity': '💮 Special Edition',
+        'message': "🎉 300 messages! Claim your 💮 Special Edition with /sclaim",
+        'grab_required': 4
+    },
+    1000: {
+        'type': 'limited', 
+        'rarity': '🔮 Limited Edition',
+        'message': "🌟 1000 messages! Choose 🔮 Limited Edition with /lclaim",
+        'grab_required': 7
+    }
+}
+
+
 async def perform_backup():
     """Perform the actual backup operation"""
     json_filename = f"data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
