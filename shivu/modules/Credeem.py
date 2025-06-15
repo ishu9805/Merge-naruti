@@ -69,10 +69,10 @@ async def daily_code(client: Client, message: Message):
     user_id = message.from_user.id
 
     # Check group membership
-    if not await is_member(user_id):
+    """if not await is_member(user_id):
         reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("✨ Join the Group to use command ✨", url=GROUP_LINK)]])
         await message.reply_text("You need to join our group to use this command.", reply_markup=reply_markup)
-        return
+        return"""
 
     # Rate limit (24 hours)
     last_usage = user_last_daily_code.get(user_id)
@@ -103,10 +103,10 @@ async def redeem(client: Client, message: Message):
     code = " ".join(message.command[1:])
 
     # Check group membership
-    if not await is_member(user_id):
+    """if not await is_member(user_id):
         reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("✨ Join the Group ✨", url=GROUP_LINK)]])
         await message.reply_text("You need to join our group to use this command.", reply_markup=reply_markup)
-        return
+        return"""
 
     # Validate and redeem code
     code_data = generated_codes.get(code)
