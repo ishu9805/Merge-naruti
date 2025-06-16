@@ -22,7 +22,7 @@ async def sendall(update: Update, context: CallbackContext):
 
     try:
         # Count only unsent characters
-        total = await collection.count_documents({"sented": {"$ne": True}})
+        total = await collection.count_documents({"unsented": {"$ne": True}})
         if total == 0:
             await update.message.reply_text("✅ All characters have already been sent!")
             return
@@ -33,7 +33,7 @@ async def sendall(update: Update, context: CallbackContext):
         failed_count = 0
         
         # Process only unsent characters
-        async for character in collection.find({"sented": {"$ne": True}}):
+        async for character in collection.find({"unsented": {"$ne": True}}):
             try:
                 # Send the character
                 await send_character(context.bot, character)
