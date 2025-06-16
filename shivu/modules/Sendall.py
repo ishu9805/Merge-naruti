@@ -8,8 +8,8 @@ from pymongo.errors import PyMongoError
 # Configuration
 #TOKEN = "7880519589:AAGzxUrbOgJlHlv3JM7j_Jccj4sXZblmjZs"
 #MONGO_URL = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-CHANNEL_ID = -1002692918301 # Replace with your channel ID
-OWNER_ID = 7378476666  # Your Telegram user ID
+CHANNEL_ID = -1002519377646 # Replace with your channel ID
+OWNER_ID = 6902029663  # Your Telegram user ID
 DELAY_BETWEEN_MESSAGES = 3  # Seconds between sends
 
 # Initialize MongoDB connection
