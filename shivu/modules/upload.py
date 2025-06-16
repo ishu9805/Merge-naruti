@@ -226,32 +226,8 @@ async def ul(client, message):
             await collection.insert_one(character)
 
             # Send character details to the channel
-            await client.send_photo(
-                chat_id=-1002117539029,
-                photo=catbox_url,
-                caption=(
-                    f"Character Name: {character_name}\n"
-                    f"Anime Name: {anime}\n"
-                    f"Rarity: {rarity_text}\n"
-                    f"ID: {available_id}\n"
-                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-                ),
-            )
-            await client.send_photo(
-                chat_id=-1002567797000,
-                photo=catbox_url,
-                caption = (
-                f"🌟 **Character Detail** 🌟\n"
-                    f"\n━━━━━━━━━━━━━━━━━━\n"
-                    f"🔹 **Name:** {character_name}\n"
-                    f"🔸 **Anime:** {anime}\n"
-                    f"🔹 **ID:** {available_id}\n"
-                    f"🔸 **Rarity:** {rarity_text}\n"
-                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
-                    f"\n━━━━━━━━━━━━━━━━━━\n"
-                ),
-            )
-            await client.send_photo(
+            
+            tempo = await client.send_photo(
                 chat_id=-1002606804832,
                 photo=catbox_url,
                 caption = (
@@ -265,7 +241,7 @@ async def ul(client, message):
                     f"\n━━━━━━━━━━━━━━━━━━\n"
                 ),
             )
-            
+            await tempo.pin()
             await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
         
         except Exception as e:
@@ -395,14 +371,7 @@ async def update(client: Client, message: Message):
 
    
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
-    await client.message(
-                chat_id=7378476666,
-            
-                text=(
-                    f"{character['id']}"
-                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-                ),
-            )
+    
     bulk_operations = []
     async for user in user_collection.find():
         if 'characters' in user:
@@ -534,7 +503,7 @@ async def upload_video_character(client, message):
     try:
         # Send the video to the character channel
         await client.send_video(
-            chat_id=-1002567797000,
+            chat_id=-1002606804832,
             video=vid_url,
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
