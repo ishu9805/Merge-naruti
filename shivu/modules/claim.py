@@ -24,7 +24,7 @@ from shivu import (
     force 
 )
 from shivu.modules.lock import command_lock as cmd
-
+from shivu.modules.fjoin import check_membership as fj
 DEVS = (7378476666)
 CHAT_ID = "-1002338924488"
 
@@ -33,13 +33,7 @@ CHARACTERS_PER_PAGE = 10
 claim_lock = {}
 
 # New emoji list for fun responses
-async def is_member(user_id):
-    """Check if a user is part of the required group."""
-    try:
-        member = await application.bot.get_chat_member(required_group_id, user_id)
-        return member.status in ['member', 'administrator', 'creator']
-    except Exception:
-        return False
+
         
 async def format_time_delta(delta):
     seconds = delta.total_seconds()
@@ -67,6 +61,7 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
 
 
 @cmd
+@fj
 @app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
@@ -93,18 +88,7 @@ async def hclaim(_, message: t.Message):
             await message.reply_text(f"Please start the bot in DM first [start](https://t.me/fancy_waifu_husbando_bot?start=start)")
             return
 
-        if not await is_member(user_id):
-            group_link = force
-            messages = (
-                "You need to be a member of our exclusive group to use this command.\n"
-                "Join now and explore the amazing features awaiting you!\n\n"
-            )
-            reply_markup = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("✨ Join the Group ✨", url=group_link)]]
-            )
-            await message.reply_text(messages, reply_markup=reply_markup)
-            return
-
+        
         # Get user data with atomic operation to prevent race conditions
         user_data = await user_collection.find_one_and_update(
             {'id': user_id},
