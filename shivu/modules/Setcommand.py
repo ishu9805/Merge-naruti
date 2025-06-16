@@ -2,7 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import BotCommand
 from shivu import shivuups as app
 
-@app.on_message(filters.command("setcommand") & filters.user([7469481988]))
+@app.on_message(filters.command("setcommand"))
 async def set_commands(client, message):
     commands = [
         BotCommand("task", "📝 Complete tasks for rewards"),
