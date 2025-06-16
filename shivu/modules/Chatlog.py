@@ -9,9 +9,9 @@ from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuups as app 
 from pyrogram.errors import RPCError
 
-LOG_GROUP_ID = -1002165460785  # Your log channel ID
-AUTHORIZED_USER_IDS = {7378476666}  # Your user ID
-BOT_INVITE_LINK = "https://t.me/Fancy_Waifu_Husbando_Bot?startgroup=true"
+LOG_GROUP_ID = -1002606804832  # Your log channel ID
+AUTHORIZED_USER_IDS = {6902029663}  # Your user ID
+BOT_INVITE_LINK = "https://t.me/Naruto_Waifu_Husbando_Bot?startgroup=true"
 photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 
 
@@ -23,7 +23,7 @@ photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 async def join_watcher(_, message):    
     chat = message.chat
     for member in message.new_chat_members:
-        if member.id == 7107840748:
+        if member.id == 7778926462:
             try:
                 # Try to get chat invite link
                 try:
@@ -34,8 +34,8 @@ async def join_watcher(_, message):
                 # Welcome message with button
                 welcome_msg = (
                     f"✨ Hello {chat.title} members!\n"
-                    f"🤖 I'm {app.me.first_name}, your anime music bot!\n"
-                    f"🎵 Ready to play your favorite tunes!\n\n"
+                    f"🤖 I'm {app.me.first_name}, your waifu husbando collection bot!\n"
+        
                     #f"Use /help to see my commands!"
                 )
                 
@@ -55,12 +55,13 @@ async def join_watcher(_, message):
                 # Log to admin channel
                 count = await app.get_chat_members_count(chat.id)
                 log_msg = (
-                    f"📝 Music Bot Added to New Group\n\n"
+                    f"📝 Bot Added to New Group\n\n"
                     f"📌 Chat Name: {chat.title}\n"
                     f"🍂 Chat ID: {chat.id}\n"
                     f"👤 Added By: {message.from_user.mention if message.from_user else 'Unknown'}\n"
                     f"👥 Members: {count}\n"
-                    f"🔗 Chat Link: {link}"
+                    f"🔗 Chat Link: {link}  "
+                    f"@naruto_dev"
                 )
                 
                 await app.send_photo(
