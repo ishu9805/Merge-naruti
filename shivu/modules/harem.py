@@ -30,6 +30,7 @@ from shivu import (
     chat_dataps as chat_data,
 )
 from shivu.modules.lock import must_dm
+from shivu.modules.fjoin import ptb_check_membership as ptbfj
 
 MAX_CAPTION_LENGTH = 1024
 
@@ -55,15 +56,8 @@ RARITY_MAPPING = {
     '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': '🧧'
 }
 
-async def is_member(user_id):
-    """Check if a user is part of the required group."""
-    try:
-        member = await application.bot.get_chat_member("-1002610579411", user_id)
-        return member.status in ['member', 'administrator', 'creator']
-    except Exception:
-        return False
-        
 
+@ptbfj
 @must_dm
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
