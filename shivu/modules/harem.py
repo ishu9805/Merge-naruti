@@ -58,7 +58,6 @@ RARITY_MAPPING = {
 
 
 @ptbfj()
-
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
     user = await user_collection.find_one({'id': user_id})
