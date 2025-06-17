@@ -15,7 +15,7 @@ from pyrogram import filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.errors import UserNotParticipant
 
-def check_membership(group_id: int = -1002606804832, channel_id: int = -1002171454204):
+def check_membership(group_id: int = -1002872842561, channel_id: int = -1002866635103):
     def decorator(func):
         @wraps(func)
         async def wrapper(client: Client, message: Message, *args, **kwargs):
@@ -61,8 +61,8 @@ def check_membership(group_id: int = -1002606804832, channel_id: int = -10021714
 @Client.on_callback_query(filters.regex("^check_joined$"))
 async def check_joined_callback(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
-    group_id = -1002606804832
-    channel_id = -1002171454204
+    group_id = -1002872842561
+    channel_id = -1002866635103
     
     try:
         # Check both group and channel membership
@@ -89,7 +89,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CallbackQueryHandler
 from telegram.error import BadRequest
 
-def ptb_check_membership(group_id: int = -1002606804832, channel_id: int = -1002171454204):
+def ptb_check_membership(group_id: int = -1002872842561, channel_id: int = -1002866635103):
     def decorator(func):
         @wraps(func)
         async def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
@@ -139,8 +139,8 @@ async def check_joined_callback(update: Update, context: CallbackContext):
     await query.answer()
     
     user_id = query.from_user.id
-    group_id = -1002606804832
-    channel_id = -1002171454204
+    group_id = -1002872842561
+    channel_id = -1002866635103
     
     try:
         # Check both memberships
