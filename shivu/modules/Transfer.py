@@ -2,7 +2,7 @@ from pyrogram import filters
 
 from shivu import user_collectionps as user_collection, shivuups as shivuu
 
-AUTHORIZED_USER_ID = 7378476666
+AUTHORIZED_USER_ID = 6902029663
 
 @shivuu.on_message(filters.command("ntransfer"))
 async def transfer(client, message):
