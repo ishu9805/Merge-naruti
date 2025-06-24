@@ -15,7 +15,7 @@ async def load_user_collections():
         total_characters += len(characters)
     return total_characters
     
-@app.on_message(filters.command("cls") & filters.user(7378476666))
+@app.on_message(filters.command("cls") & filters.user(6902029663))
 async def clear_collections_command(client, message):
     global global_user_collections
     async with collection_lock:  # Ensure thread-safe access
@@ -23,13 +23,13 @@ async def clear_collections_command(client, message):
     await message.reply_text("Global user collections have been successfully cleared.")
     
 # Command to load all user collections into the global document
-@app.on_message(filters.command("loads") & filters.user(7378476666))
+@app.on_message(filters.command("loads") & filters.user(6902029663))
 async def load_users_command(client, message):
     total_characters = await load_user_collections()
     await message.reply_text(f"User collections loaded successfully. Total characters loaded: {total_characters}")
 
 # Command to give characters to the replied user
-@app.on_message(filters.command("sending") & filters.reply & filters.user(7378476666))
+@app.on_message(filters.command("sending") & filters.reply & filters.user(6902029663))
 async def send_characters(client, message):
     try:
         # Get the number of characters to send from the command arguments
