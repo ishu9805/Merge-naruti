@@ -46,7 +46,7 @@ reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAP
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
-AMV_GROUP_ID = -1002606804832 # Your main group ID
+AMV_GROUP_ID = --1002783891820 # Your main group ID
  # Spawn every 100 messages
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
@@ -140,7 +140,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             summer_spawn_thresholds[chat_id] = random.randint(1500, 2500)
             
             # Special AMV counter for the designated group
-            if chat_id == "-1002606804832":  # AMV_GROUP_ID as string
+            if chat_id == "-1002783891820":  # AMV_GROUP_ID as string
                 amv_message_count[chat_id] = 0
                 amv_spawn_thresholds[chat_id] = random.randint(2500, 3500)
 
@@ -148,7 +148,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         total_message_counts[chat_id] += 1
 
         # Handle AMV group separately
-        if chat_id == "-1002606804832":
+        if chat_id == "-1002783891820":
             amv_message_count[chat_id] += 1
             if amv_message_count[chat_id] >= amv_spawn_thresholds[chat_id]:
                 await spawn_amv_character(update, context)
