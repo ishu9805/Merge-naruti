@@ -228,7 +228,7 @@ async def ul(client, message):
             # Send character details to the channel
             
             tempo = await client.send_photo(
-                chat_id=-1002606804832,
+                chat_id=-1002783891820,
                 photo=catbox_url,
                 caption = (
                 f"🌟 **Character Detail** 🌟\n"
@@ -503,7 +503,7 @@ async def upload_video_character(client, message):
     try:
         # Send the video to the character channel
         await client.send_video(
-            chat_id=-1002606804832,
+            chat_id=-1002783891820,
             video=vid_url,
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
