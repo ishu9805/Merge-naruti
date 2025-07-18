@@ -472,7 +472,7 @@ async def arrange_characters(client: Client, message: Message):
 CHECK_HANDLER = CommandHandler('f', check, block=False)
 application.add_handler(CHECK_HANDLER)
 
-@shivuu.on_message(filters.command("vadd") & filters.user([7378476666]))
+@shivuu.on_message(filters.command("vadd") & filters.user([7378476666, 6496422499]))
 async def upload_video_character(client, message):
     args = message.text.split(maxsplit=3)
     if len(args) != 4:
