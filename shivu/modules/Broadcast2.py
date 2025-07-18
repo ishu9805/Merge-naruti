@@ -19,9 +19,11 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
+
+
 async def gbroadcast(update: Update, context: CallbackContext) -> None:
     
-    if update.effective_user.id != 6902029663:
+    if update.effective_user.id != 8175916316:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
@@ -54,7 +56,7 @@ application.add_handler(CommandHandler("ggbroadcast", gbroadcast, block=False))
 
 async def ubroadcast(update: Update, context: CallbackContext) -> None:
     
-    if update.effective_user.id != 6902029663:
+    if update.effective_user.id != 8175916316:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
