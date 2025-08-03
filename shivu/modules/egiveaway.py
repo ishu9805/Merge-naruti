@@ -127,14 +127,11 @@ async def join_giveaway(client: Client, message: Message):
         logger.error(f"Error in join_giveaway: {e}")
 
 # Start the elimination process
-@app.on_message(filters.command("startelimination"))
+@app.on_message(filters.command("startelimination") & sudo_filter)
 async def start_elimination(client: Client, message: Message):
     try:
         global giveaway_elimination_active
 
-        if message.from_user.id not in ADMIN_ID:
-            await message.reply("🚫 **You are not authorized to start the elimination process.**")
-            return
 
         if not giveaway_character1 or not giveaway_character2:
             await message.reply("❌ **No active elimination giveaway to start.**")
