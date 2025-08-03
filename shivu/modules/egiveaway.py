@@ -4,7 +4,7 @@ import asyncio
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
-
+from . import sudo_filter
 from .lock import command_lock
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
@@ -48,13 +48,12 @@ async def send_media_group_with_caption(client, chat_id, media, caption):
         logger.error(f"Error sending media group: {e}")
 
 # Start an elimination giveaway
-@app.on_message(filters.command("egiveaway"))
+@app.on_message(filters.command("egiveaway") & sudo_filter)
 async def start_elimination_giveaway(client: Client, message: Message):
     try:
         global giveaway_character1, giveaway_character2, giveaway_participants, giveaway_elimination_active
 
-        if int(message.from_user.id) not in ADMIN_ID:
-            return
+        
 
         if len(message.command) < 3:
             await message.reply("❌ **Usage:** `/egiveaway <character_id> <character_id2>`")
@@ -118,7 +117,7 @@ async def join_giveaway(client: Client, message: Message):
         giveaway_participants.append(user_id)
         await message.reply(f"✅ **You have successfully joined the elimination giveaway!**\n👥 **Total Participants:** {len(giveaway_participants)}")
         await client.send_message(
-            chat_id=-1002606804832,
+            chat_id=-1002783891820,
             text=(
                 f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
                 f"👥 **Total Participants:** {len(giveaway_participants)}"
@@ -184,7 +183,7 @@ async def elimination_process(client: Client):
                 eliminated_names.append(f"[{user.first_name}](tg://user?id={user_id})")
 
             await client.send_message(
-                chat_id=-1002606804832,
+                chat_id=-1002783891820,
                 text=(
                     f"🚫 **Eliminated Users:** {', '.join(eliminated_names)}\n"
                     f"👥 **Remaining Participants:** {len(giveaway_participants)}"
@@ -204,7 +203,7 @@ async def elimination_process(client: Client):
 
                 # Send the message
                 await client.send_message(
-                    chat_id=-1002606804832,
+                    chat_id=-1002783891820,
                     text=(
                         f"🎉 **Last {len(giveaway_participants)} Participants:**\n"
                         f"{last_five_ids}"
