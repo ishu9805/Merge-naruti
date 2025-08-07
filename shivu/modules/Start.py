@@ -4,232 +4,216 @@ import random
 #from . import user_collection, app
 from shivu import *
 from .block import block_dec, temp_block, block_cbq
+
+from pyrogram import filters, Client
+from pyrogram.types import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
+import random
 from datetime import datetime
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
-    shivuups as app,
-    applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
+    collection, top_global_groups_collection, group_user_totals_collection,
+    user_collection, user_totals_collection, shivuu, app, application,
+    SUPPORT_CHAT, UPDATE_CHAT, db, pmusers, ban_collection, user_count, chat_data,
+    PHOTO_URL, OWNER_ID, PARTNER, BOT_USERNAME
 )
 
+# Stylish fonts
+class Font:
+    BOLD = "**"
+    ITALIC = "__"
+    MONO = "`"
+    STRIKE = "~~"
+    TITLE = "✧ {} ✧"
+    SUBHEAD = "✦ {} ✦"
+    HIGHLIGHT = "✨ {} ✨"
+
+# Database collections
 sudb = db.sudo
 devb = db.dev
 uploaderdb = db.uploader
 
+# Constants
 BOT_NAME = "Naruto"
+START_VIDEOS = PHOTO_URL
+
+# Attractive start message with styling
 start_text = f"""
-🌸 **welcome to {BOT_NAME}!** 🌸
+{Font.TITLE.format("🌸 WELCOME TO NARUTO UNIVERSE 🌸")}
 
-an anime-based games bot! add me to your group to start your journey.
+{Font.HIGHLIGHT.format("Anime Character Collection Game")}
 
-🎮 **features:**
-- play fun anime-based games
-- earn 🪙 coins
-- collect rare characters
-- and much more!
+{Font.SUBHEAD.format("Features:")}
+• Collect rare anime characters
+• Compete with friends
+• Earn coins and rewards
+• Trade characters
+• Leaderboards
 
-👉 **get started by adding me to your group or clicking the button below!**
+{Font.ITALIC}Begin your ninja journey today!{Font.ITALIC}
+
+{Font.HIGHLIGHT.format("Get started by adding me to your group!")}
 """
 
-credits_text = """
-🌟 **bot credits** 🌟
+# Enhanced credits text
+credits_text = f"""
+{Font.TITLE.format("🌟 CREDITS 🌟")}
 
-users below are the developers, uploaders, etc... of this bot. you can personally contact them for issues, but please avoid unnecessary dms.
+{Font.SUBHEAD.format("Development Team:")}
+• Developers
+• Sudo Users
+• Uploaders
 
-🙏 **thank you!**
+{Font.ITALIC}Special thanks to our wonderful community!{Font.ITALIC}
 """
 
+# Stylish buttons with emojis
 support_buttons = [
-    [IKB("💬 support", url=f"https://t.me/{SUPPORT_CHAT}"),
-     IKB("📢 updates", url=f"https://t.me/{UPDATE_CHAT}")],
-    [IKB("➕ add me to your group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
-    [IKB("❓ help", url=f"https://t.me/{SUPPORT_CHAT}"),
-     IKB("🌟 credits", callback_data="credits")]
+    [IKB("💬 Support Chat", url=f"{SUPPORT_CHAT}"),
+     IKB("📢 Updates", url=f"{UPDATE_CHAT}")],
+    [IKB("➕ Add to Group", url=f"{BOT_USERNAME}")],
+    [IKB("❓ Help", callback_data="help"),
+     IKB("🌟 Credits", callback_data="credits")]
 ]
 
-@app.on_message(filters.command("start") & filters.private)
-@block_dec
-async def startp(_, message):
-    id = message.from_user.id
-    if temp_block(id):
-        return
-    user = await _.get_users(id)
-    username = user.username
-    first_name = user.first_name
-
-    user_data = await user_collection.find_one({"id": id})
-
-    if user_data:
-        # Check if "created_at" key exists, if not, add it
-        if "created_at" not in user_data:
-            user_collection.update_one(
-                {"id": id},
-                {"$set": {"created_at": datetime.now()}}
-            )
-        if "characters" not in user_data:
-            user_collection.update_one(
-                {"id":id},
-                {"$set": {"characters": []}}
-            )
-        user_collection.update_one(
-            {"id": id},
-            {
-                "$set": {
-                    "username": username,
-                    "first_name": first_name
-                }
-            }
-        )
-    else:
-        user_collection.insert_one(
-            {
-                "id": id,
+# Helper function for user initialization
+async def init_user(user_id, username, first_name):
+    await user_collection.update_one(
+        {"id": user_id},
+        {
+            "$setOnInsert": {
+                "coins": 100,
+                "characters": [],
+                "created_at": datetime.now(),
+                "title": "Genin"
+            },
+            "$set": {
                 "username": username,
                 "first_name": first_name,
-                "coins": 100,  # starting coins
-                "characters": [],
-                "created_at": datetime.now()
+                "last_active": datetime.now()
             }
-        )
+        },
+        upsert=True
+    )
 
-    random_video = random.choice(PHOTO_URL)
+# Enhanced start command with better visuals
+@app.on_message(filters.command("start") & filters.private)
+@block_dec
+async def start_private(_, message):
+    user_id = message.from_user.id
+    if temp_block(user_id):
+        return
+    
+    user = await _.get_users(user_id)
+    await init_user(user_id, user.username, user.first_name)
+    
+    # Select random video with caption
+    welcome_video = random.choice(START_VIDEOS)
+    caption = f"""
+{Font.TITLE.format(f"Welcome {user.first_name}!")}
+
+{Font.HIGHLIGHT.format("Ready to start your collection?")}
+
+{Font.ITALIC}Use the buttons below to navigate:{Font.ITALIC}
+    """
+    
     await _.send_video(
-        chat_id=id,
-        video=random_video,
-        caption=start_text,
+        chat_id=user_id,
+        video=welcome_video,
+        caption=caption,
         reply_markup=IKM(support_buttons)
     )
 
+# Group start with better message
 @app.on_message(filters.command("start") & filters.group)
 @block_dec
-async def startg(_, message):
-    user_id = message.from_user.id
-    if temp_block(user_id):
-        return
+async def start_group(_, message):
     await message.reply_text(
-        "🚀 **to start using me, please click the button below to initiate in dm.**",
+        f"""
+{Font.TITLE.format("Naruto Collection Game")}
+
+{Font.ITALIC}To start playing, please initiate me in DMs!{Font.ITALIC}
+        """,
         reply_markup=IKM([
-            [IKB("✨ start in dm", url=f"https://t.me/{BOT_USERNAME}?start=start")]
+            [IKB("✨ Start in DM", url=f"https://t.me/{BOT_USERNAME}?start=start")]
         ])
     )
 
+# Enhanced credits command
 @app.on_message(filters.command("credits"))
 @block_dec
-async def cred(_, message):
-    user_id = message.from_user.id
-    if temp_block(user_id):
-        return
+async def show_credits(_, message):
     await message.reply_text(
         text=credits_text,
         reply_markup=IKM([
-            [IKB("👨‍💻 developers", callback_data="sdev"),
-             IKB("👑 sudos", callback_data="ssudo")],
-            [IKB("📤 uploaders", callback_data="suploader"),
-             IKB("🔙 back", callback_data="main")]
+            [IKB("👨‍💻 Developers", callback_data="sdev"),
+             IKB("👑 Sudo Users", callback_data="ssudo")],
+            [IKB("📤 Uploaders", callback_data="suploader"),
+             IKB("🔙 Back", callback_data="main")]
         ])
     )
 
+# Helper function for listing team members
+async def generate_team_buttons(collection, title):
+    buttons = []
+    async for user in collection.find():
+        user_id = user.get("user_id")
+        if user_id:
+            try:
+                user_data = await _.get_users(user_id)
+                name = user_data.first_name
+                buttons.append(IKB(f"👤 {name}", user_id=user_id))
+            except:
+                continue
+    
+    # Split into rows of 2 buttons each
+    rows = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
+    return rows
+
+# Enhanced team display handlers
 @app.on_callback_query(filters.regex("credits"))
 @block_cbq
-async def credcb(_, callback_query):
-    await callback_query.edit_message_text(
+async def credits_callback(_, query):
+    await query.edit_message_text(
         text=credits_text,
         reply_markup=IKM([
-            [IKB("👨‍💻 developers", callback_data="sdev"),
-             IKB("👑 sudos", callback_data="ssudo")],
-            [IKB("📤 uploaders", callback_data="suploader"),
-             IKB("🔙 back", callback_data="main")]
+            [IKB("👨‍💻 Developers", callback_data="sdev"),
+             IKB("👑 Sudo Users", callback_data="ssudo")],
+            [IKB("📤 Uploaders", callback_data="suploader"),
+             IKB("🔙 Back", callback_data="main")]
         ])
     )
 
-@app.on_callback_query(filters.regex("sdev"))
+@app.on_callback_query(filters.regex("sdev|ssudo|suploader"))
 @block_cbq
-async def sdev(_, callback_query):
-    await callback_query.edit_message_text(
-        text="⏳ loading developer names...",
-        reply_markup=IKM([
-            [IKB("🔙 back", callback_data="credits")]
-        ])
+async def show_team(_, query):
+    team_type = query.data
+    titles = {
+        "sdev": ("👨‍💻 Developers", devb),
+        "ssudo": ("👑 Sudo Users", sudb),
+        "suploader": ("📤 Uploaders", uploaderdb)
+    }
+    
+    title, collection = titles[team_type]
+    await query.edit_message_text(
+        text=f"{Font.TITLE.format(title)}\n\n{Font.ITALIC}Loading team members...{Font.ITALIC}",
+        reply_markup=IKM([[IKB("🔙 Back", callback_data="credits")]])
+    )
+    
+    buttons = await generate_team_buttons(collection, title)
+    buttons.append([IKB("🔙 Back", callback_data="credits")])
+    
+    await query.edit_message_text(
+        text=f"{Font.TITLE.format(title)}\n\n{Font.HIGHLIGHT.format('Our Amazing Team:')}",
+        reply_markup=IKM(buttons)
     )
 
-    dev_buttons = []
-    async for user in devb.find():
-        dev_id = user.get("user_id")
-        if dev_id:
-            user_data = await user_collection.find_one({"id": dev_id})
-            first_name = user_data.get("first_name", "unknown") if user_data else "unknown"
-            dev_buttons.append(IKB(first_name, user_id=dev_id))
-
-    rows = [dev_buttons[i:i+3] for i in range(0, min(len(dev_buttons), 12), 3)]
-    await callback_query.edit_message_text(
-        text="**👨‍💻 developers:**",
-        reply_markup=IKM(rows + [[IKB("🔙 back", callback_data="credits")]])
-    )
-
-@app.on_callback_query(filters.regex("ssudo"))
-@block_cbq
-async def ssudo(_, callback_query):
-    await callback_query.edit_message_text(
-        text="⏳ loading sudo names...",
-        reply_markup=IKM([
-            [IKB("🔙 back", callback_data="credits")]
-        ])
-    )
-
-    sudo_buttons = []
-    async for user in sudb.find():
-        sudo_id = user.get("user_id")
-        if sudo_id:
-            user_data = await user_collection.find_one({"id": sudo_id})
-            first_name = user_data.get("first_name", "unknown") if user_data else "unknown"
-            sudo_buttons.append(IKB(first_name, user_id=sudo_id))
-
-    rows = [sudo_buttons[i:i+3] for i in range(0, min(len(sudo_buttons), 12), 3)]
-    await callback_query.edit_message_text(
-        text="**👑 sudos:**",
-        reply_markup=IKM(rows + [[IKB("🔙 back", callback_data="credits")]])
-    )
-
-@app.on_callback_query(filters.regex("suploader"))
-@block_cbq
-async def suploader(_, callback_query):
-    await callback_query.edit_message_text(
-        text="⏳ loading uploader names...",
-        reply_markup=IKM([
-            [IKB("🔙 back", callback_data="credits")]
-        ])
-    )
-
-    uploader_buttons = []
-    async for user in uploaderdb.find():
-        uploader_id = user.get("user_id")
-        if uploader_id:
-            user_data = await user_collection.find_one({"id": uploader_id})
-            first_name = user_data.get("first_name", "unknown") if user_data else "unknown"
-            uploader_buttons.append(IKB(first_name, user_id=uploader_id))
-
-    rows = [uploader_buttons[i:i+3] for i in range(0, min(len(uploader_buttons), 12), 3)]
-    await callback_query.edit_message_text(
-        text="**📤 uploaders:**",
-        reply_markup=IKM(rows + [[IKB("🔙 back", callback_data="credits")]])
-    )
-
+# Main menu callback
 @app.on_callback_query(filters.regex("main"))
-async def main(_, callback_query):
-    random_video = random.choice(PHOTO_URL)
-    await callback_query.edit_message_text(
-        text=start_text,
+async def main_menu(_, query):
+    welcome_video = random.choice(START_VIDEOS)
+    await query.message.delete()
+    await _.send_video(
+        chat_id=query.from_user.id,
+        video=welcome_video,
+        caption=start_text,
         reply_markup=IKM(support_buttons)
     )
