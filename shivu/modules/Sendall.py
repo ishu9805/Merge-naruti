@@ -17,38 +17,44 @@ CHANNEL_ID = -1002519377646  # Replace with your channel ID
 OWNER_ID = 6902029663  # Your Telegram user ID
 DELAY_BETWEEN_MESSAGES = 3  # Seconds between sends
 
+
 async def sendall(update: Update, context: CallbackContext):
-    """Command handler to send all unsent characters to channel in ID order"""
+    """Command handler to send all unsent characters to channel in numerical ID order"""
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
 
     try:
         # Count only unsent characters (where done is not True)
-        total = await collection.count_documents({"done": {"$ne": True}})
+        total = await collection.count_documents({"dones": {"$ne": True}})
         if total == 0:
             await update.message.reply_text("✅ All characters have already been sent!")
             return
 
         progress_msg = await update.message.reply_text(
-            f"⏳ Starting to send {total} unsent characters in ID order..."
+            f"⏳ Starting to send {total} unsent characters in numerical ID order..."
         )
         
         sent_count = 0
         failed_count = 0
         
-        # Get all unsent characters sorted by ID in ascending order
-        cursor = collection.find({"done": {"$ne": True}}).sort("id", 1)
+        # Get all unsent characters and sort them numerically by ID
+        all_characters = []
+        async for character in collection.find({"dones": {"$ne": True}}):
+            all_characters.append(character)
         
-        async for character in cursor:
+        # Sort numerically by ID (convert to int for proper numeric sorting)
+        all_characters.sort(key=lambda x: int(x.get('id', 0)))
+        
+        for character in all_characters:
             try:
                 # Send the character
                 await send_character(context.bot, character)
                 
-                # Mark as done in database (using both done and sented fields)
+                # Mark as done in database
                 await collection.update_one(
                     {"_id": character["_id"]},
-                    {"$set": {"done": True, "sented": True}}
+                    {"$set": {"dones": True, "sented": True}}
                 )
                 
                 sent_count += 1
@@ -83,40 +89,6 @@ async def sendall(update: Update, context: CallbackContext):
         await update.message.reply_text(f"❌ Database error: {str(e)}")
     except Exception as e:
         await update.message.reply_text(f"❌ Unexpected error: {str(e)}")
-
-async def send_character(bot, character):
-    """Send a single character to channel with formatted message"""
-    # Format ID with leading zero if it's a number
-    char_id = str(character.get('id', 'N/A'))
-    if char_id.isdigit():
-        char_id = char_id.zfill(2)
-    
-    caption = (
-        f"🆔 ID: {char_id}\n"
-        f"📛 Name: {character.get('name', 'Unknown')}\n"
-        f"🎌 Anime: {character.get('anime', 'Unknown')}\n"
-        f"🌟 Rarity: {character.get('rarity', 'Unknown')}\n"
-        f"🔖 Status: {'✅ Done' if character.get('done') else '🆕 New'}"
-    )
-    
-    if 'img_url' in character:
-        await bot.send_photo(
-            chat_id=CHANNEL_ID,
-            photo=character['img_url'],
-            caption=caption
-        )
-    elif 'vid_url' in character:
-        await bot.send_video(
-            chat_id=CHANNEL_ID,
-            video=character['vid_url'],
-            caption=caption,
-            supports_streaming=True
-        )
-    else:
-        await bot.send_message(
-            chat_id=CHANNEL_ID,
-            text=f"📄 Character Data\n\n{caption}"
-        )
 
 # Add handler
 application.add_handler(CommandHandler("sendall", sendall))
