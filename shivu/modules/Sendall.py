@@ -5,43 +5,50 @@ import asyncio
 from shivu import applicationps as application, collectionps as collection
 from pymongo.errors import PyMongoError
 
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackContext
+from motor.motor_asyncio import AsyncIOMotorClient
+import asyncio
+from shivu import applicationps as application, collectionps as collection
+from pymongo.errors import PyMongoError
+
 # Configuration
-#TOKEN = "7880519589:AAGzxUrbOgJlHlv3JM7j_Jccj4sXZblmjZs"
-#MONGO_URL = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-CHANNEL_ID = -1002519377646 # Replace with your channel ID
+CHANNEL_ID = -1002519377646  # Replace with your channel ID
 OWNER_ID = 6902029663  # Your Telegram user ID
 DELAY_BETWEEN_MESSAGES = 3  # Seconds between sends
 
-# Initialize MongoDB connection
-
 async def sendall(update: Update, context: CallbackContext):
-    """Command handler to send all unsent characters to channel"""
+    """Command handler to send all unsent characters to channel in ID order"""
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
 
     try:
-        # Count only unsent characters
-        total = await collection.count_documents({"unsented": {"$ne": True}})
+        # Count only unsent characters (where done is not True)
+        total = await collection.count_documents({"done": {"$ne": True}})
         if total == 0:
             await update.message.reply_text("✅ All characters have already been sent!")
             return
 
-        progress_msg = await update.message.reply_text(f"⏳ Starting to send {total} unsent characters...")
+        progress_msg = await update.message.reply_text(
+            f"⏳ Starting to send {total} unsent characters in ID order..."
+        )
         
         sent_count = 0
         failed_count = 0
         
-        # Process only unsent characters
-        async for character in collection.find({"unsented": {"$ne": True}}):
+        # Get all unsent characters sorted by ID in ascending order
+        cursor = collection.find({"done": {"$ne": True}}).sort("id", 1)
+        
+        async for character in cursor:
             try:
                 # Send the character
                 await send_character(context.bot, character)
                 
-                # Mark as sent in database
+                # Mark as done in database (using both done and sented fields)
                 await collection.update_one(
                     {"_id": character["_id"]},
-                    {"$set": {"sented": True}}
+                    {"$set": {"done": True, "sented": True}}
                 )
                 
                 sent_count += 1
@@ -50,6 +57,7 @@ async def sendall(update: Update, context: CallbackContext):
                 if sent_count % 10 == 0:
                     await progress_msg.edit_text(
                         f"⏳ Progress: {sent_count}/{total} sent\n"
+                        f"📈 Current ID: {character.get('id', 'N/A')}\n"
                         f"✅ Success: {sent_count}\n"
                         f"❌ Failed: {failed_count}"
                     )
@@ -63,10 +71,12 @@ async def sendall(update: Update, context: CallbackContext):
         
         # Final report
         await progress_msg.edit_text(
-            f"📊 Send All Complete!\n\n"
+            f"🎉 Send All Complete!\n\n"
+            f"📊 Statistics:\n"
             f"✅ Successfully sent: {sent_count}\n"
             f"❌ Failed to send: {failed_count}\n"
-            f"📦 Total unsent processed: {total}"
+            f"📦 Total processed: {total}\n"
+            f"🆔 Highest ID sent: {character.get('id', 'N/A')}"
         )
     
     except PyMongoError as e:
@@ -75,12 +85,18 @@ async def sendall(update: Update, context: CallbackContext):
         await update.message.reply_text(f"❌ Unexpected error: {str(e)}")
 
 async def send_character(bot, character):
-    """Send a single character to channel"""
+    """Send a single character to channel with formatted message"""
+    # Format ID with leading zero if it's a number
+    char_id = str(character.get('id', 'N/A'))
+    if char_id.isdigit():
+        char_id = char_id.zfill(2)
+    
     caption = (
-        f"🆔 ID: {character.get('id', 'N/A')}\n"
+        f"🆔 ID: {char_id}\n"
         f"📛 Name: {character.get('name', 'Unknown')}\n"
         f"🎌 Anime: {character.get('anime', 'Unknown')}\n"
         f"🌟 Rarity: {character.get('rarity', 'Unknown')}\n"
+        f"🔖 Status: {'✅ Done' if character.get('done') else '🆕 New'}"
     )
     
     if 'img_url' in character:
@@ -102,8 +118,5 @@ async def send_character(bot, character):
             text=f"📄 Character Data\n\n{caption}"
         )
 
-
-  
-    # Add handler
+# Add handler
 application.add_handler(CommandHandler("sendall", sendall))
-    
