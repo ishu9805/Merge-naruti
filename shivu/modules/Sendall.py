@@ -18,12 +18,21 @@ OWNER_ID = 6902029663  # Your Telegram user ID
 DELAY_BETWEEN_MESSAGES = 3  # Seconds between sends
 
 async def send_all_characters(update: Update, context: CallbackContext):
-    """Command handler to send ALL characters to channel in numerical ID order"""
+    """Command handler to send ALL characters to channel in numerical ID order with optional start ID"""
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
 
     try:
+        # Check if a starting ID was provided
+        start_id = None
+        if context.args:
+            try:
+                start_id = int(context.args[0])
+            except ValueError:
+                await update.message.reply_text("❌ Please provide a valid numeric starting ID.")
+                return
+
         # Count ALL characters regardless of sent status
         total_characters = await collection.count_documents({})
         if total_characters == 0:
@@ -32,10 +41,12 @@ async def send_all_characters(update: Update, context: CallbackContext):
 
         progress_msg = await update.message.reply_text(
             f"⏳ Preparing to send ALL {total_characters} characters in numerical order..."
+            + (f"\n🚩 Starting from ID: {start_id}" if start_id is not None else "")
         )
         
         successfully_sent = 0
         failed_to_send = 0
+        skipped_before_start = 0
         
         # Get ALL characters and sort them numerically by ID
         all_chars = []
@@ -46,6 +57,13 @@ async def send_all_characters(update: Update, context: CallbackContext):
         all_chars.sort(key=lambda x: int(x.get('id', 0)))
         
         for character in all_chars:
+            current_id = int(character.get('id', 0))
+            
+            # Skip characters before the starting ID if specified
+            if start_id is not None and current_id < start_id:
+                skipped_before_start += 1
+                continue
+                
             try:
                 # Send the character (regardless of previous sent status)
                 await send_character_to_channel(context.bot, character)
@@ -64,7 +82,8 @@ async def send_all_characters(update: Update, context: CallbackContext):
                         f"⏳ Progress: {successfully_sent}/{total_characters}\n"
                         f"📌 Current ID: {character.get('id', 'N/A')}\n"
                         f"✅ Sent: {successfully_sent}\n"
-                        f"❌ Failed: {failed_to_send}"
+                        f"❌ Failed: {failed_to_send}\n"
+                        f"⏭ Skipped: {skipped_before_start}"
                     )
                 
                 await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
@@ -76,10 +95,11 @@ async def send_all_characters(update: Update, context: CallbackContext):
         
         # Final report
         await progress_msg.edit_text(
-            f"🎉 Completed Sending ALL Characters!\n\n"
+            f"🎉 Completed Sending Characters!\n\n"
             f"📊 Results:\n"
             f"✅ Successfully sent: {successfully_sent}\n"
             f"❌ Failed to send: {failed_to_send}\n"
+            f"⏭ Skipped before start ID: {skipped_before_start}\n"
             f"📦 Total in database: {total_characters}\n"
             f"🆔 Highest ID sent: {character.get('id', 'N/A')}"
         )
@@ -120,4 +140,4 @@ async def send_character_to_channel(bot, character_data):
         )
 
 # Add handler with a more descriptive command name
-application.add_handler(CommandHandler("sendallcharacters", send_all_characters))
+application.add_handler(CommandHandler("sendall", send_all_characters))
