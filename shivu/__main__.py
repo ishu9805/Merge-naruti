@@ -665,7 +665,9 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_summer_character(update, context)
     elif game_type == 'celestial':
         await spawn_valentine_character(update, context)
-
+    elif game_type == 'monsoon':
+        await spawn_monsoon_character(update, context)
+        
 
 @block_dec_ptb
 @ptbcmd
