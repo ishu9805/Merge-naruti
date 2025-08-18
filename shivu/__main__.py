@@ -99,6 +99,7 @@ async def react_to_message(chat_id, message_id, emoji):
     except:
        pass
 
+
 locks = {}
 message_counters = {}
 spam_counters = {}
@@ -184,14 +185,89 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             valentine_spawn_thresholds[chat_id] = random.randint(8000, 10000)
             total_message_counts[chat_id] = 0  # Reset after special spawn
 
-        """elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
-            await spawn_summer_character(update, context)
+        elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
+            await spawn_monsoon_character(update, context)
             summer_spawn_thresholds[chat_id] = random.randint(650, 1000)
             total_message_counts[chat_id] = 0  # Reset after special spawn"""
             
 
 
+async def spawn_monsoon_character(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
 
+    alls_characters = [c for c in all_characters if not c.get('slock', False)]
+    
+    if not alls_characters:
+        await update.effective_chat.send_message("🌧️ The rain has washed away all characters for now... Try again later!")
+        return
+
+    monsoon_characters = [c for c in alls_characters if c.get('rarity') == '☔ Monsoon']
+
+    if not monsoon_characters:
+        print("No Monsoon characters found in the database.")
+        return
+
+    # Select a random Monsoon character
+    character = random.choice(monsoon_characters)
+    
+    # Check global ownership count
+    waifu_id = character['id']
+    user_ownership_data = await user_collection.aggregate([
+        {'$match': {'characters.id': waifu_id}},
+        {'$unwind': '$characters'},
+        {'$match': {'characters.id': waifu_id}},
+        {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
+        {'$sort': {'count': -1}}
+    ]).to_list(length=10)
+
+    global_count = sum(user['count'] for user in user_ownership_data)
+
+    if global_count >= 10:  # Lowered limit for rare Monsoon characters
+        print(f"Monsoon character {waifu_id} has been claimed by too many collectors.")
+        return
+
+    sent_characters[chat_id].append(character.get('id'))
+    last_characters[chat_id] = character
+
+    if chat_id in first_correct_guesses:
+        del first_correct_guesses[chat_id]
+
+    caption = (
+        "⛈️ *A Monsoon Mystery Appears!* ☔\n\n"
+        "Raindrops fall... can you **guess their name**?\n"
+        "/guess [name] to claim this rare character! 🌧️\n\n"
+    )
+    
+    if character.get('img_url'):
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=character['img_url'],
+            caption=caption,
+            parse_mode='Markdown'
+        )
+    elif character.get('vid_url'):
+        await context.bot.send_video(
+            chat_id=chat_id,
+            video=character['vid_url'],
+            caption=caption,
+            parse_mode='Markdown',
+            supports_streaming=True
+        )
+
+    # Special rain effect for admin notification
+    await context.bot.send_message(
+        chat_id="6902029663",
+        text=(
+            f"⛈️ Monsoon Alert! ⛈️\n"
+            f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
+            f"Only {15 - global_count} remaining claims available worldwide!"
+        )
+    )
+    
 
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
@@ -338,21 +414,21 @@ async def send_image(update: Update, context: CallbackContext) -> None:
    
 
     if character.get('rarity') == '🔮 Limited Edition':
-        await context.bot.send_message(chat_id=7378476666, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=6902029663, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎄 Christmas Special':
-        await context.bot.send_message(chat_id=7378476666, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=6902029663, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎃 Halloween':
-        await context.bot.send_message(chat_id=7378476666, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=6902029663, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
     
 
     if character.get('rarity') == '💝 Valentine':
-        await context.bot.send_message(chat_id=7378476666, text=f"💝 Valentine !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=6902029663, text=f"💝 Valentine !~! {character['id']} !~! {chat_id}")
 
     
     if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=7378476666, text=f"❄️ Winter !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=6902029663, text=f"❄️ Winter !~! {character['id']} !~! {chat_id}")
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
@@ -469,7 +545,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     
     # Notify admin (optional)
-    await context.bot.send_message(chat_id=7378476666, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
+    await context.bot.send_message(chat_id=6902029663, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
 
 
 async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
