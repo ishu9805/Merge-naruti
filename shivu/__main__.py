@@ -199,13 +199,9 @@ async def spawn_monsoon_character(update: Update, context: CallbackContext) -> N
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    alls_characters = [c for c in all_characters if not c.get('slock', False)]
     
-    if not alls_characters:
-        await update.effective_chat.send_message("🌧️ The rain has washed away all characters for now... Try again later!")
-        return
 
-    monsoon_characters = [c for c in alls_characters if c.get('rarity') == '☔ Monsoon']
+    monsoon_characters = [c for c in all_characters if c.get('rarity') == '☔ Monsoon']
 
     if not monsoon_characters:
         print("No Monsoon characters found in the database.")
