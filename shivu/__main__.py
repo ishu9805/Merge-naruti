@@ -678,6 +678,9 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if is_banned:
         return
 
+    if temp_block(user_id):
+        return
+
     # Check if there's an active character to guess
     if chat_id not in last_characters:
         return
