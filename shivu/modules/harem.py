@@ -53,7 +53,8 @@ RARITY_MAPPING = {
     '🎭 Cosplay Master 🎭': '🎭',
     '🎖 Apex Lot ( AUCTION )': '🎖',
     '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️',
-    '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': '🧧'
+    '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': '🧧',
+    '☔ Monsoon': '☔'
 }
 
 
