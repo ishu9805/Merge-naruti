@@ -187,7 +187,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
         elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
             await spawn_monsoon_character(update, context)
-            summer_spawn_thresholds[chat_id] = random.randint(1500, 2500)
+            summer_spawn_thresholds[chat_id] = random.randint(1000, 2000)
             total_message_counts[chat_id] = 0  # Reset after special spawn"""
             
 
