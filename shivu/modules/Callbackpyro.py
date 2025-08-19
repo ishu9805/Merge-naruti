@@ -89,7 +89,7 @@ async def callback_query_handler(client, callback_query):
                 [
                     InlineKeyboardButton("🎗️", callback_data="rarity:🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"),
                     InlineKeyboardButton("🧧", callback_data="rarity:🧧 𝙀𝙫𝙚𝙣𝙩𝙨"),
-                    InlineKeyboardButton("☔", callback_data="rarity: ☔ Monsoon")
+                    InlineKeyboardButton("☔", callback_data="rarity:☔ Monsoon")
                 ]
             ]
 
