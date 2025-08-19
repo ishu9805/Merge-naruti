@@ -42,7 +42,7 @@ async def block_cwf(_, m: Message):
     user_id = m.from_user.id
 
     if user_id in t_block:
-        if time.time() - t_block[user_id] < 270:
+        if time.time() - t_block[user_id] < 300:
             return
         t_block.pop(user_id)
 
@@ -51,7 +51,7 @@ async def block_cwf(_, m: Message):
     if user_id in dic1:
         if current_time - dic1[user_id] <= 1:
             dic2[user_id] = dic2.get(user_id, 0) + 1
-            if dic2[user_id] >= 50:
+            if dic2[user_id] >= 4:
                 t_block[user_id] = current_time
                 dic2[user_id] = 0
                 #txt = "."
