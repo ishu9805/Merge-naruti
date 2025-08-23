@@ -139,5 +139,97 @@ async def send_character_to_channel(bot, character_data):
             text=f"📄 Character Data\n\n{caption}"
         )
 
+
+
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackContext
+from telegram.error import TelegramError
+from motor.motor_asyncio import AsyncIOMotorClient
+import asyncio
+from . import sudo_filter
+from shivu import applicationps as application, collectionps as collection
+from pymongo.errors import PyMongoError
+
+# Configuration
+CHANNEL_ID = -1002519377646  # Your channel ID
+OWNER_ID = 6902029663  # Your Telegram user ID
+
+async def send_one_character(update: Update, context: CallbackContext):
+    """Command handler to send a single character to channel by ID"""
+    if update.effective_user.id != OWNER_ID:
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    # Check if a character ID was provided
+    if not context.args:
+        await update.message.reply_text("❌ Please provide a character ID.\nUsage: /sendone <character_id>")
+        return
+
+    try:
+        character_id = context.args[0]
+        
+        # Find the character by ID
+        character = await collection.find_one({"id": character_id})
+        
+        if not character:
+            await update.message.reply_text(f"❌ Character with ID {character_id} not found in database!")
+            return
+
+        # Send the character to channel
+        try:
+            await send_character_to_channel(context.bot, character)
+            
+            # Update sent status
+            await collection.update_one(
+                {"_id": character["_id"]},
+                {"$set": {"sented": True}}
+            )
+            
+            await update.message.reply_text(f"✅ Successfully sent character {character_id} to channel!")
+            
+        except TelegramError as e:
+            await update.message.reply_text(f"❌ Failed to send character to channel: {str(e)}")
+            
+    except PyMongoError as e:
+        await update.message.reply_text(f"❌ Database error: {str(e)}")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Unexpected error: {str(e)}")
+
+async def send_character_to_channel(bot, character_data):
+    """Send a single character to channel with formatted message"""
+    char_id = character_data.get('id', 'N/A')
+    
+    caption = (
+        f"🆔 ID: {char_id}\n"
+        f"📛 Name: {character_data.get('name', 'Unknown')}\n"
+        f"🎌 Anime: {character_data.get('anime', 'Unknown')}\n"
+        f"🌟 Rarity: {character_data.get('rarity', 'Unknown')}\n"
+    )
+    
+    try:
+        if 'img_url' in character_data:
+            await bot.send_photo(
+                chat_id=CHANNEL_ID,
+                photo=character_data['img_url'],
+                caption=caption
+            )
+        elif 'vid_url' in character_data:
+            await bot.send_video(
+                chat_id=CHANNEL_ID,
+                video=character_data['vid_url'],
+                caption=caption,
+                supports_streaming=True
+            )
+        else:
+            await bot.send_message(
+                chat_id=CHANNEL_ID,
+                text=f"📄 Character Data\n\n{caption}"
+            )
+    except TelegramError as e:
+        print(f"Telegram API error when sending character {char_id}: {str(e)}")
+        raise
+
+# Add handler
+application.add_handler(CommandHandler("sendone", send_one_character))
 # Add handler with a more descriptive command name
 application.add_handler(CommandHandler("sendall", send_all_characters))
