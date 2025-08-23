@@ -271,3 +271,75 @@ async def inlinequery(client, update):
     # Pagination
     next_offset = str(offset + limit) if len(results) == limit else ""
     await update.answer(results, next_offset=next_offset, cache_time=6, is_gallery=True)
+
+
+
+
+from pyrogram import filters
+from shivu import shivuups as app
+
+@app.on_message(filters.command("finderrors"))
+async def find_missing_media(client, message):
+    try:
+        # Find characters missing img_url
+        missing_img = await collection.find({
+            "$or": [
+                {"img_url": {"$exists": False}},
+                {"img_url": None},
+                {"img_url": ""}
+            ]
+        }).to_list(length=None)
+        
+        # Find characters missing vid_url
+        missing_vid = await collection.find({
+            "$or": [
+                {"vid_url": {"$exists": False}},
+                {"vid_url": None},
+                {"vid_url": ""}
+            ]
+        }).to_list(length=None)
+        
+        # Find characters missing both
+        missing_both = await collection.find({
+            "$or": [
+                {"$and": [
+                    {"$or": [{"img_url": {"$exists": False}}, {"img_url": None}, {"img_url": ""}]},
+                    {"$or": [{"vid_url": {"$exists": False}}, {"vid_url": None}, {"vid_url": ""}]}
+                ]}
+            ]
+        }).to_list(length=None)
+        
+        # Create response message
+        response = "**Characters with Missing Media URLs:**\n\n"
+        
+        if missing_img:
+            img_ids = [str(char.get('id', 'Unknown')) for char in missing_img]
+            response += f"**Missing img_url ({len(missing_img)}):**\n{', '.join(img_ids)}\n\n"
+        else:
+            response += "✅ No characters missing img_url\n\n"
+            
+        if missing_vid:
+            vid_ids = [str(char.get('id', 'Unknown')) for char in missing_vid]
+            response += f"**Missing vid_url ({len(missing_vid)}):**\n{', '.join(vid_ids)}\n\n"
+        else:
+            response += "✅ No characters missing vid_url\n\n"
+            
+        if missing_both:
+            both_ids = [str(char.get('id', 'Unknown')) for char in missing_both]
+            response += f"**Missing both URLs ({len(missing_both)}):**\n{', '.join(both_ids)}\n\n"
+        else:
+            response += "✅ No characters missing both URLs\n\n"
+        
+        # Send the response
+        if len(response) > 4096:
+            # If message is too long, send as document
+            with open("missing_media_report.txt", "w") as f:
+                f.write(response)
+            await message.reply_document("missing_media_report.txt", caption="Report of characters with missing media URLs")
+        else:
+            await message.reply_text(response)
+            
+    except Exception as e:
+        await message.reply_text(f"Error: {str(e)}")
+
+
