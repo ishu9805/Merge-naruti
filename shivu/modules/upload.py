@@ -69,40 +69,34 @@ async def upload_to_imgbb(file_path, api_key=IMGBB_API_KEY):
     """
     url = "https://api.imgbb.com/1/upload"
     
+    # Read the file
     with open(file_path, "rb") as file:
-        payload = {
-            "key": api_key,
-        }
-        files = {
-            "image": file,
-        }
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=payload, files=files) as response:
-                result = await response.json()
-                
-                if response.status == 200 and result.get("success"):
-                    return result["data"]["url"]
-                else:
-                    error_msg = result.get('error', {}).get('message', 'Unknown error')
-                    raise Exception(f"ImgBB upload failed: {error_msg}")
+        file_data = file.read()
+    
+    # Create form data
+    data = aiohttp.FormData()
+    data.add_field('key', api_key)
+    data.add_field('image', file_data, filename=os.path.basename(file_path))
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=data) as response:
+            result = await response.json()
+            
+            if response.status == 200 and result.get("success"):
+                return result["data"]["url"]
+            else:
+                error_msg = result.get('error', {}).get('message', 'Unknown error')
+                raise Exception(f"ImgBB upload failed: {error_msg}")
 
 async def upload_to_telegraph(file_path):
     """
     Upload image to Telegraph (fallback option)
     """
     try:
-        # For Telegraph, we need to use the synchronous library
-        import threading
-        from functools import partial
-        
-        # Run synchronous telegraph upload in a thread
-        loop = asyncio.get_event_loop()
-        upload_func = partial(upload_file, file_path)
-        upload_result = await loop.run_in_executor(None, upload_func)
-        
-        if isinstance(upload_result, list) and len(upload_result) > 0:
-            return f"https://telegra.ph{upload_result[0]}"
+        # Use the synchronous telegraph upload function
+        result = upload_file(file_path)
+        if isinstance(result, list) and len(result) > 0:
+            return f"https://telegra.ph{result[0]}"
         else:
             raise Exception("Telegraph upload failed")
     except Exception as e:
@@ -114,20 +108,21 @@ async def upload_to_catbox(file_path):
     """
     url = "https://catbox.moe/user/api.php"
     
+    # Read the file
     with open(file_path, "rb") as file:
-        payload = {
-            'reqtype': 'fileupload',
-        }
-        files = {
-            'fileToUpload': file,
-        }
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=payload, files=files) as response:
-                if response.status == 200:
-                    return (await response.text()).strip()
-                else:
-                    raise Exception(f"Catbox upload failed with status {response.status}")
+        file_data = file.read()
+    
+    # Create form data
+    data = aiohttp.FormData()
+    data.add_field('reqtype', 'fileupload')
+    data.add_field('fileToUpload', file_data, filename=os.path.basename(file_path))
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=data) as response:
+            if response.status == 200:
+                return (await response.text()).strip()
+            else:
+                raise Exception(f"Catbox upload failed with status {response.status}")
 
 async def upload_image_with_fallback(file_path):
     """
@@ -152,6 +147,8 @@ async def upload_image_with_fallback(file_path):
             continue
     
     raise Exception(f"All image hosting services failed. Last error: {str(last_error)}")
+
+
 
 def check_file_size(file_path, max_size_mb=10):
     """
