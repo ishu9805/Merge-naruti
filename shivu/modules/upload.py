@@ -314,8 +314,10 @@ async def ul(client, message):
                 )
             
         await tempo.pin()
+        
         await message.reply_text(f'✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}')
-    
+        await client.send_message(f' @naruto_dev `/sendone {available_id}')
+        
     except Exception as e:
         error_msg = f"❌ Character Upload Unsuccessful. Error: {str(e)}"
         await message.reply_text(error_msg)
