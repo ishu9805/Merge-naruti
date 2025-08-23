@@ -14,7 +14,7 @@ import urllib.request
 import random
 import aiohttp
 import asyncio
-from . import sudo_filter
+from . import sudo_filter, uploader_filter
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
