@@ -3,12 +3,8 @@ from pymongo import ReturnDocument
 import os
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
-#, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT, OWNER_ID, user_collection
-from . import uploader_filter
-
-from telegraph import upload_file
+import requests
 from pyrogram import filters
-#from shivu import shivuu, collection
 from pyrogram.types import InputMediaPhoto
 import os
 from pyrogram import Client, filters
@@ -16,9 +12,9 @@ from pyrogram.types import Message
 from pymongo import ReturnDocument, UpdateOne
 import urllib.request
 import random
+import aiohttp
+import asyncio
 from . import sudo_filter
-#from shivu import application, collection, db, CHARA_CHANNEL_ID, user_collection
-from . import uploader_filter
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -37,13 +33,12 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
-# Channel ID for posting character information (replace with your actual channel ID)
- 
 
-import os
-import requests
-#from shivu import shivuu, collection
-from pyrogram import filters
+# Channel ID for posting character information
+CHARA_CHANNEL_ID = -1002783891820
+
+# Your imgBB API Key
+IMGBB_API_KEY = "6d52008ec9026912f9f50c8ca96a09c3"
 
 # Define the wrong format message and rarity map
 WRONG_FORMAT_TEXT = """Wrong ❌ format...  eg. /upload reply to photo muzan-kibutsuji Demon-slayer 3
@@ -63,199 +58,280 @@ rarity_map = {
     12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
     15: "🎭 Cosplay Master 🎭", 17: "🎖 Apex Lot ( AUCTION )", 16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨", 18: "🍑 Echhi", 19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊", 20: "☔ Monsoon", 21: "🪸 Aquatic", 22: "🎨 Artistic"
 }
-# Function to find the next available ID for a character
-
-
-from asyncio import Lock
 
 # Global set to keep track of active IDs and a lock for safe access
 active_ids = set()
-id_lock = Lock()
-import requests
+id_lock = asyncio.Lock()
 
-
-def upload_to_catbox(file_path):
-    url = "https://catbox.moe/user/api.php"
-    # Set the payload to specify that the upload type is a file and choose the `fileupload` option
-    payload = {
-        'reqtype': 'fileupload',
-    }
-    # Open the file in binary mode and send it to Catbox
-    files = {
-        'fileToUpload': open(file_path, 'rb'),
-    }
-    # Send the POST request to Catbox with the file and payload
-    response = requests.post(url, files=files, data=payload)
-
-    # Check if the upload was successful
-    if response.status_code == 200:
-        return response.text.strip()  # Return the URL of the uploaded image
-    else:
-        raise Exception(f"Failed to upload to Catbox. Status Code: {response.status_code}")
-
-# Example usage:
-
-
-def upload_to_envs(file_path=None, file_url=None, expires=None, secret=None):
-    url = "https://envs.sh"
-    files = {}
-    data = {}
+async def upload_to_imgbb(file_path, api_key=IMGBB_API_KEY):
+    """
+    Upload image to imgBB (primary upload service)
+    """
+    url = "https://api.imgbb.com/1/upload"
     
-    # If uploading a local file
-    if file_path:
-        try:
-            files = {'file': open(file_path, 'rb')}
-        except Exception as e:
-            print(f"Error opening file: {str(e)}")
-            return None
-    
-    # If uploading a remote URL
-    elif file_url:
-        data = {'url': file_url}
-    
-    # Add secret and expiration if provided
-    if secret:
-        data['secret'] = secret
-    if expires:
-        data['expires'] = expires  # Expiration time in hours
-    
-    # Try to make the request
+    with open(file_path, "rb") as file:
+        payload = {
+            "key": api_key,
+        }
+        files = {
+            "image": file,
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=payload, files=files) as response:
+                result = await response.json()
+                
+                if response.status == 200 and result.get("success"):
+                    return result["data"]["url"]
+                else:
+                    error_msg = result.get('error', {}).get('message', 'Unknown error')
+                    raise Exception(f"ImgBB upload failed: {error_msg}")
+
+async def upload_to_telegraph(file_path):
+    """
+    Upload image to Telegraph (fallback option)
+    """
     try:
-        response = requests.post(url, files=files, data=data)
+        # For Telegraph, we need to use the synchronous library
+        import threading
+        from functools import partial
         
-        # Close the file if it's a local file upload
-        if file_path:
-            files['file'].close()
+        # Run synchronous telegraph upload in a thread
+        loop = asyncio.get_event_loop()
+        upload_func = partial(upload_file, file_path)
+        upload_result = await loop.run_in_executor(None, upload_func)
         
-        if response.status_code == 200:
-            print("File uploaded successfully to envs.sh!")
-            print("File URL:", response.text.strip())
-            return response.text.strip()
+        if isinstance(upload_result, list) and len(upload_result) > 0:
+            return f"https://telegra.ph{upload_result[0]}"
         else:
-            print("Failed to upload file to envs.sh.")
-            print("Status Code:", response.status_code)
-            print("Response:", response.text)
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error during upload: {str(e)}")
-        return None
+            raise Exception("Telegraph upload failed")
+    except Exception as e:
+        raise Exception(f"Telegraph upload error: {str(e)}")
 
-
-def check_file_size(file_path, max_size_mb=20):
-    if os.path.getsize(file_path) > max_size_mb * 1024 * 1024:
-        raise Exception("File size exceeds the 10 MB limit.")
+async def upload_to_catbox(file_path):
+    """
+    Upload image to Catbox (secondary fallback option)
+    """
+    url = "https://catbox.moe/user/api.php"
+    
+    with open(file_path, "rb") as file:
+        payload = {
+            'reqtype': 'fileupload',
+        }
+        files = {
+            'fileToUpload': file,
+        }
         
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=payload, files=files) as response:
+                if response.status == 200:
+                    return (await response.text()).strip()
+                else:
+                    raise Exception(f"Catbox upload failed with status {response.status}")
 
+async def upload_image_with_fallback(file_path):
+    """
+    Try multiple image hosting services with fallback - imgBB as primary
+    """
+    services = [
+        upload_to_imgbb,  # Primary - imgBB
+        upload_to_telegraph,  # First fallback - Telegraph
+        upload_to_catbox,  # Second fallback - Catbox
+    ]
+    
+    last_error = None
+    for service in services:
+        try:
+            print(f"Trying {service.__name__}...")
+            url = await service(file_path)
+            print(f"Success with {service.__name__}: {url}")
+            return url
+        except Exception as e:
+            print(f"Failed with {service.__name__}: {str(e)}")
+            last_error = e
+            continue
+    
+    raise Exception(f"All image hosting services failed. Last error: {str(last_error)}")
 
-# Example usage:
-# image_url = upload_to_catbox('path_to_your_image.jpg')
-# print(image_url)
+def check_file_size(file_path, max_size_mb=10):
+    """
+    Check if file size is within limits
+    """
+    file_size = os.path.getsize(file_path)
+    if file_size > max_size_mb * 1024 * 1024:
+        raise Exception(f"File size ({file_size/1024/1024:.2f} MB) exceeds the {max_size_mb} MB limit.")
+    return True
 
-# Function to find the next available ID for a character
 async def find_available_id():
-    async with id_lock:  # Ensure only one upload can find and reserve an ID at a time
+    """
+    Find the next available ID for a character
+    """
+    async with id_lock:
         cursor = collection.find().sort('id', 1)
         ids = [doc['id'] for doc in await cursor.to_list(length=None)]
-        for i in range(1, max(map(int, ids)) + 2):  # +2 to account for the case where the max ID is the last one
+        
+        # Handle case where no documents exist
+        if not ids:
+            candidate_id = "01"
+            active_ids.add(candidate_id)
+            return candidate_id
+        
+        # Convert to integers for proper comparison
+        int_ids = [int(id) for id in ids]
+        
+        for i in range(1, max(int_ids) + 2):
             candidate_id = str(i).zfill(2)
             if candidate_id not in ids and candidate_id not in active_ids:
                 active_ids.add(candidate_id)
                 return candidate_id
-        return str(max(map(int, ids)) + 1).zfill(2)  # Return the next available ID
+        return str(max(int_ids) + 1).zfill(2)
 
 async def find_available_ids():
-    async with id_lock:  # Ensure only one upload can find and reserve an ID at a time
+    """
+    Find available IDs without reserving them
+    """
+    async with id_lock:
         cursor = collection.find().sort('id', 1)
         ids = [doc['id'] for doc in await cursor.to_list(length=None)]
-        for i in range(1, max(map(int, ids)) + 2):  # +2 to account for the case where the max ID is the last one
+        
+        # Handle case where no documents exist
+        if not ids:
+            return "01"
+        
+        # Convert to integers for proper comparison
+        int_ids = [int(id) for id in ids]
+        
+        for i in range(1, max(int_ids) + 2):
             candidate_id = str(i).zfill(2)
             if candidate_id not in ids and candidate_id not in active_ids:
-                #active_ids.add(candidate_id)
                 return candidate_id
-        return str(max(map(int, ids)) + 1).zfill(2) # Return the next available ID
-        
+        return str(max(int_ids) + 1).zfill(2)
 
 @shivuu.on_message(filters.command(["uid"]) & uploader_filter)
 async def ulo(client, message):
+    """
+    Command to get the next available ID
+    """
     available_id = await find_available_ids()
     await client.send_message(chat_id=message.chat.id, text=f"{available_id}")
-            
-# Command to upload character information
+
 @shivuu.on_message(filters.command(["upload"]) & uploader_filter)
 async def ul(client, message):
+    """
+    Command to upload character information
+    """
     reply = message.reply_to_message
-    if reply and (reply.photo or reply.document):
-        args = message.text.split()
-        if len(args) != 4:
-            await client.send_message(chat_id=message.chat.id, text=WRONG_FORMAT_TEXT)
-            return
-        
-        # Extract cer details from the command arguments
-        character_name = args[1].replace('-', ' ').title()
-        anime = args[2].replace('-', ' ').title()
-        rarity = int(args[3])
-        
-        # Validate rarity value
-        if rarity not in rarity_map:
-            await message.reply_text("Invalid rarity value. Please use a value between 1 and 13.")
-            return
-        
-        rarity_text = rarity_map[rarity]
-        
-        try:
-            available_id = await find_available_id()
-
-            # Prepare character data
-            character = {
-                'name': character_name,
-                'anime': anime,
-                'rarity': rarity_text,
-                'id': available_id,
-                'slock': "false",
-                'added': message.from_user.id
-            }
-
-            processing_message = await message.reply("<ᴘʀᴏᴄᴇꜱꜱɪɴɢ>....")
-            path = await reply.download()
-
-            # Upload image to Catbox
-            catbox_url = upload_to_catbox(path)
-            character['img_url'] = catbox_url
-            
-            # Insert character into the database
-            await collection.insert_one(character)
-
-            # Send character details to the channel
-            
-            tempo = await client.send_photo(
-                chat_id=-1002783891820,
-                photo=catbox_url,
-                caption = (
-                f"🌟 **Character Detail** 🌟\n"
-                    f"\n━━━━━━━━━━━━━━━━━━\n"
-                    f"🔹 **Name:** {character_name}\n"
-                    f"🔸 **Anime:** {anime}\n"
-                    f"🔹 **ID:** {available_id}\n"
-                    f"🔸 **Rarity:** {rarity_text}\n"
-                    f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
-                    f"\n━━━━━━━━━━━━━━━━━━\n"
-                ),
-            )
-            await tempo.pin()
-            await message.reply_text(f'CHARACTER ADDED.... id :- {available_id}')
-        
-        except Exception as e:
-            await message.reply_text(f"Character Upload Unsuccessful. Error: {str(e)}")
-        
-        finally:
-            os.remove(path)  # Clean up the downloaded file
-            async with id_lock:
-                active_ids.discard(available_id)  # Remove the ID from the active set once done
-    else:
+    if not reply or not (reply.photo or reply.document):
         await message.reply_text("Please reply to a photo or document.")
-
-
+        return
         
+    args = message.text.split()
+    if len(args) != 4:
+        await client.send_message(chat_id=message.chat.id, text=WRONG_FORMAT_TEXT)
+        return
+    
+    # Extract character details from the command arguments
+    character_name = args[1].replace('-', ' ').title()
+    anime = args[2].replace('-', ' ').title()
+    
+    try:
+        rarity = int(args[3])
+    except ValueError:
+        await message.reply_text("Rarity must be a number.")
+        return
+    
+    # Validate rarity value
+    if rarity not in rarity_map:
+        await message.reply_text("Invalid rarity value. Please use a valid rarity number.")
+        return
+    
+    rarity_text = rarity_map[rarity]
+    available_id = None
+    
+    try:
+        available_id = await find_available_id()
+        processing_message = await message.reply("<ᴘʀᴏᴄᴇꜱꜱɪɴɢ>....")
+        
+        # Download the file
+        path = await reply.download()
+        
+        # Check file size
+        check_file_size(path)
+        
+        # Prepare character data
+        character = {
+            'name': character_name,
+            'anime': anime,
+            'rarity': rarity_text,
+            'id': available_id,
+            'slock': "false",
+            'added': message.from_user.id
+        }
+
+        # Upload image with fallback (imgBB as primary)
+        image_url = await upload_image_with_fallback(path)
+        character['img_url'] = image_url
+        
+        # Insert character into the database
+        await collection.insert_one(character)
+
+        # Send character details to the channel
+        caption = (
+            f"🌟 **Character Detail** 🌟\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+            f"🔹 **Name:** {character_name}\n"
+            f"🔸 **Anime:** {anime}\n"
+            f"🔹 **ID:** {available_id}\n"
+            f"🔸 **Rarity:** {rarity_text}\n"
+            f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+        )
+        
+        # Try to send with the uploaded URL first
+        try:
+            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
+                tempo = await client.send_video(
+                    chat_id=CHARA_CHANNEL_ID,
+                    video=image_url,
+                    caption=caption,
+                )
+            else:
+                tempo = await client.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=image_url,
+                    caption=caption,
+                )
+        except:
+            # Fallback to sending the local file if URL doesn't work
+            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
+                tempo = await client.send_video(
+                    chat_id=CHARA_CHANNEL_ID,
+                    video=path,
+                    caption=caption,
+                )
+            else:
+                tempo = await client.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=path,
+                    caption=caption,
+                )
+            
+        await tempo.pin()
+        await message.reply_text(f'✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}')
+    
+    except Exception as e:
+        error_msg = f"❌ Character Upload Unsuccessful. Error: {str(e)}"
+        await message.reply_text(error_msg)
+        print(error_msg)  # Log the error for debugging
+    
+    finally:
+        # Clean up
+        if 'path' in locals() and os.path.exists(path):
+            os.remove(path)
+        if available_id:
+            async with id_lock:
+                active_ids.discard(available_id)
+
 @app.on_message(filters.command('delete') & sudo_filter)
 async def delete(client: Client, message: Message):
     args = message.text.split(maxsplit=1)[1:]
@@ -266,11 +342,7 @@ async def delete(client: Client, message: Message):
     character_id = args[0]
     character = await collection.find_one_and_delete({'id': character_id})
    
- 
-
     if character:
-        
-
         bulk_operations = []
         async for user in user_collection.find():
             if 'characters' in user:
@@ -286,20 +358,12 @@ async def delete(client: Client, message: Message):
     else:
         await message.reply_text('Character not found in database.')
 
-
-
 async def check_total_characters(update: Update, context: CallbackContext) -> None:
     try:
         total_characters = await collection.count_documents({})
-        
         await update.message.reply_text(f"Total number of characters: {total_characters}")
     except Exception as e:
         await update.message.reply_text(f"Error occurred: {e}")
-
-
-
-
-
 
 async def check(update: Update, context: CallbackContext) -> None:    
     try:
@@ -309,7 +373,6 @@ async def check(update: Update, context: CallbackContext) -> None:
             return
             
         character_id = context.args[0]
-        
         character = await collection.find_one({'id': args[0]}) 
             
         if character:
@@ -333,9 +396,6 @@ async def check(update: Update, context: CallbackContext) -> None:
              await update.message.reply_text("Character not found.")
     except Exception as e:
         await update.message.reply_text(f"Error occurred: {e}")
-            
-
-
 
 application.add_handler(CommandHandler("total", check_total_characters))
 
@@ -366,10 +426,9 @@ async def update(client: Client, message: Message):
         try:
             new_value = rarity_map[int(new_value)]
         except KeyError:
-            await message.reply_text('Invalid rarity. Please use a number between 1 and 10.')
+            await message.reply_text('Invalid rarity. Please use a number between 1 and 22.')
             return
 
-   
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
     
     bulk_operations = []
@@ -405,7 +464,7 @@ async def update_rarity(client: Client, message: Message):
     try:
         new_rarity_value = rarity_map[int(new_rarity)]
     except KeyError:
-        await message.reply_text('Invalid rarity. Please use a number between 1 and 10.')
+        await message.reply_text('Invalid rarity. Please use a number between 1 and 22.')
         return
 
     await collection.update_one({'id': character_id}, {'$set': {'rarity': new_rarity_value}})
@@ -424,7 +483,6 @@ async def update_rarity(client: Client, message: Message):
         await user_collection.bulk_write(bulk_operations)
 
     await message.reply_text('Rarity updated in Database and all user collections.')
-
 
 @app.on_message(filters.command('arrange') & sudo_filter)
 async def arrange_characters(client: Client, message: Message):
@@ -464,10 +522,7 @@ async def arrange_characters(client: Client, message: Message):
     if user_bulk_operations:
         await user_collection.bulk_write(user_bulk_operations)
 
-    await message.reply_text('Characters have been rearranged and')
-    
-
-
+    await message.reply_text('Characters have been rearranged and IDs updated successfully.')
 
 CHECK_HANDLER = CommandHandler('f', check, block=False)
 application.add_handler(CHECK_HANDLER)
@@ -476,17 +531,12 @@ application.add_handler(CHECK_HANDLER)
 async def upload_video_character(client, message):
     args = message.text.split(maxsplit=3)
     if len(args) != 4:
-        print("lol")
+        await message.reply_text("Wrong format. Use: /vadd character-name anime-name video-url")
         return
 
     character_name = args[1].replace('-', ' ').title()
     anime = args[2].replace('-', ' ').title()
-    
     vid_url = args[3]
-
-    
-
-    
 
     # Generate the next available ID
     available_id = await find_available_id()
@@ -497,13 +547,14 @@ async def upload_video_character(client, message):
         'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
         'id': available_id,
         'vid_url': vid_url,
-        'slock': "false"
+        'slock': "false",
+        'added': message.from_user.id
     }
 
     try:
         # Send the video to the character channel
         await client.send_video(
-            chat_id=-1002783891820,
+            chat_id=CHARA_CHANNEL_ID,
             video=vid_url,
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
@@ -521,4 +572,3 @@ async def upload_video_character(client, message):
         await message.reply_text("✅ Video character added successfully.")
     except Exception as e:
         await message.reply_text(f"❌ Failed to upload character. Error: {e}")
-        
