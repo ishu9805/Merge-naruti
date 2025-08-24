@@ -1,47 +1,42 @@
-
-
-
-
 import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-#from config import LOGGER_ID as LOG_GROUP_ID
-from shivu import shivuups as app 
-from pyrogram.errors import RPCError
+from pyrogram.errors import RPCError, ChatAdminRequired, UserNotParticipant
+from shivu import shivuups as app, LOG_CHANNEL as LOG_GROUP_ID
 
-LOG_GROUP_ID = -1002606804832  # Your log channel ID
+# Configuration
 AUTHORIZED_USER_IDS = {6902029663}  # Your user ID
 BOT_INVITE_LINK = "https://t.me/Naruto_Waifu_Husbando_Bot?startgroup=true"
 photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 
-
-
-# Bot invite link
-#BOT_INVITE_LINK = "https://t.me/Fancy_Waifu_Husbando_Bot?startgroup=true"
-
 @app.on_message(filters.new_chat_members, group=2)
 async def join_watcher(_, message):    
     chat = message.chat
+    bot_id = app.me.id
+    
     for member in message.new_chat_members:
-        if member.id == 7778926462:
+        if member.id == bot_id:
             try:
                 # Try to get chat invite link
                 try:
                     link = await app.export_chat_invite_link(chat.id)
-                except:
+                except (ChatAdminRequired, UserNotParticipant):
+                    link = "Private Group (No permission to get link)"
+                except Exception:
                     link = "Private Group"
                 
                 # Welcome message with button
                 welcome_msg = (
                     f"✨ Hello {chat.title} members!\n"
                     f"🤖 I'm {app.me.first_name}, your waifu husbando collection bot!\n"
-        
-                    #f"Use /help to see my commands!"
+                    f"📚 Use /help to see all available commands!\n\n"
+                    f"🌟 Add me to your groups to start collecting!"
                 )
                 
                 # Create add button
                 keyboard = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)]
+                    [InlineKeyboardButton("Aᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴘ", url=BOT_INVITE_LINK)],
+                    [InlineKeyboardButton("Hᴇʟᴘ", callback_data="help_command")]
                 ])
                 
                 # Send welcome message with random photo
@@ -53,31 +48,40 @@ async def join_watcher(_, message):
                 )
                 
                 # Log to admin channel
-                count = await app.get_chat_members_count(chat.id)
-                log_msg = (
-                    f"📝 Bot Added to New Group\n\n"
-                    f"📌 Chat Name: {chat.title}\n"
-                    f"🍂 Chat ID: {chat.id}\n"
-                    f"👤 Added By: {message.from_user.mention if message.from_user else 'Unknown'}\n"
-                    f"👥 Members: {count}\n"
-                    f"🔗 Chat Link: {link}  "
-                    f"@naruto_dev"
-                )
-                
-                await app.send_photo(
-                    LOG_GROUP_ID,
-                    photo=photo,
-                    caption=log_msg
+                try:
+                    count = await app.get_chat_members_count(chat.id)
+                    log_msg = (
+                        f"📝 Bot Added to New Group\n\n"
+                        f"📌 Chat Name: {chat.title}\n"
+                        f"🍂 Chat ID: {chat.id}\n"
+                        f"👤 Added By: {message.from_user.mention if message.from_user else 'Unknown'}\n"
+                        f"👥 Members: {count}\n"
+                        f"🔗 Chat Link: {link}\n"
+                        f"#NewGroup @naruto_dev"
+                    )
                     
-                )
+                    await app.send_photo(
+                        LOG_GROUP_ID,
+                        photo=photo,
+                        caption=log_msg
+                    )
+                    
+                except Exception as log_error:
+                    error_msg = f"Error logging to channel: {str(log_error)}"
+                    await app.send_message(LOG_GROUP_ID, error_msg)
                 
             except Exception as e:
                 error_msg = f"Error in new chat handler: {str(e)}"
-                await app.send_message(LOG_GROUP_ID, error_msg)
+                try:
+                    await app.send_message(LOG_GROUP_ID, error_msg)
+                except:
+                    pass  # Avoid infinite error loop
 
 @app.on_message(filters.left_chat_member)
 async def on_left_chat_member(_, message: Message):
-    if message.left_chat_member.id == 7107840748:
+    bot_id = app.me.id
+    
+    if message.left_chat_member and message.left_chat_member.id == bot_id:
         try:
             remove_by = message.from_user.mention if message.from_user else "Unknown User"
             left_msg = (
@@ -95,4 +99,7 @@ async def on_left_chat_member(_, message: Message):
             )
         except Exception as e:
             error_msg = f"Error in left chat handler: {str(e)}"
-            await app.send_message(LOG_GROUP_ID, error_msg)
+            try:
+                await app.send_message(LOG_GROUP_ID, error_msg)
+            except:
+                pass  # Avoid infinite error loop
