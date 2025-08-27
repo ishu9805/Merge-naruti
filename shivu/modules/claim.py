@@ -61,12 +61,16 @@ async def get_unique_characters(user_id, target_rarities=['⚪️ Common', '🟣
 
 
 @cmd
-@fj
 @app.on_message(filters.command(["hclaim"]))
 async def hclaim(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
 
+
+    if str(message.chat.id) != "-1002783891820":
+        await message.reply_text("you can only use this command here @hclaim_support")
+        break 
+        
     if message.forward_date:
         return
 
