@@ -129,6 +129,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     if temp_block(user_id):
         return
 
+    # Initialize lock for this chat if it doesn't exist
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
@@ -154,12 +155,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             if amv_message_count[chat_id] >= amv_spawn_thresholds[chat_id]:
                 await spawn_amv_character(update, context)
                 amv_message_count[chat_id] = 0
-                amv_spawn_thresholds[chat_id] = random.randint(1800, 3000)
+                amv_spawn_thresholds[chat_id] = random.randint(1000, 2500)
 
-        # Check for regular character spawn
-        chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
-        message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
-
+        # Check for user spam prevention
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
             if last_user[chat_id]['count'] >= 6:
@@ -170,25 +168,36 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
+        # Initialize and increment regular message counter
         if chat_id not in message_counts:
             message_counts[chat_id] = 0
         message_counts[chat_id] += 1
+
+        # Get message frequency from database
+        chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
+        message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
         # Spawn regular character
         if message_counts[chat_id] >= message_frequency:
             await send_image(update, context)
             message_counts[chat_id] = 0
 
-        # Check for special spawns (Valentine/Summer)
-        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
+        # Check for special spawns using relative threshold approach
+        current_count = total_message_counts[chat_id]
+        valentine_threshold = valentine_spawn_thresholds[chat_id]
+        summer_threshold = summer_spawn_thresholds[chat_id]
+        
+        # Valentine spawn check
+        if current_count >= valentine_threshold:
             await spawn_valentine_character(update, context)
-            valentine_spawn_thresholds[chat_id] = random.randint(8000, 10000)
-            total_message_counts[chat_id] = 0  # Reset after special spawn
-
-        elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
+            # Set next threshold relative to current count
+            valentine_spawn_thresholds[chat_id] = current_count + random.randint(2000, 5000)
+            
+        # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
+        elif current_count >= summer_threshold:
             await spawn_monsoon_character(update, context)
-            summer_spawn_thresholds[chat_id] = random.randint(1000, 2000)
-            total_message_counts[chat_id] = 0  # Reset after special spawn"""
+            # Set next threshold relative to current count
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(1000, 2000)
             
 
 
