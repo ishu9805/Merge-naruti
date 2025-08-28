@@ -138,13 +138,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize counters if they don't exist
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            valentine_spawn_thresholds[chat_id] = random.randint(7000, 10000)
-            summer_spawn_thresholds[chat_id] = random.randint(1500, 2500)
+            valentine_spawn_thresholds[chat_id] = random.randint(1000, 3000)
+            summer_spawn_thresholds[chat_id] = random.randint(500, 2000)
             
             # Special AMV counter for the designated group
             if chat_id == "-1002783891820":  # AMV_GROUP_ID as string
                 amv_message_count[chat_id] = 0
-                amv_spawn_thresholds[chat_id] = random.randint(2500, 3500)
+                amv_spawn_thresholds[chat_id] = random.randint(800, 2000)
 
         # Increment main counter
         total_message_counts[chat_id] += 1
@@ -191,13 +191,13 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if current_count >= valentine_threshold:
             await spawn_valentine_character(update, context)
             # Set next threshold relative to current count
-            valentine_spawn_thresholds[chat_id] = current_count + random.randint(2000, 5000)
+            valentine_spawn_thresholds[chat_id] = current_count + random.randint(1200, 2500)
             
         # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
         elif current_count >= summer_threshold:
             await spawn_monsoon_character(update, context)
             # Set next threshold relative to current count
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(1000, 2000)
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(700, 2000)
             
 
 
