@@ -378,15 +378,15 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     }
 
     spawn_counts = {
-        '⚪️ Common': 5,
-        '🟣 Rare': 7,
-        '🟢 Medium': 8,
-        '🟡 Legendary': 10,
-        
+        '⚪️ Common': 3,
+        '🟣 Rare': 3,
+        '🟢 Medium': 6,
+        '🟡 Legendary': 7,
         #'🟡 Legendary': 10,
         '💮 Special Edition': 2,
         '🟡 Legendary': 5,
-        '🔮 Limited Edition': 1,
+        '🔮 Limited Edition': 2,
+        '🎨 Artistic': 1,
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
@@ -397,7 +397,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '💝 Valentine': 0, 
         '⚪️ Common': 0,  # Start spawning Valentine characters
         '🎃 Halloween': 0,
-        '🟡 Legendary': 5, 
+        #'🟡 Legendary': 5, 
         '⚪️ Common': 5,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 1,
