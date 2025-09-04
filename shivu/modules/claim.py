@@ -67,7 +67,7 @@ async def hclaim(_, message: t.Message):
     mention = message.from_user.mention
 
 
-    if str(message.chat.id) != "-1002783891820":
+    if str(message.chat.id) != "-1003046490021":
         await message.reply_text("you can only use this command here @hclaim_support")
         return
         
