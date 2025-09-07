@@ -31,10 +31,11 @@ from shivu import (
 )
 from shivu.modules.lock import must_dm
 from shivu.modules.fjoin import ptb_check_membership as ptbfj
+from scap import capsify  # Import the capsify function
 
 MAX_CAPTION_LENGTH = 1024
 
-# Define rarity emojis
+# Define rarity emojis - Updated with all requested rarities
 RARITY_MAPPING = {
     '⚪️ Common': '⚪️',
     '🟣 Rare': '🟣',
@@ -54,9 +55,13 @@ RARITY_MAPPING = {
     '🎖 Apex Lot ( AUCTION )': '🎖',
     '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️',
     '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': '🧧',
-    '☔ Monsoon': '☔'
+    '☔ Monsoon': '☔',
+    # New rarities added from your request
+    '🍑 Echhi': '🍑',
+    '☠️ 𝕯𝖎𝖛𝖎𝖓𝖊': '☠️',
+    '🪸 Aquatic': '🪸',
+    '🎨 Artistic': '🎨'
 }
-
 
 #@ptbfj()
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
@@ -74,7 +79,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         return"""
         
     if not user:
-        message = 'You Have Not Guessed any Characters Yet..'
+        message = capsify('You Have Not Guessed any Characters Yet..')
         if update.message:
             await update.message.reply_text(message)
         else:
@@ -96,17 +101,17 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         page = 0
    
 
-    harem_message = f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n"
+    harem_message = capsify(f"{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}\n\n")
     current_characters = unique_characters[page*15:(page+1)*20]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
 
     for anime, characters in current_grouped_characters.items():
-        harem_message += f"⌬ {anime} 〔{len(characters)}〕\n"
+        harem_message += capsify(f"⌬ {anime} 〔{len(characters)}〕\n")
         for character in characters:
             rarity = character['rarity']
             count = character_counts[character['id']]
             rarity_emoji = RARITY_MAPPING.get(rarity, 'Unknown')
-            harem_message += f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']} (x{count})\n"
+            harem_message += capsify(f"◈⌠{rarity_emoji}⌡ {character['id']} {character['name']} (x{count})\n")
         harem_message += "\n"
 
     if len(harem_message) > MAX_CAPTION_LENGTH:
@@ -118,8 +123,8 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     keyboard = [
         [
-            InlineKeyboardButton(f"🦋 Static [{total_count}]", switch_inline_query_current_chat=f"collection.img.{user_id}"),
-            InlineKeyboardButton("🎗️ 𝘼𝙈𝙑", switch_inline_query_current_chat=f"collection.vid.{user_id}") if has_animated else None
+            InlineKeyboardButton(capsify(f"🦋 Static [{total_count}]"), switch_inline_query_current_chat=f"collection.img.{user_id}"),
+            InlineKeyboardButton(capsify("🎗️ 𝘼𝙈𝙑"), switch_inline_query_current_chat=f"collection.vid.{user_id}") if has_animated else None
         ]
     ]
 
@@ -130,12 +135,12 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("⬅️ Previous", callback_data=f"harem:{page-1}"))
+            nav_buttons.append(InlineKeyboardButton(capsify("⬅️ Previous"), callback_data=f"harem:{page-1}"))
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"harem:{page+1}"))
+            nav_buttons.append(InlineKeyboardButton(capsify("Next ➡️"), callback_data=f"harem:{page+1}"))
         keyboard.append(nav_buttons)
     
-    keyboard.append([InlineKeyboardButton("Close", callback_data="close")])
+    keyboard.append([InlineKeyboardButton(capsify("Close"), callback_data="close")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
