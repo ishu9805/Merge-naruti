@@ -63,9 +63,38 @@ RARITY_MAPPING = {
     '🎨 Artistic': '🎨'
 }
 
+# Command to remove all PM users
+async def remove_all_pm_users(update: Update, context: CallbackContext):
+    # Check if user is owner
+    if update.effective_user.id != OWNER_ID:
+        await update.message.reply_text(capsify("You Are Not Authorized To Use This Command."))
+        return
+    
+    # Remove all PM users
+    result = await pmusers.delete_many({})
+    await update.message.reply_text(capsify(f"Removed {result.deleted_count} PM Users From Database."))
+
 #@ptbfj()
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
+    
+    # Check if user has started the bot in DM
+    user_doc = await pmusers.find_one({'user_id': user_id})
+    if not user_doc or user_doc.get('blocked', False):
+        bot_username = (await context.bot.get_me()).username
+        start_link = f"https://t.me/{bot_username}?start=start"
+        
+        message = capsify("You Need To Start Me In DM First To Use This Command.")
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton(capsify("Start Bot In DM"), url=start_link)]
+        ])
+        
+        if update.message:
+            await update.message.reply_text(message, reply_markup=reply_markup)
+        else:
+            await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
+        return
+        
     user = await user_collection.find_one({'id': user_id})
     #user_info = await user_count.find_one({'user_id': user_id})
     """if not await is_member(user_id):
@@ -248,6 +277,7 @@ async def pagination_callback(update: Update, context: CallbackContext):
 
 
 application.add_handler(CommandHandler(["ncollection", "mycollection"], harem))
+application.add_handler(CommandHandler("rmmmusers", remove_all_pm_users))
 
 application.add_handler(CallbackQueryHandler(pagination_callback, pattern='^harem:'))
 application.add_handler(CallbackQueryHandler(lambda u, c: u.callback_query.message.delete(), pattern='^close$'))
