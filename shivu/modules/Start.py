@@ -229,3 +229,29 @@ async def main_menu(_, query):
         caption=start_text,
         reply_markup=IKM(support_buttons)
     )
+
+
+
+# In your start command handler (usually in a different file), add this:
+async def start(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    
+    # Add user to pmusers collection when they start the bot
+    await pmusers.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'user_id': user_id,
+            'first_name': update.effective_user.first_name,
+            'username': update.effective_user.username,
+            #'started_at': datetime.now(),
+            'blocked': False
+        }},
+        upsert=True
+    )
+    
+    # Your existing start message code here
+    @welcome_message = capsify("Welcome to the bot! Start chatting with me.")
+    #await update.message.reply_text(welcome_message)
+
+# Add this handler to your application
+application.add_handler(CommandHandler("start", start))
