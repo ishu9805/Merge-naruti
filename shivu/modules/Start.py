@@ -250,7 +250,7 @@ async def start(update: Update, context: CallbackContext):
     )
     
     # Your existing start message code here
-    @welcome_message = capsify("Welcome to the bot! Start chatting with me.")
+    #welcome_message = capsify("Welcome to the bot! Start chatting with me.")
     #await update.message.reply_text(welcome_message)
 
 # Add this handler to your application
