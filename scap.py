@@ -1,6 +1,8 @@
 
 ALPHABETS = "abcdefghijklmnopqrstuvwxyz"
-ALL_CAPS = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ"
+#ALL_CAPS = "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ"
+ALL_CAPS = "abcdefghijklmnopqrstuvwxyz"
+
 
 def capsify(text: str) -> str:
     txt = ""
