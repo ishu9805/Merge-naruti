@@ -81,7 +81,7 @@ credits_text = f"""
 
 # Stylish buttons with emojis
 support_buttons = [
-    [IKB("💬 Support Chat", url=f"{SUPPORT_CHAT}"),
+    [IKB("💬 Support Chat", url=f"https://t.me/hclaim_support"),
      IKB("📢 Updates", url=f"{UPDATE_CHAT}")],
     [IKB("➕ Add to Group", url=f"{BOT_USERNAME}")],
     [IKB("❓ Help", callback_data="help"),
