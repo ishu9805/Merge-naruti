@@ -195,3 +195,31 @@ async def aexec_scheduled(code):
     )
     return await locals()["__aexec"]()
 
+
+
+@Client.on_message(
+    filters.command("clearexec")
+    & dev_filter
+)
+async def clear_exec(client, message: Message):
+    removed = []
+    # Remove dynamically created eval functions
+    for key in list(globals().keys()):
+        if key.startswith("__aexec"):
+            del globals()[key]
+            removed.append(key)
+
+    # Remove temp files if any
+    if os.path.exists("output.txt"):
+        os.remove("output.txt")
+        removed.append("output.txt")
+
+    # Kill background processes if left running
+    try:
+        subprocess.run("pkill -f python", shell=True)
+    except Exception:
+        pass
+
+    await message.reply_text(
+        f"✅ Cleared executed code.\nRemoved: `{', '.join(removed) if removed else 'Nothing to remove'}`"
+    )
