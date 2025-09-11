@@ -571,3 +571,115 @@ async def upload_video_character(client, message):
         await message.reply_text("✅ Video character added successfully.")
     except Exception as e:
         await message.reply_text(f"❌ Failed to upload character. Error: {e}")
+
+
+
+@shivuu.on_message(filters.command(["updateimg"]) & uploader_filter)
+async def update_image(client, message):
+    """
+    Command to update character image by replying to a photo with the character ID
+    Format: /updateimg [character_id]
+    """
+    reply = message.reply_to_message
+    if not reply or not (reply.photo or reply.document):
+        await message.reply_text("Please reply to a photo or document with this command.")
+        return
+        
+    args = message.text.split()
+    if len(args) != 2:
+        await message.reply_text("Wrong format. Use: /updateimg [character_id] (reply to image)")
+        return
+    
+    character_id = args[1]
+    
+    # Check if character exists
+    character = await collection.find_one({'id': character_id})
+    if not character:
+        await message.reply_text(f"Character with ID {character_id} not found.")
+        return
+    
+    try:
+        processing_message = await message.reply("<ᴜᴘᴅᴀᴛɪɴɢ ɪᴍᴀɢᴇ...>")
+        
+        # Download the new image
+        path = await reply.download()
+        
+        # Check file size
+        check_file_size(path)
+        
+        # Upload image with fallback (imgBB as primary)
+        image_url = await upload_image_with_fallback(path)
+        
+        # Update character in the database
+        await collection.update_one(
+            {'id': character_id}, 
+            {'$set': {'img_url': image_url}}
+        )
+        
+        # Update all user collections that have this character
+        bulk_operations = []
+        async for user in user_collection.find():
+            if 'characters' in user:
+                for char in user['characters']:
+                    if char['id'] == character_id:
+                        char['img_url'] = image_url
+                bulk_operations.append(
+                    UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+                )
+
+        if bulk_operations:
+            await user_collection.bulk_write(bulk_operations)
+        
+        # Send confirmation message
+        await message.reply_text(f'✅ Image updated successfully for character ID: {character_id}')
+        
+        # Send updated character info to channel
+        caption = (
+            f"🔄 **Character Image Updated** 🔄\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+            f"🔹 **Name:** {character['name']}\n"
+            f"🔸 **Anime:** {character['anime']}\n"
+            f"🔹 **ID:** {character_id}\n"
+            f"🔸 **Rarity:** {character['rarity']}\n"
+            f"Image updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+        )
+        
+        # Try to send with the uploaded URL
+        try:
+            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
+                await client.send_video(
+                    chat_id=CHARA_CHANNEL_ID,
+                    video=image_url,
+                    caption=caption,
+                )
+            else:
+                await client.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=image_url,
+                    caption=caption,
+                )
+        except:
+            # Fallback to sending the local file if URL doesn't work
+            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
+                await client.send_video(
+                    chat_id=CHARA_CHANNEL_ID,
+                    video=path,
+                    caption=caption,
+                )
+            else:
+                await client.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=path,
+                    caption=caption,
+                )
+                
+    except Exception as e:
+        error_msg = f"❌ Image update failed. Error: {str(e)}"
+        await message.reply_text(error_msg)
+        print(error_msg)  # Log the error for debugging
+    
+    finally:
+        # Clean up
+        if 'path' in locals() and os.path.exists(path):
+            os.remove(path)
