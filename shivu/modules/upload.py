@@ -649,13 +649,13 @@ async def update_image(client, message):
         try:
             if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
                 await client.send_video(
-                    chat_id=CHARA_CHANNEL_ID,
+                    chat_id=-1002519377646,
                     video=image_url,
                     caption=caption,
                 )
             else:
                 await client.send_photo(
-                    chat_id=CHARA_CHANNEL_ID,
+                    chat_id=-1002519377646,
                     photo=image_url,
                     caption=caption,
                 )
