@@ -293,7 +293,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
                 available_amvs.append(char)
         
         if not available_amvs:
-            await context.bot.send_message(chat_id=-1002606804832, text="hmm")
+            await context.bot.send_message(chat_id=-1002783891820, text="hmm")
             return
 
         character = random.choice(available_amvs)
@@ -308,7 +308,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         if chat_id in first_correct_guesses:
             del first_correct_guesses[chat_id]
 
-        await context.bot.send_message(chat_id=-1002606804832, text="🎗️")
+        await context.bot.send_message(chat_id=-1002783891820, text="🎗️")
         await asyncio.sleep(2)
         # Store AMV character info
 
