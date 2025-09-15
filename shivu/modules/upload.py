@@ -72,7 +72,7 @@ rarity_map = {
     22: "🎨 Artistic",
     23: "💳 VIP SLOT",
     24: "🎗️ 𝘼𝙈𝙑 𝙃𝙞𝙣𝙙𝙞 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
-    25: "🏴‍☠️ Buccaneers"
+    25: "🏴‍☠️ Marauds"
 }
 """
 
@@ -102,7 +102,7 @@ rarity_map = {
     22: "🎨 Artistic",
     23: "💳 VIP SLOT",
     24: "🎗️ 𝘼𝙈𝙑 𝙃𝙞𝙣𝙙𝙞 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
-    25: "🏴‍☠️ Buccaneers"
+    25: "🏴‍☠️ Marauds"
 }
 
 
