@@ -36,7 +36,8 @@ shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
 #app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
 
 lol = AsyncIOMotorClient(mongo_urlings)
-dbps = lol['NARUTOGAMEBOT']
+#dbps = lol['NARUTOGAMEBOT']
+dbps = lol['ARISE']
 dm_collection = dbps["started_users"]
 
 collectionps = dbps['anime_characters_lol']
