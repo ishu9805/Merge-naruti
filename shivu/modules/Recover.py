@@ -56,14 +56,9 @@ async def recover_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Download the file
         file = await context.bot.get_file(document.file_id)
-        download_path = f"recovery_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        await file.download_to_drive(download_path)
-        
-        LOGGER.info(f"Downloaded backup file: {download_path}")
-        
-        # Read and parse the backup file
-        with open(download_path, 'r') as f:
-            backup_data = json.load(f)
+        bio = await file.download_as_bytearray()
+        backup_data = json.loads(bio.decode("utf-8"))
+
         
         # Restore data to MongoDB
         recovery_stats = await restore_backup(backup_data)
