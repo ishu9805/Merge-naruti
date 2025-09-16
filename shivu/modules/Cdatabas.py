@@ -8,8 +8,9 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from shivu import shivuups as shivuu, collectionps as collection # your MongoDB collection
 
-# ===================== Logging =====================
+  # your MongoDB collection
 
+# ===================== Logging =====================
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -18,26 +19,41 @@ logger = logging.getLogger(__name__)
 
 # ===================== Config =====================
 SOURCE_GROUP_ID = -1002784099298
+IMGBB_API_KEY = "6d52008ec9026912f9f50c8ca96a09c3"
 DOWNLOAD_DIR = "downloads"
 
 # Ensure download directory exists
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-
-def upload_to_catbox(file_path: str) -> str:
+# ===================== Helper Functions =====================
+async def upload_to_imgbb(file_path, api_key=IMGBB_API_KEY):
     """
-    Upload image to Catbox and return URL
+    Upload image to ImgBB
     """
-    url = "https://catbox.moe/user/api.php"
-    files = {"fileToUpload": open(file_path, "rb")}
-    data = {"reqtype": "fileupload"}
+    url = "https://api.imgbb.com/1/upload"
     
-    response = requests.post(url, files=files, data=data)
-    if response.status_code == 200:
-        return response.text.strip()
-    else:
-        raise Exception(f"Catbox upload failed with status {response.status_code}")
-        
+    # Check file size first (max 32MB)
+    file_size = os.path.getsize(file_path)
+    if file_size > 32 * 1024 * 1024:
+        raise Exception(f"File size ({file_size/1024/1024:.2f} MB) exceeds the 32 MB limit.")
+    
+    # Read the file
+    with open(file_path, "rb") as file:
+        file_data = file.read()
+    
+    # Create form data
+    data = aiohttp.FormData()
+    data.add_field('key', api_key)
+    data.add_field('image', file_data, filename=os.path.basename(file_path))
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=data) as response:
+            result = await response.json()
+            if response.status == 200 and result.get("success"):
+                return result["data"]["url"]
+            else:
+                error_msg = result.get('error', {}).get('message', 'Unknown error')
+                raise Exception(f"ImgBB upload failed: {error_msg}")
 
 def extract_details_from_caption(caption: str):
     """
@@ -78,8 +94,8 @@ async def process_message(message: Message):
         # Download photo
         file_path = await message.download(file_name=os.path.join(DOWNLOAD_DIR, f"{message.id}.jpg"))
         
-        # Upload to Catbox
-        img_url = await upload_to_catbox(file_path)
+        # Upload to ImgBB
+        img_url = await upload_to_imgbb(file_path)
         
         # Prepare document
         doc = {
@@ -107,7 +123,7 @@ async def process_message(message: Message):
 
 # ===================== Commands =====================
 
-#shivuu.on_message(filters.command("resetcollection"))
+#@shivuu.on_message(filters.command("resetcollection"))
 async def reset_collection(client, message: Message):
     """
     Clear all documents from the collection
