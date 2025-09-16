@@ -22,28 +22,21 @@ DOWNLOAD_DIR = "downloads"
 # Ensure download directory exists
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# ===================== Helper Functions =====================
-def upload_to_imgbb(file_path, api_key=IMGBB_API_KEY):
-    """
-    Upload image to ImgBB via requests
-    """
-    url = "https://api.imgbb.com/1/upload"
 
-    # Check file size first (max 32MB)
-    file_size = os.path.getsize(file_path)
-    if file_size > 32 * 1024 * 1024:
-        raise Exception(f"File size ({file_size/1024/1024:.2f} MB) exceeds 32MB limit.")
-
-    with open(file_path, "rb") as f:
-        response = requests.post(url, files={"image": f}, data={"key": api_key})
+def upload_to_catbox(file_path: str) -> str:
+    """
+    Upload image to Catbox and return URL
+    """
+    url = "https://catbox.moe/user/api.php"
+    files = {"fileToUpload": open(file_path, "rb")}
+    data = {"reqtype": "fileupload"}
     
-    result = response.json()
-    if response.status_code == 200 and result.get("success"):
-        return result["data"]["url"]
+    response = requests.post(url, files=files, data=data)
+    if response.status_code == 200:
+        return response.text.strip()
     else:
-        error_msg = result.get("error", {}).get("message", "Unknown error")
-        raise Exception(f"ImgBB upload failed: {error_msg}")
-
+        raise Exception(f"Catbox upload failed with status {response.status_code}")
+        
 
 def extract_details_from_caption(caption: str):
     """
