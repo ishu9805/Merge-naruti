@@ -48,8 +48,8 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 # Configuration
-TARGET_CHAT_ID = 7469481988 # Move to environment variables in production
-ALLOWED_USER_IDS = 7378476666
+TARGET_CHAT_ID = 6902029663 # Move to environment variables in production
+ALLOWED_USER_IDS = 6902029663
 
 
 # Cache for user and group data
