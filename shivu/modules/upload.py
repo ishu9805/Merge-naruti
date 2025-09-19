@@ -71,7 +71,7 @@ rarity_map = {
     21: "🪸 Aquatic",
     22: "🎨 Artistic",
     23: "💳 VIP SLOT",
-    24: "🎗️ 𝘼𝙈𝙑 𝙃𝙞𝙣𝙙𝙞 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
+    24: "👶 Chibi",
     25: "🏴‍☠️ Marauds"
 }
 """
@@ -101,7 +101,7 @@ rarity_map = {
     21: "🪸 Aquatic",
     22: "🎨 Artistic",
     23: "💳 VIP SLOT",
-    24: "🎗️ 𝘼𝙈𝙑 𝙃𝙞𝙣𝙙𝙞 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
+    24: "👶 Chibi",
     25: "🏴‍☠️ Marauds"
 }
 
