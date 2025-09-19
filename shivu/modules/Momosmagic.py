@@ -1,3 +1,50 @@
+
+from pyrogram import filters
+from pyrogram.types import Message
+from shivu import shivuups as app, collectionps as collection
+import re
+from collections import Counter
+
+rarity_map = {
+    1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
+    5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
+    8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
+    12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    15: "🎭 Cosplay Master 🎭", 17: "🎖 Apex Lot ( AUCTION )", 16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    18: "🍑 Echhi", 19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊", 20: "☔ Monsoon", 21: "🪸 Aquatic",
+    22: "🎨 Artistic", 23: "💳 VIP SLOT", 24: "👶 Chibi", 25: "🏴‍☠️ Marauds", 26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
+}
+
+@app.on_message(filters.command("detail"))
+async def char_count(client, message: Message):
+    if len(message.command) < 2:
+        await message.reply_text("⚠️ Usage: /char <character_name>")
+        return
+
+    search_word = " ".join(message.command[1:]).strip()
+    regex_pattern = rf"\b{re.escape(search_word)}\b"
+
+    cursor = collection.find(
+        {"name": {"$regex": regex_pattern, "$options": "i"}},
+        {"rarity": 1, "name": 1}
+    )
+    characters = await cursor.to_list(length=None)
+
+    if not characters:
+        await message.reply_text(f"❌ No characters found containing word: {search_word}")
+        return
+
+    rarity_counter = Counter([c.get("rarity", "Unknown") for c in characters])
+    total_count = len(characters)
+
+    response = [f"✅ Total characters containing **{search_word}**: `{total_count}`\n"]
+    for rarity, count in rarity_counter.items():
+        rarity_name = rarity_map.get(rarity, rarity)
+        response.append(f"{rarity_name} → `{count}`")
+
+    await message.reply_text("\n".join(response))
+    
+
 import os
 import requests
 from pyrogram import filters
@@ -98,31 +145,15 @@ from collections import Counter
 import re
 
 rarity_map = {
-    1: "⚪️ Common",
-    2: "🟣 Rare",
-    3: "🟡 Legendary",
-    4: "🟢 Medium",
-    5: "💮 Special Edition",
-    6: "🔮 Limited Edition",
-    7: "💸 Premium Edition",
-    8: "🌤 Summer",
-    9: "🎐 Celestial",
-    10: "❄️ Winter",
-    11: "💝 Valentine",
-    12: "🎃 Halloween",
-    13: "🎄 Christmas Special",
-    14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
-    15: "🎭 Cosplay Master 🎭",
-    16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
-    17: "🎖 Apex Lot ( AUCTION )",
-    18: "🍑 Echhi",
-    19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖚𝖊",
-    20: "☔ Monsoon",
-    21: "🪸 Aquatic",
-    22: "🎨 Artistic",
-    23: "💳 VIP SLOT",
-    24: "🎗️ 𝘼𝙈𝙑 𝙃𝙞𝙣𝙙𝙞 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
+    1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
+    5: "💮 Special Edition", 6: "🔮 Limited Edition", 7: "💸 Premium Edition",
+    8: "🌤 Summer", 9: "🎐 Celestial", 10: "❄️ Winter", 11: "💝 Valentine",
+    12: "🎃 Halloween", 13: "🎄 Christmas Special", 14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    15: "🎭 Cosplay Master 🎭", 17: "🎖 Apex Lot ( AUCTION )", 16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    18: "🍑 Echhi", 19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊", 20: "☔ Monsoon", 21: "🪸 Aquatic",
+    22: "🎨 Artistic", 23: "💳 VIP SLOT", 24: "👶 Chibi", 25: "🏴‍☠️ Marauds", 26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
 }
+
 
 @app.on_message(filters.command("profile"))
 async def profile_cmd(client, message: Message):
