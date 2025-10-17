@@ -10,6 +10,9 @@ from shivu import collectionps as collection, user_collectionps as user_collecti
 DIWALI_START = datetime(2025, 10, 17)
 DIWALI_END = datetime(2025, 10, 23)
 
+
+# gives full datetime with date and time
+
 # Reward pool
 DIWALI_PREMIUM_BONUS = {
     "rewards": [
@@ -30,7 +33,7 @@ DIWALI_PREMIUM_BONUS = {
 @app.on_message(filters.command("dbonus"))
 async def diwali_premium_bonus(client: Client, message: Message):
     user_id = message.from_user.id
-    today = datetime.now().date()
+    today = datetime.now()  # simplest
 
     # Check if event is active
     if not (DIWALI_START <= datetime.now() <= DIWALI_END):
