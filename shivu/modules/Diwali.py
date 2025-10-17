@@ -1,181 +1,172 @@
 # modules/user/events/diwali_premium_bonus.py
-from datetime import datetime, timedelta
+from datetime import datetime
 import random
 from pyrogram import Client, filters
+from pyrogram.types import Message
 from shivu import shivuups as app
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from core.database import db
+from shivu import collectionps as collection, user_collectionps as user_collection
 
-DIWALI_START = datetime(2025, 10, 17)  # Adjust for your Diwali dates
+# Event Duration
+DIWALI_START = datetime(2025, 10, 17)
 DIWALI_END = datetime(2025, 10, 23)
 
-
+# Reward pool
 DIWALI_PREMIUM_BONUS = {
     "rewards": [
-        # Coin Rewards (70% chance total)
+        # Coin Rewards (70%)
         {"type": "coins", "amount": 2000, "name": "💰 Small Diwali Treasure", "chance": 0.25},
         {"type": "coins", "amount": 5000, "name": "💰 Medium Diwali Fortune", "chance": 0.20},
         {"type": "coins", "amount": 8000, "name": "💰 Large Diwali Wealth", "chance": 0.15},
         {"type": "coins", "amount": 10000, "name": "💰 Grand Diwali Jackpot", "chance": 0.10},
-        
-        # Character Rewards (30% chance total)
+
+        # Character Rewards (30%)
         {"type": "character", "rarity": "💮 Special Edition", "name": "🎴 Special Edition Character", "chance": 0.15},
         {"type": "character", "rarity": "🔮 Limited Edition", "name": "💎 Limited Edition Character", "chance": 0.10}
-        #{"type": "character", "rarity": "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣", "name": "🎬 AMV Edition Character", "chance": 0.05}
     ],
-    "daily_limit": 1,
-    "event_duration": 5  # Diwali festival days
+    "daily_limit": 1
 }
+
 
 @app.on_message(filters.command("bonus"))
 async def diwali_premium_bonus(client: Client, message: Message):
     user_id = message.from_user.id
-    
-    # Check if Diwali event is active
-    if not DIWALI_START <= datetime.now() <= DIWALI_END:
+    today = datetime.now().date()
+
+    # Check if event is active
+    if not (DIWALI_START <= datetime.now() <= DIWALI_END):
         await message.reply_text(
             "🎇 **Diwali Event Has Ended!**\n\n"
             "The festival of lights has concluded. Stay tuned for the next festival event! 🪔"
         )
         return
-    
-    # Check daily limit
-    today = datetime.now().date()
-    user_data = await db.users.find_one({"id": user_id})
-    
-    if user_data and user_data.get('last_diwali_bonus_date') == today:
+
+    # Ensure user exists in DB
+    await user_collection.update_one(
+        {"id": user_id},
+        {"$setOnInsert": {"id": user_id, "coins": 0, "characters": []}},
+        upsert=True
+    )
+
+    # Check daily bonus
+    user_data = await user_collection.find_one({"id": user_id})
+    if user_data and user_data.get("last_diwali_bonus_date") == today:
         await message.reply_text(
             "🪔 **Daily Bonus Already Claimed!**\n\n"
-            "You have already claimed your Diwali bonus today.\n"
-            "Come back tomorrow for another chance at festival rewards! 🌟"
+            "Come back tomorrow for another Diwali blessing! 🌟"
         )
         return
-    
-    # Select random reward
+
+    # Select reward
     reward = select_diwali_reward()
-    
-    # Give reward to user
+
+    # Grant reward
     await grant_diwali_reward(user_id, reward)
-    
-    # Update user's last claim date
-    await db.users.update_one(
-        {"id": user_id},
-        {"$set": {"last_diwali_bonus_date": today}}
-    )
-    
-    # Send reward message
+
+    # Update last claim date
+    await user_collection.update_one({"id": user_id}, {"$set": {"last_diwali_bonus_date": today}})
+
+    # Send message
     await send_reward_message(client, message, reward)
 
+
 def select_diwali_reward():
-    """Select a random Diwali reward based on chances"""
+    """Randomly select a Diwali reward based on probability."""
     rewards = DIWALI_PREMIUM_BONUS["rewards"]
-    weights = [reward["chance"] for reward in rewards]
+    weights = [r["chance"] for r in rewards]
     return random.choices(rewards, weights=weights)[0]
 
+
 async def grant_diwali_reward(user_id, reward):
-    """Grant the selected reward to user"""
+    """Grant reward to user and ensure DB consistency."""
     if reward["type"] == "coins":
-        await db.users.update_one(
+        await user_collection.update_one(
             {"id": user_id},
             {"$inc": {"coins": reward["amount"]}},
             upsert=True
         )
-    
+
     elif reward["type"] == "character":
-        # Find a character of the specified rarity that user doesn't own
+        # Try to get character from DB
         character = await get_available_character(user_id, reward["rarity"])
+
         if character:
-            await db.users.update_one(
+            # Ensure this character exists in main collection
+            existing = await collection.find_one({"id": character["id"]})
+            if not existing:
+                await collection.insert_one(character)
+
+            # Add to user’s collection
+            await user_collection.update_one(
                 {"id": user_id},
                 {"$push": {"characters": character}},
                 upsert=True
             )
             reward["character_data"] = character
         else:
-            # Fallback to coins if no character available
-            fallback_coins = 5000
-            await db.users.update_one(
+            # fallback to coins
+            fallback_amount = 5000
+            await user_collection.update_one(
                 {"id": user_id},
-                {"$inc": {"coins": fallback_coins}}
+                {"$inc": {"coins": fallback_amount}},
+                upsert=True
             )
-            reward["type"] = "coins"
-            reward["amount"] = fallback_coins
-            reward["name"] = "💰 Fallback Diwali Reward"
+            reward.update({
+                "type": "coins",
+                "amount": fallback_amount,
+                "name": "💰 Fallback Diwali Reward"
+            })
+
 
 async def get_available_character(user_id, rarity):
-    """Get a random character of specified rarity that user doesn't own"""
-    user_data = await db.users.find_one({"id": user_id})
-    owned_character_ids = {char["id"] for char in user_data.get("characters", [])}
-    
-    # Find characters of specified rarity that user doesn't own
-    available_chars = await db.characters.find({
+    """Fetch a random character of a given rarity that the user doesn't own."""
+    user_data = await user_collection.find_one({"id": user_id})
+    owned_ids = {c["id"] for c in user_data.get("characters", [])}
+
+    available_chars = await collection.find({
         "rarity": rarity,
-        "id": {"$nin": list(owned_character_ids)}
+        "id": {"$nin": list(owned_ids)}
     }).to_list(length=None)
-    
+
     if available_chars:
         return random.choice(available_chars)
     return None
 
+
 async def send_reward_message(client, message, reward):
-    """Send beautiful reward announcement"""
+    """Send a festive Diwali reward message."""
     user_mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-    
+
+    # --- COINS REWARD ---
     if reward["type"] == "coins":
         caption = (
             f"🎇 **Diwali Bonus Claimed!** 🪔\n\n"
             f"**Winner:** {user_mention}\n"
-            f"**Prize:** {reward['name']}\n"
-            f"**Amount:** {reward['amount']} coins 💰\n\n"
-            f"🌟 *May this Diwali bring immense prosperity to your collection!* 🌟\n"
-            f"🪔 *Happy Diwali!* 🪔"
+            f"**Reward:** {reward['name']}\n"
+            f"**Amount:** `{reward['amount']}` coins 💰\n\n"
+            f"🌟 *May this Diwali bring endless fortune to your collection!* 🌟"
         )
-        PHOTO = ["https://files.catbox.moe/a60vfa.jpg", "https://files.catbox.moe/n045ua.jpg", "https://files.catbox.moe/4q0r0j.jpg"]
-        # Send with festive photo
+        PHOTOS = [
+            "https://files.catbox.moe/a60vfa.jpg",
+            "https://files.catbox.moe/n045ua.jpg",
+            "https://files.catbox.moe/4q0r0j.jpg"
+        ]
         await message.reply_photo(
-            photo= random.choice(PHOTO)  # Add festive image
+            photo=random.choice(PHOTOS),
             caption=caption
         )
-        
-        # Additional celebration message
-        await message.reply_text(
-            f"🎉 **CONGRATULATIONS!** 🎉\n\n"
-            f"You won **{reward['amount']} coins** in the Diwali festival!\n"
-            f"Your new balance is shining bright! ✨"
-        )
-    
+
+    # --- CHARACTER REWARD ---
     elif reward["type"] == "character" and "character_data" in reward:
-        character = reward["character_data"]
-        
+        char = reward["character_data"]
         caption = (
             f"🎇 **Diwali Character Unlocked!** 🪔\n\n"
             f"**Winner:** {user_mention}\n"
-            f"**Prize:** {reward['name']}\n"
-            f"**Character:** {character['name']}\n"
-            f"**Rarity:** {character['rarity']}\n"
-            f"**Anime:** {character['anime']}\n\n"
-            f"🌟 *A special festival character joins your collection!* 🌟\n"
-            f"🪔 *Happy Diwali!* 🪔"
+            f"**Character:** {char['name']}\n"
+            f"**Rarity:** {char['rarity']}\n"
+            f"**Anime:** {char['anime']}\n\n"
+            f"🌟 *A rare blessing has joined your collection!* 🌟"
         )
-        
-        # Send character with festive message
-        if character.get('img_url'):
-            await message.reply_photo(
-                photo=character['img_url'],
-                caption=caption
-            )
-        elif character.get('vid_url'):
-            await message.reply_video(
-                video=character['vid_url'],
-                caption=caption,
-                supports_streaming=True
-            )
-        
-        # Celebration message
-        await message.reply_text(
-            f"🎊 **FESTIVAL BLESSING!** 🎊\n\n"
-            f"✨ **{character['name']}** has joined your collection!\n"
-            f"🎴 Rarity: {character['rarity']}\n"
-            f"📺 From: {character['anime']}\n\n"
-            f"What a wonderful Diwali gift! 🪔"
-      )
+        if char.get("img_url"):
+            await message.reply_photo(photo=char["img_url"], caption=caption)
+        elif char.get("vid_url"):
+            await message.reply_video(video=char["vid_url"], caption=caption, supports_streaming=True)
