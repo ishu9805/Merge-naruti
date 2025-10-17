@@ -20,7 +20,7 @@ DIWALI_PREMIUM_BONUS = {
         
         # Character Rewards (30% chance total)
         {"type": "character", "rarity": "💮 Special Edition", "name": "🎴 Special Edition Character", "chance": 0.15},
-        {"type": "character", "rarity": "🔮 Limited Edition", "name": "💎 Limited Edition Character", "chance": 0.10},
+        {"type": "character", "rarity": "🔮 Limited Edition", "name": "💎 Limited Edition Character", "chance": 0.10}
         #{"type": "character", "rarity": "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣", "name": "🎬 AMV Edition Character", "chance": 0.05}
     ],
     "daily_limit": 1,
