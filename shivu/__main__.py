@@ -121,7 +121,11 @@ def escape_markdown(text):
     escape_chars = r'\*_`\\~>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
 
-@block_dec_ptb
+
+# Add these global variables near your other globals
+spawn_cooldowns = {}  # {chat_id: timestamp}
+SPAWN_COOLDOWN = 30  # seconds between spawns
+
 async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
@@ -129,12 +133,23 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     if temp_block(user_id):
         return
 
+    # Check spawn cooldown
+    current_time = time.time()
+    if chat_id in spawn_cooldowns:
+        if current_time - spawn_cooldowns[chat_id] < SPAWN_COOLDOWN:
+            return  # Still in cooldown period
+
     # Initialize lock for this chat if it doesn't exist
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
+        # Check cooldown again inside lock to prevent race condition
+        if chat_id in spawn_cooldowns:
+            if current_time - spawn_cooldowns[chat_id] < SPAWN_COOLDOWN:
+                return
+
         # Initialize counters if they don't exist
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
@@ -156,6 +171,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                 await spawn_amv_character(update, context)
                 amv_message_count[chat_id] = 0
                 amv_spawn_thresholds[chat_id] = random.randint(1000, 2500)
+                spawn_cooldowns[chat_id] = current_time  # Set cooldown after AMV spawn
+                return  # Prevent regular spawn after AMV
 
         # Check for user spam prevention
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
@@ -181,6 +198,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if message_counts[chat_id] >= message_frequency:
             await send_image(update, context)
             message_counts[chat_id] = 0
+            spawn_cooldowns[chat_id] = current_time  # Set cooldown after regular spawn
+            return  # Exit after spawning to prevent multiple spawns
 
         # Check for special spawns using relative threshold approach
         current_count = total_message_counts[chat_id]
@@ -192,32 +211,35 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             await spawn_valentine_character(update, context)
             # Set next threshold relative to current count
             valentine_spawn_thresholds[chat_id] = current_count + random.randint(1200, 2500)
+            spawn_cooldowns[chat_id] = current_time  # Set cooldown
+            return  # Exit after special spawn
             
         # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
         elif current_count >= summer_threshold:
             await spawn_monsoon_character(update, context)
             # Set next threshold relative to current count
             summer_spawn_thresholds[chat_id] = current_count + random.randint(700, 1500)
-            
+            spawn_cooldowns[chat_id] = current_time  # Set cooldown
+            return  # Exit after special spawn
 
 
-async def spawn_monsoon_character(update: Update, context: CallbackContext) -> None:
+
+async def spawn_diwali_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
     
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    
+    # Filter for Diwali characters - Event rarity and name contains 🪔
+    diwali_characters = [c for c in all_characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨' and '🪔' in c.get('name', '')]
 
-    monsoon_characters = [c for c in all_characters if c.get('rarity') == '☔ Monsoon']
-
-    if not monsoon_characters:
-        print("No Monsoon characters found in the database.")
+    if not diwali_characters:
+        print("No Diwali characters found in the database.")
         return
 
-    # Select a random Monsoon character
-    character = random.choice(monsoon_characters)
+    # Select a random Diwali character
+    character = random.choice(diwali_characters)
     
     # Check global ownership count
     waifu_id = character['id']
@@ -231,8 +253,8 @@ async def spawn_monsoon_character(update: Update, context: CallbackContext) -> N
 
     global_count = sum(user['count'] for user in user_ownership_data)
 
-    if global_count >= 10:  # Lowered limit for rare Monsoon characters
-        print(f"Monsoon character {waifu_id} has been claimed by too many collectors.")
+    if global_count >= 7:  # Limit for Diwali characters
+        print(f"Diwali character {waifu_id} has been claimed by too many collectors.")
         return
 
     sent_characters[chat_id].append(character.get('id'))
@@ -242,9 +264,9 @@ async def spawn_monsoon_character(update: Update, context: CallbackContext) -> N
         del first_correct_guesses[chat_id]
 
     caption = (
-        "⛈️ *A Monsoon Mystery Appears!* ☔\n\n"
-        "Raindrops fall... can you **guess their name**?\n"
-        "/guess [name] to claim this rare character! 🌧️\n\n"
+        "🎆 *A Diwali Celebration Appears!* 🪔\n\n"
+        "Lights are shining... can you **guess their name**?\n"
+        "/guess [name] to claim this festive character! ✨\n\n"
     )
     
     if character.get('img_url'):
@@ -263,13 +285,13 @@ async def spawn_monsoon_character(update: Update, context: CallbackContext) -> N
             supports_streaming=True
         )
 
-    # Special rain effect for admin notification
+    # Special Diwali effect for admin notification
     await context.bot.send_message(
         chat_id="6902029663",
         text=(
-            f"⛈️ Monsoon Alert! ⛈️\n"
+            f"🎆 Diwali Alert! 🎆\n"
             f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
-            f"Only {15 - global_count} remaining claims available worldwide!"
+            f"Only {7 - global_count} remaining claims available worldwide!"
         )
     )
     
