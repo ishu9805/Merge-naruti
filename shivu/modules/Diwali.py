@@ -27,7 +27,7 @@ DIWALI_PREMIUM_BONUS = {
 }
 
 
-@app.on_message(filters.command("bonus"))
+@app.on_message(filters.command("dbonus"))
 async def diwali_premium_bonus(client: Client, message: Message):
     user_id = message.from_user.id
     today = datetime.now().date()
