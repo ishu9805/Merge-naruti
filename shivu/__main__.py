@@ -227,7 +227,11 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 async def spawn_diwali_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
-    
+
+    if chat_id != "-1002783891820":
+        #await message.reply_text("you can only use this command here @hclaim_support")
+        return
+            
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
