@@ -228,7 +228,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
 
-    if chat_id != "-1002783891820":
+    if str(chat_id) != "-1002783891820":
         #await message.reply_text("you can only use this command here @hclaim_support")
         return
             
