@@ -1,4 +1,4 @@
-import asyncio
+]import asyncio
 import datetime
 import importlib
 import random
@@ -218,7 +218,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         elif current_count >= summer_threshold:
             await spawn_diwali_character(update, context)
             # Set next threshold relative to current count
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(300, 1000)
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(300, 600)
             spawn_cooldowns[chat_id] = current_time  # Set cooldown
             return  # Exit after special spawn
 
