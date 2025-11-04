@@ -216,9 +216,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             
         # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
         elif current_count >= summer_threshold:
-            #await spawn_diwali_character(update, context)
+            await spawn_diwali_character(update, context)
             # Set next threshold relative to current count
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(300, 600)
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(50, 100)
             spawn_cooldowns[chat_id] = current_time  # Set cooldown
             return  # Exit after special spawn
 
@@ -228,15 +228,15 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
     chat_id = update.effective_chat.id
     current_time = datetime.datetime.now().strftime("%Y-%m-%d")
 
-    if str(chat_id) != "-1002783891820":
+    """if str(chat_id) != "-1002783891820":
         #await message.reply_text("you can only use this command here @hclaim_support")
-        return
+        return"""
             
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
     # Filter for Diwali characters - Event rarity and name contains 🪔
-    diwali_characters = [c for c in all_characters if c.get('rarity') == '🧧 𝙀𝙫𝙚𝙣𝙩𝙨' and '🪔' in c.get('name', '')]
+    diwali_characters = [c for c in all_characters if c.get('rarity') == ❄️ Winter] # and '🪔' in c.get('name', '')]
 
     if not diwali_characters:
         print("No Diwali characters found in the database.")
@@ -257,7 +257,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
 
     global_count = sum(user['count'] for user in user_ownership_data)
 
-    if global_count >= 7:  # Limit for Diwali characters
+    if global_count >= 5:  # Limit for Diwali characters
         print(f"Diwali character {waifu_id} has been claimed by too many collectors.")
         return
 
@@ -268,9 +268,9 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
         del first_correct_guesses[chat_id]
 
     caption = (
-        "🎆 *A Diwali Celebration Appears!* 🪔\n\n"
-        "Lights are shining... can you **guess their name**?\n"
-        "/guess [name] to claim this festive character! ✨\n\n"
+        "❄️ *A Winter Wonderland Appears!* 🏔️\n\n"
+        "The snow is glistening... can you **guess their name**?\n"
+        "/guess [name] to claim this frosty friend! 🌟\n\n"
     )
     
     if character.get('img_url'):
@@ -293,7 +293,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
     await context.bot.send_message(
         chat_id="6902029663",
         text=(
-            f"🎆 Diwali Alert! 🎆\n"
+            f"🎆 Winter Alert! 🎆\n"
             f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
             f"Only {7 - global_count} remaining claims available worldwide!"
         )
@@ -406,25 +406,27 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     spawn_counts = {
         '⚪️ Common': 5,
         '🟣 Rare': 7,
-        '🟢 Medium': 8,
-        '🟡 Legendary': 10,
+        '🟢 Medium': 3,
+        '🟡 Legendary': 5,
         
         #'🟡 Legendary': 10,
         '💮 Special Edition': 2,
         '🟡 Legendary': 5,
-        '🔮 Limited Edition': 1,
+        '🔮 Limited Edition': 2,
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
         '❄️ Winter': 0,
         '🟡 Legendary': 0, 
         '⚪️ Common': 5,
+        
          # Stop spawning Winter characters
         '💝 Valentine': 0, 
         '⚪️ Common': 0,  # Start spawning Valentine characters
         '🎃 Halloween': 0,
         '🟡 Legendary': 5, 
-        '⚪️ Common': 5,
+        '🎨 Artistic':1,
+        #'⚪️ Common': 5,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 1,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
