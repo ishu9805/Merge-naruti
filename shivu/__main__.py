@@ -154,7 +154,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
             valentine_spawn_thresholds[chat_id] = random.randint(1000, 3000)
-            summer_spawn_thresholds[chat_id] = random.randint(500, 2000)
+            summer_spawn_thresholds[chat_id] = random.randint(500, 1200)
             
             # Special AMV counter for the designated group
             if chat_id == "-1002783891820":  # AMV_GROUP_ID as string
@@ -218,7 +218,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         elif current_count >= summer_threshold:
             await spawn_diwali_character(update, context)
             # Set next threshold relative to current count
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(10, 40)
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(700, 1300)
             spawn_cooldowns[chat_id] = current_time  # Set cooldown
             return  # Exit after special spawn
 
