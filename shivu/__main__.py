@@ -236,7 +236,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
         sent_characters[chat_id] = []
 
     # Filter for Diwali characters - Event rarity and name contains 🪔
-    diwali_characters = [c for c in all_characters if c.get('rarity') == ❄️ Winter] # and '🪔' in c.get('name', '')]
+    diwali_characters = [c for c in all_characters if c.get('rarity') == '❄️ Winter'] # and '🪔' in c.get('name', '')]
 
     if not diwali_characters:
         print("No Diwali characters found in the database.")
