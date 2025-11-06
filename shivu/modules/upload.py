@@ -133,7 +133,7 @@ async def upload_to_imgbb(file_path, api_key=IMGBB_API_KEY):
                 return result["data"]["url"]
             else:
                 error_msg = result.get('error', {}).get('message', 'Unknown error')
-                raise Exception(f"ImgBB upload failed: {error_msg}")
+                raise Exception(f"ImgBB upload fbailed: {error_msg}")
 
 async def upload_to_telegraph(file_path):
     """
@@ -197,7 +197,7 @@ async def upload_image_with_fallback(file_path):
 
 
 
-def check_file_size(file_path, max_size_mb=10):
+def check_file_size(file_path, max_size_mb=30):
     """
     Check if file size is within limits
     """
