@@ -121,8 +121,8 @@ async def callback_query_handler(client, callback_query):
         elif data.startswith("fconfirm") or data.startswith("fcancel"):
             await button(client, callback_query)
         # Schedule the deletion of the callback query message after 20 seconds
-        await asyncio.sleep(20)
-        await callback_query.message.delete()
+        else:
+            pass
 
     except Exception as e:
         await callback_query.answer("An error occurred. Please try again.", show_alert=True)
