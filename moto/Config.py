@@ -1,12 +1,13 @@
+TOKENsingings = "7107840748:AAFc8v9lLpHPafEplEXLcoOmNSiiqe-O2XE"
 
-    # Get this value from my.telegram.org/app
+#TOKENsingings = "8366850759:AAH0vGg4EKDRYekyJaVSwIlt1rCvRLjyT5s"
+# Get this value from my.telegram.org/app
 OWNER_ID = "6902029663"
 PARTNER =  "6902029663", "7651091427"
 sudo_users =  "6902029663"
 GROUP_ID = -1002198664660
 LOG_CHANNEL = -1003074022043
-#TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"
-TOKENsingings = "8366850759:AAH0vGg4EKDRYekyJaVSwIlt1rCvRLjyT5s"
+#TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"TOKENsingings = "8366850759:AAH0vGg4EKDRYekyJaVSwIlt1rCvRLjyT5s"
 mongo_urlings = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "https://t.me/+77WFaB7bj9k2OTll"
