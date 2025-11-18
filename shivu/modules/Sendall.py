@@ -122,7 +122,7 @@ async def send_single(_, message):
     except:
         return await message.reply("❌ Invalid ID format.")
 
-    data = await collection.find_one({"_id": char_id})
+    data = await collection.find_one({"id": char_id})
     if not data:
         return await message.reply("❌ Character not found.")
 
@@ -142,7 +142,7 @@ async def send_all(_, message):
     except:
         return await message.reply("❌ Invalid ID format.")
 
-    data = await collection.find_one({"_id": char_id})
+    data = await collection.find_one({"id": char_id})
     if not data:
         return await message.reply("❌ Character not found.")
 
