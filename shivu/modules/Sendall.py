@@ -8,8 +8,6 @@ from pymongo.errors import PyMongoError
 
 from pyrogram import filters
 from shivu import shivuups as app
-from shivu import collection  # your MongoDB collection
-
 
 OWNER_ID = 8535832693
 CHANNEL_ID = -1003295207951
