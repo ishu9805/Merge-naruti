@@ -118,7 +118,7 @@ async def send_single(_, message):
         return await message.reply("Usage: /send <id>")
 
     try:
-        char_id = int(message.command[1])
+        char_id = message.command[1]
     except:
         return await message.reply("❌ Invalid ID format.")
 
@@ -138,7 +138,7 @@ async def send_all(_, message):
         return await message.reply("Usage: /sendall <id>")
 
     try:
-        char_id = int(message.command[1])
+        char_id = message.command[1]
     except:
         return await message.reply("❌ Invalid ID format.")
 
