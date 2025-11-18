@@ -12,9 +12,8 @@ from shivu import shivuups as app
 OWNER_ID = 8535832693
 CHANNEL_ID = -1003295207951
 
-
 # ---------------------------------------------------------
-# TYPE MAP (Art variants)
+# TYPE MAP
 # ---------------------------------------------------------
 type_map = {
     "⚽": "Football", "🏀": "Basketball", "🎊": "Cheerleader", "🏖": "Summer",
@@ -27,7 +26,6 @@ type_map = {
     "🦠": "Toxic", "🧧": "Chinese New Year", "🪽": "Angelic", "🍫": "Chocolates",
     "🔞": "+18", "🧬": "Cross-Verse", "👶": "Chibi", "🪙": "Treasure"
 }
-
 
 # ---------------------------------------------------------
 # RARITY MAP
@@ -44,53 +42,51 @@ rarity_map = {
 
 
 # ---------------------------------------------------------
-# Detect Art Type
+# Detect art type from name
 # ---------------------------------------------------------
 def detect_character_type(name: str):
-    for emoji, tname in type_map.items():
+    for emoji, typename in type_map.items():
         if emoji in name:
-            return f"*{tname}*"
+            return f"*{typename}*"
     return None
 
 
 # ---------------------------------------------------------
-# Stylish Caption Generator ✨
+# Build caption
 # ---------------------------------------------------------
 def generate_caption(char_id, name, anime, rarity):
-
     rarity_text = rarity_map.get(rarity, "Unknown")
     ctype = detect_character_type(name)
 
-    type_line = f"🎨 *Type:* {ctype}\n" if ctype else ""
+    type_block = f"🎨 *Type:* {ctype}\n" if ctype else ""
 
     caption = f"""
 ╔══✦❀•°:🎭:°•❀✦══╗
-         *CHARACTER UNLOCKED*
+        *CHARACTER UNLOCKED*
 ╚══✦❀•°:💫:°•❀✦══╝
 
 🆔 *ID:* `{char_id}`
 👤 *Name:* {name}
 📺 *Anime:* {anime}
 
-{type_line}🌟 *Rarity:* {rarity_text}
+{type_block}🌟 *Rarity:* {rarity_text}
 
 ╭───────────────────╮
-   *COLLECT • TRADE • OWN*
+    *COLLECT • TRADE • OWN*
 ╰───────────────────╯
 """
     return caption
 
 
 # ---------------------------------------------------------
-# Main Send Function
+# Send character (photo/video auto)
 # ---------------------------------------------------------
 async def send_character(chat_id, data):
-
     char_id = data["_id"]
     name = data["name"]
     anime = data["anime"]
     rarity = data["rarity"]
-    url = data["img_url"]
+    url = data["img_url"]  # supports image or video url
 
     caption = generate_caption(char_id, name, anime, rarity)
 
@@ -114,43 +110,42 @@ async def send_character(chat_id, data):
 
 
 # ---------------------------------------------------------
-# /send command — send by ID
+# /send (send 1 character by ID)
 # ---------------------------------------------------------
 @app.on_message(filters.command("send") & filters.user(OWNER_ID))
 async def send_single(_, message):
     if len(message.command) < 2:
-        return await app.send_message(message.chat.id, "Usage: /send <id>")
+        return await message.reply("Usage: /send <id>")
 
     try:
         char_id = int(message.command[1])
     except:
-        return await app.send_message(message.chat.id, "Invalid ID format.")
+        return await message.reply("❌ Invalid ID format.")
 
-    data = collection.find_one({"_id": char_id})
+    data = await collection.find_one({"_id": char_id})
     if not data:
-        return await app.send_message(message.chat.id, "Character not found.")
+        return await message.reply("❌ Character not found.")
 
     await send_character(message.chat.id, data)
 
 
 # ---------------------------------------------------------
-# /sendall — send to every user (broadcast)
+# /sendall — send to Database Channel
 # ---------------------------------------------------------
 @app.on_message(filters.command("sendall") & filters.user(OWNER_ID))
 async def send_all(_, message):
     if len(message.command) < 2:
-        return await app.send_message(message.chat.id, "Usage: /sendall <id>")
+        return await message.reply("Usage: /sendall <id>")
 
     try:
         char_id = int(message.command[1])
     except:
-        return await app.send_message(message.chat.id, "Invalid ID format.")
+        return await message.reply("❌ Invalid ID format.")
 
-    data = collection.find_one({"_id": char_id})
+    data = await collection.find_one({"_id": char_id})
     if not data:
-        return await app.send_message(message.chat.id, "Character not found.")
+        return await message.reply("❌ Character not found.")
 
-    # Send to database channel first
     await send_character(CHANNEL_ID, data)
 
-    await app.send_message(message.chat.id, "Broadcast sent successfully.")
+    await message.reply("✅ Character sent to database channel.")
