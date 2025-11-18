@@ -95,15 +95,15 @@ async def send_character(chat_id, data):
             await app.send_video(
                 chat_id,
                 video=url,
-                caption=caption,
-                parse_mode="HTML"
+                caption=caption
+            
             )
         else:
             await app.send_photo(
                 chat_id,
                 photo=url,
-                caption=caption,
-                parse_mode="HTML"
+                caption=caption
+    
             )
     except Exception as e:
         print("Send error:", e)
