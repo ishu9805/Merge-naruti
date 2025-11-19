@@ -606,7 +606,7 @@ async def update_image(client, message):
             os.remove(path)
 
 
-@shivuu.on_message(filters.photo | filters.document)
+@shivuu.on_message(filters.photo)
 async def auto_upload_from_group(client, message):
     """
     Auto-upload character from group posts - extracts info from caption
@@ -614,6 +614,7 @@ async def auto_upload_from_group(client, message):
     Example: "Naruto Uzumaki - Naruto - 3"
     """
     if str(message.chat.id) != "-1003159072405":
+        await client.send_message(message.chat.it, text= 'hi')
         return
     # For groups, get the user who sent the message
     if message.from_user:
