@@ -606,7 +606,7 @@ async def update_image(client, message):
             os.remove(path)
 
 
-@shivuu.on_message(filters.channel & filters.chat("-1003159072405") & (filters.photo | filters.document))
+@shivuu.on_message(filters.chat("-1003159072405") & (filters.photo | filters.document))
 async def auto_upload_from_channel(client, message):
     """
     Auto-upload character from channel posts - extracts info from caption
