@@ -606,14 +606,21 @@ async def update_image(client, message):
             os.remove(path)
 
 
-@shivuu.on_message(filters.chat("-1003159072405") & (filters.photo | filters.document))
-async def auto_upload_from_channel(client, message):
+@shivuu.on_message(filters.group() & (filters.photo | filters.document))
+async def auto_upload_from_group(client, message):
     """
-    Auto-upload character from channel posts - extracts info from caption
+    Auto-upload character from group posts - extracts info from caption
     Format in caption: "Character Name - Anime Name - Rarity Number"
     Example: "Naruto Uzumaki - Naruto - 3"
     """
-    uploader = message.from_user.id
+    if str(message.chat.id) != "-1003159072405":
+        return
+    # For groups, get the user who sent the message
+    if message.from_user:
+        uploader = message.from_user.id
+    else:
+        uploader = "Unknown"  # Fallback for anonymous sends
+    
     # Check if message has caption with required format
     if not message.caption:
         await client.send_message(
@@ -682,9 +689,6 @@ async def auto_upload_from_channel(client, message):
             # Insert character into the database
             await collection.insert_one(character)
 
-        
-  
-            
             # Send additional confirmation
             await client.send_message(
                 chat_id=message.chat.id,
@@ -693,7 +697,7 @@ async def auto_upload_from_channel(client, message):
             
         except Exception as e:
             error_msg = f"❌ Character Upload Unsuccessful. Error: {str(e)}"
-            await client.send_message(chat_id=CHARA_CHANNEL_ID, text=error_msg)
+            await client.send_message(chat_id=message.chat.id, text=error_msg)  # Fixed: send to group instead of CHARA_CHANNEL_ID
             print(error_msg)  # Log the error for debugging
         
         finally:
@@ -706,6 +710,5 @@ async def auto_upload_from_channel(client, message):
                     
     except Exception as e:
         error_msg = f"❌ Error processing auto-upload: {str(e)}"
-        await client.send_message(chat_id=CHARA_CHANNEL_ID, text=error_msg)
+        await client.send_message(chat_id=message.chat.id, text=error_msg)  # Fixed: send to group instead of CHARA_CHANNEL_ID
         print(error_msg)
-
