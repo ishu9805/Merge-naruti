@@ -13,8 +13,8 @@ from shivu import shivuups as app, collectionps as collection
 # CONFIG
 CHANNEL_ID: int = -1003295207951
 OWNER_ID: int = 8535832693
-DELAY_BETWEEN_MESSAGES: float = 3.0
-PROGRESS_UPDATE_EVERY: int = 10
+DELAY_BETWEEN_MESSAGES: float = 2.0
+PROGRESS_UPDATE_EVERY: int = 50
 
 # logging
 log = logging.getLogger(__name__)
