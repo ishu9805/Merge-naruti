@@ -605,17 +605,15 @@ async def update_image(client, message):
         if 'path' in locals() and os.path.exists(path):
             os.remove(path)
 
-
-@app.on_message(filters.photo)
+SUPPORT_ID = -1003159072405
+@app.on_message(filters.group & filters.chat(SUPPORT_ID))
 async def auto_upload_from_group(client, message):
     """
     Auto-upload character from group posts - extracts info from caption
     Format in caption: "Character Name - Anime Name - Rarity Number"
     Example: "Naruto Uzumaki - Naruto - 3"
     """
-    if str(message.chat.id) != "-1003159072405":
-        await client.send_message(message.chat.it, text= 'hi')
-        return
+    
     # For groups, get the user who sent the message
     if message.from_user:
         uploader = message.from_user.id
