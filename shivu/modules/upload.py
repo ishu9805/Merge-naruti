@@ -606,7 +606,7 @@ async def update_image(client, message):
             os.remove(path)
 
 
-@shivuu.on_message(filters.photo)
+@app.on_message(filters.photo)
 async def auto_upload_from_group(client, message):
     """
     Auto-upload character from group posts - extracts info from caption
