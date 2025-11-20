@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+1from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import CallbackContext
 from bson import ObjectId
 import logging
@@ -15,7 +15,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMe
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from datetime import datetime, timedelta
 
-# Assuming these are defined elsewhere in your code
+1# Assuming these are defined elsewhere in your code
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -46,51 +46,6 @@ from bson import ObjectId
 from pymongo import ReturnDocument
 import logging
 async def add_character_to_shop(update: Update, context: CallbackContext) -> None:
-    try:
-        # Check if the user is authorized (you can implement your own logic here)
-        if str(update.effective_user.id) not in PARTNER:
-            await update.message.reply_text("You are not authorized to use this command.")
-            return
-
-        # Check if the correct number of arguments is provided
-        if len(context.args) != 3:
-            await update.message.reply_text("Usage: /addsh <id> <price> <quantity>")
-            return
-
-        character_id = context.args[0]
-        price = int(context.args[1])
-        quantity = int(context.args[2])
-
-        # Retrieve character data from the original collection
-        character = await collection.find_one({"id": character_id})
-
-        if not character:
-            await update.message.reply_text("Character not found in the original collection.")
-            return
-
-        # Prepare the character data to be added to the shop
-        character_data = {
-            "name": character["name"],
-            "anime": character["anime"],
-            "rarity": character["rarity"],
-            "price": price,
-            "id": character["id"],
-            "img_url": character["img_url"],
-            "quantity": quantity
-        }
-
-        # Insert the character into the shops_collection
-        await shops_collection.insert_one(character_data)
-
-        await update.message.reply_text(f"Character '{character['name']}' added to the shop with price {price} and quantity {quantity}.")
-
-    except Exception as e:
-        LOGGER.error(f"Error occurred while adding character to shop: {e}")
-        await update.message.reply_text("An error occurred while adding the character to the shop. Please try again later.")
-
-# Add the command handler to your application
-application.add_handler(CommandHandler("addsh", add_character_to_shop))
-
 
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
