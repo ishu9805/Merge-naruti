@@ -232,7 +232,7 @@ async def cmd_shop(client: Client, message):
         ch = it["character"]
         lines.append(f"{i+1}. {ch.get('rarity','')} • **{ch.get('name')}** — `{it['price']}` {it['currency']} — Code: `{it['code']}`")
     lines.append("\n✨ Browse Inline: Type `@YourBotUsername shop` in any chat.")
-    await message.reply_text("\n".join(lines), parse_mode="markdown")
+    await message.reply_text("\n".join(lines), parse_mode="MARKDOWN")
 
 # ---------- Inline query (browse items with pictures) ----------
 @app.on_inline_query()
@@ -257,7 +257,7 @@ async def inline_shop(client: Client, inline_query: InlineQuery):
                     title=title,
                     description=descr,
                     caption=caption,
-                    parse_mode="markdown"
+                    parse_mode="MARKDOWN"
                 )
             )
         except Exception:
@@ -331,7 +331,7 @@ async def cmd_buy(client: Client, message):
         {"$set": {"sold_to": uid, "sold_at": now}}
     )
 
-    await message.reply_text(f"🎉 Purchase complete! You bought **{char.get('name')}** for `{price}` {currency}.\nIt was added to your collection.", parse_mode="markdown")
+    await message.reply_text(f"🎉 Purchase complete! You bought **{char.get('name')}** for `{price}` {currency}.\nIt was added to your collection.", parse_mode="MARKDOWN")
 
 # ---------- Admin helper (optional) ----------
 def _is_partner(user_id: int) -> bool:
