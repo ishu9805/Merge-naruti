@@ -13,7 +13,7 @@ from .lock import *
 
 
 StartTime = time.time()
-dev_users = {7469481988}
+dev_users = {8535832693}
 
 sudb = db.sudo
 devb = db.dev 
