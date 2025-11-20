@@ -15,7 +15,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMe
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from datetime import datetime, timedelta
 
-1# Assuming these are defined elsewhere in your code
+# Assuming these are defined elsewhere in your code
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -45,7 +45,6 @@ from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from bson import ObjectId
 from pymongo import ReturnDocument
 import logging
-async def add_character_to_shop(update: Update, context: CallbackContext) -> None:
 
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
