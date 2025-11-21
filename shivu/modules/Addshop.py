@@ -219,7 +219,7 @@ async def _generate_shop_if_needed() -> List[Dict[str, Any]]:
     return await active_cursor.to_list(length=None)
 
 # ---------- /shop (text preview) ----------
-@app.on_message(filters.command("shop") & filters.private)
+@app.on_message(filters.command(["shop", "shopmenu"]) & filters.private)
 async def cmd_shop(client: Client, message):
     items = await _generate_shop_if_needed()
     if not items:
@@ -231,12 +231,12 @@ async def cmd_shop(client: Client, message):
     for i, it in enumerate(items):
         ch = it["character"]
         lines.append(f"{i+1}. {ch.get('rarity','')} • **{ch.get('name')}** — `{it['price']}` {it['currency']} — Code: `{it['code']}`")
-    lines.append("\n✨ Browse Inline: Type `@YourBotUsername shop` in any chat.")
+    lines.append("\n✨ Browse Inline: Type `@Naruto_waifu_husbando_bot shop.price` in any chat.")
     await message.reply_text("\n".join(lines), parse_mode=ParseMode.MARKDOWN)
 
 # ---------- Inline query (browse items with pictures) ----------
-@app.on_inline_query()
-async def inline_shop(client: Client, inline_query: InlineQuery):
+
+async def handle_shop_inline(client: Client, inline_query: InlineQuery):
     q = inline_query.query.strip().lower()
     # We only return results when user types: "shop" or queries starting with "shop"
     if not q or not q.startswith("shop.prince"):
