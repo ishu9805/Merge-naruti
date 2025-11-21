@@ -239,7 +239,7 @@ async def cmd_shop(client: Client, message):
 async def inline_shop(client: Client, inline_query: InlineQuery):
     q = inline_query.query.strip().lower()
     # We only return results when user types: "shop" or queries starting with "shop"
-    if not q or not q.startswith("shop"):
+    if not q or not q.startswith("shop.prince"):
         return
 
     items = await _generate_shop_if_needed()
