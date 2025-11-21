@@ -5,7 +5,7 @@ from cachetools import TTLCache
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pyrogram import Client, filters
 from pyrogram.types import InlineQueryResultPhoto, InlineQueryResultVideo
-
+from shivu.modules.Addshop import handle_shop_inline
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -66,8 +66,20 @@ RARITY_MAPPING = {
 }
 
 
+
 @app.on_inline_query()
-async def inlinequery(client, update):
+async def inline_master(client, inline_query):
+    q = inline_query.query.strip()
+
+    # --- SHOP INLINE ---
+    if q.lower().startswith("shop.prince"):
+        return await handle_shop_inline(client, inline_query)
+
+    # --- CHARACTER INLINE SEARCH ---
+    return await handle_general_inline(client, inline_query)
+    
+
+async def handle_general_inline(client, update):
     query = update.query.strip()
     offset = int(update.offset) if update.offset else 0
     limit = 30
