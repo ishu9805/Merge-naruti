@@ -53,50 +53,38 @@ from bson import ObjectId
 from shivu import shops_collectionps as shops_collection, user_collectionps as user_collection, applicationps as application
 import logging
 
-# Set up logging
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
-    level=logging.INFO,
+
+# premium_shop.py
+from pyrogram import Client, filters
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineQueryResultPhoto,
+    InlineQuery
 )
-LOGGER = logging.getLogger(__name__)
+from pyrogram.enums import ParseMode
 
-
-"""
-Pyrogram + Motor: 3-day rotating Inline Shop module
-- Inline browsing: @YourBotUsername shop
-- Text preview: /shop
-- Buy: /buy <code>
-- Regenerates shop every 3 days (on-demand at /shop or inline)
-"""
-
-import logging
-import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
-
 from bson import ObjectId
 from pymongo import ReturnDocument
+import uuid
+import math
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineQueryResultPhoto, InputTextMessageContent, InlineQuery
-
-# --- ADJUST THESE IMPORTS TO MATCH YOUR PROJECT ---
+# -------------------------
+# IMPORT YOUR APP & DB
+# -------------------------
 from shivu import (
-    shivuups as app,                # Pyrogram Client
-    collectionps as collection,     # main characters collection (Motor)
-    daily_shopps as daily_shop_collection,  # Motor collection for shop items (create if missing)
-    user_collectionps as user_collection,   # users collection (Motor)
-    PARTNER                          # partner/admin list (optional)
+    shivuups as app,                 # Pyrogram Client instance
+    collectionps as collection,      # main characters collection
+    daily_shopps as daily_shop_collection,  # shop collection
+    user_collectionps as user_collection
 )
-# ------------------------------------------------------------------
 
-# Logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
-LOGGER = logging.getLogger("rotating-shop")
-
-# --- Configuration (from your spec) ---
-SHOP_TTL_DAYS = 3  # refresh every 3 days
+# -------------------------
+# CONFIG
+# -------------------------
+SHOP_TTL_HOURS = 48  # 2 days reset
+PAGE_SIZE = 6        # number of inline cards per page
 
 PRICING = {
     "events": {"price": 1000, "currency": "tokens"},
@@ -106,7 +94,6 @@ PRICING = {
     "seasonal": {"price": 300, "currency": "tokens"},
 }
 
-# Desired counts (from your last message)
 WANTED_COUNTS = {
     "events": 1,
     "special": 1,
@@ -115,243 +102,406 @@ WANTED_COUNTS = {
     "seasonal": 1,
 }
 
-# Map a "pool name" to a mongodb match expression for rarity field
-# Adjust the regex substrings if your database uses different text.
 POOL_QUERIES = {
     "events": {"rarity": {"$regex": r"(Events|🧧|Event)", "$options": "i"}},
-    "special": {"rarity": {"$regex": r"(Special Edition|💮|Special)", "$options": "i"}},
+    "special": {"rarity": {"$regex": r"(Special|💮)", "$options": "i"}},
     "limited": {"rarity": {"$regex": r"(Limited Edition|🔮|Limited)", "$options": "i"}},
-    "premium": {"rarity": {"$regex": r"(Premium|💸|Premium Edition)", "$options": "i"}},
-    # seasonal: look for any of the seasonal tags in rarity or in a 'tags' array (flexible)
+    "premium": {"rarity": {"$regex": r"(Premium|💸)", "$options": "i"}},
     "seasonal": {"$or": [
-        {"rarity": {"$regex": r"(Summer|Winter|Celestial|Valentine|Halloween|Christmas)", "$options": "i"}},
-        {"tags": {"$in": ["Summer", "Winter", "Celestial", "Valentine", "Halloween", "Christmas"]}}
+        {"rarity": {"$regex": r"(Summer|Winter|Celestial|Valentine|Halloween|Christmas)", "$options": "i"}}
     ]},
 }
 
-# utils
-def _now_utc() -> datetime:
+GLOBAL_LIMITS = {
+    "premium": 5,
+    "events": 3,
+    "seasonal": 10
+}
+
+# -------------------------
+# HELPERS
+# -------------------------
+def now():
     return datetime.utcnow()
 
-def _expires_at_now_plus_days(days: int) -> datetime:
-    return _now_utc() + timedelta(days=days)
-
-def _gen_code() -> str:
+def gen_code():
     return uuid.uuid4().hex[:8].upper()
 
-def _aesthetic_caption(item: Dict[str, Any]) -> str:
+def shop_expires_at():
+    return now() + timedelta(hours=SHOP_TTL_HOURS)
+
+def nice_countdown_text(expires_at):
+    # Style C: ultra stylish anime style
+    delta = expires_at - now()
+    if delta.total_seconds() <= 0:
+        return "⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: 0h 0m\n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
+    hours = int(delta.total_seconds() // 3600)
+    minutes = int((delta.total_seconds() % 3600) // 60)
+    return f"⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: {hours}h {minutes}m  \n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
+
+def aesthetic_caption(item, user_balance=None):
     char = item["character"]
-    price = item["price"]
-    currency = item["currency"]
-    return (
-        f"🛒 **{char.get('name')}**\n"
-        f"📺 {char.get('anime', 'Unknown')}\n"
-        f"✨ {char.get('rarity', '')}\n\n"
-        f"💸 Price: `{price}` {currency}\n"
-        f"🆔 Code: `{item['code']}`\n\n"
-        "To buy: `/buy {}` (copy the code)".format(item['code'])
+    base = (
+        f"🛒 **{char.get('name','Unknown')}**\n"
+        f"📺 {char.get('anime','Unknown')}\n"
+        f"✨ {char.get('rarity','')}\n\n"
+        f"💰 Price: `{item['price']}` {item['currency']}\n"
+        f"🆔 Code: `{item['code']}`\n"
     )
+    if user_balance is not None:
+        base += f"\n💵 Your balance: `{user_balance}` {item['currency']}\n"
+    # append countdown
+    expires_at = item.get("expires_at", shop_expires_at())
+    base += f"\n{nice_countdown_text(expires_at)}"
+    return base
 
-# ---------- SHOP GENERATION ----------
-async def _generate_shop_if_needed() -> List[Dict[str, Any]]:
-    """
-    Ensure there is a shop with unexpired items.
-    If not, generate new shop items based on WANTED_COUNTS and POOL_QUERIES.
-    Returns list of active shop items (docs).
-    """
-    now = _now_utc()
-    # Remove expired items (optional cleanup)
-    await daily_shop_collection.delete_many({"expires_at": {"$lte": now}})
-
-    # Check for any active items (not expired)
-    active_cursor = daily_shop_collection.find({"expires_at": {"$gt": now}, "available": True})
-    active = await active_cursor.to_list(length=None)
+# -------------------------
+# SHOP GENERATION (2-day)
+# -------------------------
+async def generate_shop_if_needed():
+    # cleanup expired
+    await daily_shop_collection.delete_many({"expires_at": {"$lte": now()}})
+    # active items
+    active = await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
     if active:
         return active
 
-    # No active shop — create a fresh one
-    LOGGER.info("No active shop found. Generating new shop...")
+    # generate fresh items
     new_items = []
-
-    # For each pool, sample the required number of characters
-    for pool_name, count in WANTED_COUNTS.items():
+    for pool, count in WANTED_COUNTS.items():
         if count <= 0:
             continue
-        match_query = POOL_QUERIES.get(pool_name, {})
-        # Use aggregation with $match + $sample for random picks
-        pipeline = [{"$match": match_query}, {"$sample": {"size": count}}]
+        q = POOL_QUERIES.get(pool, {})
+        # sample
         try:
-            sampled = await collection.aggregate(pipeline).to_list(length=count)
+            sampled = await collection.aggregate([{"$match": q}, {"$sample": {"size": count}}]).to_list(length=count)
         except Exception:
-            # Fallback: simple find + sample in python
-            sampled = await collection.find(match_query).to_list(length=None)
-            import random as _rnd
-            sampled = _rnd.sample(sampled, min(len(sampled), count)) if sampled else []
+            sampled = await collection.find(q).to_list(length=None)
+            import random as _r
+            sampled = _r.sample(sampled, min(len(sampled), count)) if sampled else []
 
-        # Create shop item documents for each sampled character
-        for char_doc in sampled:
-            code = _gen_code()
-            pool_price_cfg = PRICING.get(pool_name, {"price": 100, "currency": "tokens"})
-            doc = {
-                "code": code,
+        for char in sampled:
+            new_items.append({
+                "code": gen_code(),
                 "character": {
-                    "id": char_doc.get("id"),
-                    "name": char_doc.get("name"),
-                    "anime": char_doc.get("anime"),
-                    "rarity": char_doc.get("rarity"),
-                    "img_url": char_doc.get("img_url"),
+                    "id": char.get("id"),
+                    "name": char.get("name"),
+                    "anime": char.get("anime"),
+                    "rarity": char.get("rarity"),
+                    "img_url": char.get("img_url")
                 },
-                "pool": pool_name,
-                "price": pool_price_cfg["price"],
-                "currency": pool_price_cfg["currency"],   # 'tokens' or 'coins'
-                "available": True,
-                "created_at": now,
-                "expires_at": _expires_at_now_plus_days(SHOP_TTL_DAYS),
-            }
-            new_items.append(doc)
-
+                "pool": pool,
+                "price": PRICING.get(pool, {"price": 100, "currency": "tokens"})["price"],
+                "currency": PRICING.get(pool, {"price": 100, "currency": "tokens"})["currency"],
+                "expires_at": shop_expires_at(),
+                "sold_to": []
+            })
     if new_items:
-        # insert many
         await daily_shop_collection.insert_many(new_items)
-        LOGGER.info("Inserted %d new shop items.", len(new_items))
+    return await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
 
-    active_cursor = daily_shop_collection.find({"expires_at": {"$gt": now}, "available": True})
-    return await active_cursor.to_list(length=None)
+# -------------------------
+# SHOP ENTRY (command)
+# -------------------------
+@app.on_message(filters.command("shop"))
+async def cmd_shop_entry(client, message):
+    # simple button that opens inline shop in current chat
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🛒 OPEN SHOP", switch_inline_query_current_chat="shop.prince")]
+    ])
+    await message.reply_text("🛒 **Click below to open the Shop**", reply_markup=kb)
 
-# ---------- /shop (text preview) ----------
-@app.on_message(filters.command(["shop", "shopmenu"]) & filters.private)
-async def cmd_shop(client: Client, message):
-    items = await _generate_shop_if_needed()
-    if not items:
-        await message.reply_text("🚨 The shop is currently empty. Check back later.")
-        return
+# -------------------------
+# INLINE QUERY HANDLER (supports pagination & sorting)
+# Query format examples:
+#  - "shop.prince"                (defaults page=1 sort=default)
+#  - "shop.prince page=2"         (page 2)
+#  - "shop.prince sort=price_asc" (sorting)
+#  - "shop.prince page=1 sort=name"
+# -------------------------
+def parse_inline_query(q: str):
+    # returns dict with page, sort
+    page = 1
+    sort = "default"
+    parts = q.split()
+    # accept tokens like page=2 and sort=price_asc
+    for p in parts[1:]:
+        if "=" in p:
+            k, v = p.split("=", 1)
+            if k == "page":
+                try:
+                    page = max(1, int(v))
+                except:
+                    page = 1
+            elif k == "sort":
+                sort = v
+    return {"page": page, "sort": sort}
 
-    # Build a short listing
-    lines = ["🛍️ **Current Shop** — updates every 3 days\n"]
-    for i, it in enumerate(items):
-        ch = it["character"]
-        lines.append(f"{i+1}. {ch.get('rarity','')} • **{ch.get('name')}** — `{it['price']}` {it['currency']} — Code: `{it['code']}`")
-    lines.append("\n✨ Browse Inline: Type `@Naruto_waifu_husbando_bot shop.price` in any chat.")
-    await message.reply_text("\n".join(lines), parse_mode=ParseMode.MARKDOWN)
+def sort_items_list(items, sort_key):
+    if sort_key == "price_asc":
+        return sorted(items, key=lambda x: x.get("price", 0))
+    if sort_key == "price_desc":
+        return sorted(items, key=lambda x: -x.get("price", 0))
+    if sort_key == "name":
+        return sorted(items, key=lambda x: x["character"].get("name","").lower())
+    if sort_key == "rarity":
+        return sorted(items, key=lambda x: x["character"].get("rarity",""))
+    return items
 
-# ---------- Inline query (browse items with pictures) ----------
-
+@app.on_inline_query()
 async def handle_shop_inline(client: Client, inline_query: InlineQuery):
-    q = inline_query.query.strip().lower()
-    # We only return results when user types: "shop" or queries starting with "shop"
-    if not q or not q.startswith("shop.prince"):
-        return
+    q = inline_query.query.strip()
+    if not q.lower().startswith("shop.prince"):
+        return  # ignore other inline queries
 
-    items = await _generate_shop_if_needed()
+    params = parse_inline_query(q)
+    page = params["page"]
+    sort_mode = params["sort"]
+
+    items = await generate_shop_if_needed()
+    total_items = len(items)
+    items = sort_items_list(items, sort_mode)
+
+    total_pages = max(1, math.ceil(total_items / PAGE_SIZE))
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * PAGE_SIZE
+    end = start + PAGE_SIZE
+    page_items = items[start:end]
+
     results = []
-    for it in items:
+    # get user balance once
+    uid = inline_query.from_user.id
+    user_doc = await user_collection.find_one({"id": uid}) or {}
+    # show each item as a photo result with BUY button
+    for it in page_items:
         ch = it["character"]
-        title = f"{ch.get('rarity','')} • {ch.get('name')}"
-        descr = f"Price: {it['price']} {it['currency']}"
-        caption = _aesthetic_caption(it)
-        try:
-            results.append(
-                InlineQueryResultPhoto(
-                    photo_url=ch.get("img_url") or "",
-                    thumb_url=ch.get("img_url") or "",
-                    title=title,
-                    description=descr,
-                    caption=caption,
-                    parse_mode=ParseMode.MARKDOWN
-                )
+        price = it["price"]
+        currency = it["currency"]
+        code = it["code"]
+        # build caption including user balance
+        user_balance = user_doc.get(currency, 0)
+        caption = aesthetic_caption(it, user_balance=user_balance)
+
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🛒 BUY", callback_data=f"buyshop_{code}")]
+        ])
+
+        results.append(
+            InlineQueryResultPhoto(
+                photo_url=ch.get("img_url") or "",
+                thumb_url=ch.get("img_url") or "",
+                title=f"{ch.get('rarity','')} • {ch.get('name','Unknown')}",
+                description=f"{price} {currency}",
+                caption=caption,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=kb
             )
-        except Exception:
-            # skip malformed entries
-            continue
+        )
 
-    # Answer inline query
-    # cache_time=0 so users always see fresh shop (or set >0 to reduce load)
-    await inline_query.answer(results=results, cache_time=0, is_personal=True)
+    # Navigation / controls card (as last result) — uses switch_inline_query_current_chat to change page/sort
+    # Build query templates for next/prev and sorts
+    prev_page = max(1, page - 1)
+    next_page = min(total_pages, page + 1)
+    base_token = "shop.prince"
 
-# ---------- /buy <code> ----------
-@app.on_message(filters.command("buy") & filters.private)
-async def cmd_buy(client: Client, message):
-    args = message.text.split()
-    if len(args) < 2:
-        await message.reply_text("Usage: `/buy <CODE>` — find the code from the inline result or /shop listing.", parse_mode="markdown")
-        return
-
-    code = args[1].strip().upper()
-    uid = message.from_user.id
-    now = _now_utc()
-
-    # Step 1: reserve the item atomically (only if available and not expired)
-    reserved = await daily_shop_collection.find_one_and_update(
-        {"code": code, "available": True, "expires_at": {"$gt": now}},
-        {"$set": {"available": False, "reserved_by": uid, "reserved_at": now}},
-        return_document=ReturnDocument.AFTER
+    nav_buttons = [
+        InlineKeyboardButton("⏮ Prev", switch_inline_query_current_chat=f"{base_token} page={prev_page} sort={sort_mode}"),
+        InlineKeyboardButton("⏭ Next", switch_inline_query_current_chat=f"{base_token} page={next_page} sort={sort_mode}")
+    ]
+    sort_row = [
+        InlineKeyboardButton("Sort: Price↑", switch_inline_query_current_chat=f"{base_token} page=1 sort=price_asc"),
+        InlineKeyboardButton("Sort: Price↓", switch_inline_query_current_chat=f"{base_token} page=1 sort=price_desc")
+    ]
+    sort_row2 = [
+        InlineKeyboardButton("Sort: Name", switch_inline_query_current_chat=f"{base_token} page=1 sort=name"),
+        InlineKeyboardButton("Sort: Rarity", switch_inline_query_current_chat=f"{base_token} page=1 sort=rarity")
+    ]
+    # Info button (shows page/total & reset)
+    # Use a special photo-less InlineQueryResultPhoto with a neutral image or reuse first item's thumbnail if available
+    nav_caption = (
+        f"📜 Page {page}/{total_pages}  •  Items: {total_items}\n"
+        f"{nice_countdown_text(items[0].get('expires_at') if items else shop_expires_at())}\n\n"
+        "Use the buttons to change page or sorting."
     )
 
-    if not reserved:
-        await message.reply_text("❌ Item not available or code invalid / expired.")
-        return
+    # choose a thumbnail for nav (first item or empty)
+    thumb = items[0]["character"].get("img_url") if items else ""
 
-    price = int(reserved["price"])
-    currency = reserved.get("currency", "tokens")
-    char = reserved["character"]
+    results.append(
+        InlineQueryResultPhoto(
+            photo_url=thumb or "https://telegra.ph/file/placeholder.png",
+            thumb_url=thumb or "https://telegra.ph/file/placeholder.png",
+            title=f"🔧 Shop Controls",
+            description=f"Page {page}/{total_pages}  •  Sort: {sort_mode}",
+            caption=nav_caption,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup([nav_buttons, sort_row, sort_row2])
+        )
+    )
 
-    # Step 2: attempt to deduct funds atomically
+    # Answer inline query
+    await inline_query.answer(results=results, cache_time=0, is_personal=True, switch_pm_text="Open Shop", switch_pm_parameter="open_shop")
+
+# -------------------------
+# BUY STEP 1 (when user clicks BUY on card)
+# - CHECK balance BEFORE showing confirm
+# -------------------------
+@app.on_callback_query(filters.regex("^buyshop_"))
+async def buy_step1(client, cq):
+    code = cq.data.split("_", 1)[1]
+    uid = cq.from_user.id
+
+    item = await daily_shop_collection.find_one({"code": code})
+    if not item:
+        return await cq.answer("❌ Item not found or expired.", show_alert=True)
+
+    char = item["character"]
+    price = item["price"]
+    currency = item["currency"]
+
+    # check if user already owns the character
+    already = await user_collection.find_one({"id": uid, "characters.id": char.get("id")})
+    if already:
+        return await cq.answer("❌ You already own this character.", show_alert=True)
+
+    # check global limit quickly (inform user)
+    pool = item.get("pool")
+    if pool in GLOBAL_LIMITS:
+        count = await daily_shop_collection.count_documents({"character.id": char.get("id"), "sold_to": {"$exists": True}})
+        if count >= GLOBAL_LIMITS[pool]:
+            return await cq.answer("❌ This character already reached its global limit.", show_alert=True)
+
+    # check user balance
+    user = await user_collection.find_one({"id": uid}) or {}
+    bal = user.get(currency, 0)
+
+    if bal < price:
+        return await cq.answer(f"❌ Not enough {currency}.\nYou have: {bal}\nNeed: {price}", show_alert=True)
+
+    # All good — show confirm/cancel with preview and balances
+    kb = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Confirm", callback_data=f"confirmbuy_{code}"),
+            InlineKeyboardButton("❌ Cancel", callback_data=f"cancelbuy_{code}")
+        ]
+    ])
+
+    caption = (
+        f"🛒 **Purchase Confirmation**\n\n"
+        f"**{char.get('name')}**\n"
+        f"📺 {char.get('anime')}\n"
+        f"✨ {char.get('rarity')}\n\n"
+        f"💰 Price: `{price}` {currency}\n"
+        f"💵 Your balance: `{bal}` {currency}\n\n"
+        "Proceed with purchase?"
+    )
+
+    # reply in the chat where the inline result was inserted
+    await cq.message.reply_photo(photo=char.get("img_url"), caption=caption, reply_markup=kb)
+    await cq.answer()
+
+# -------------------------
+# BUY STEP 2 (Confirm handler)
+# - Deduct balance atomically
+# - Add character to user's collection
+# - Track sold_to (append uid but do not remove item)
+# -------------------------
+@app.on_callback_query(filters.regex("^confirmbuy_"))
+async def buy_confirm(client, cq):
+    code = cq.data.split("_", 1)[1]
+    uid = cq.from_user.id
+    now_dt = now()
+
+    item = await daily_shop_collection.find_one({"code": code})
+    if not item:
+        return await cq.answer("❌ Item expired.", show_alert=True)
+
+    char = item["character"]
+    char_id = char.get("id")
+    pool = item.get("pool")
+    price = item.get("price")
+    currency = item.get("currency")
+
+    # per-user ownership check (again)
+    already = await user_collection.find_one({"id": uid, "characters.id": char_id})
+    if already:
+        return await cq.message.edit_caption("❌ You already own this character.")
+
+    # global limit check
+    if pool in GLOBAL_LIMITS:
+        count = await daily_shop_collection.count_documents({"character.id": char_id, "sold_to": {"$exists": True}})
+        if count >= GLOBAL_LIMITS[pool]:
+            return await cq.message.edit_caption("❌ Global purchase limit reached for this character.")
+
+    # Deduct funds atomically
     user_filter = {"id": uid, currency: {"$gte": price}}
-    user_update = {
-        "$inc": {currency: -price},
-        "$push": {"characters": {
-            "_id": ObjectId(),
-            "id": char.get("id"),
-            "name": char.get("name"),
-            "anime": char.get("anime"),
-            "rarity": char.get("rarity"),
-            "img_url": char.get("img_url"),
-            "acquired_at": now
-        }}
-    }
-
     updated_user = await user_collection.find_one_and_update(
         user_filter,
-        user_update,
+        {"$inc": {currency: -price}},
         return_document=ReturnDocument.AFTER
     )
 
     if not updated_user:
-        # Insufficient funds — rollback reservation
-        await daily_shop_collection.update_one(
-            {"code": code, "reserved_by": uid},
-            {"$set": {"available": True}, "$unset": {"reserved_by": "", "reserved_at": ""}}
-        )
-        await message.reply_text(f"💸 Insufficient funds. You need `{price}` {currency} to buy this item.")
-        return
+        # not enough balance
+        return await cq.message.edit_caption(f"❌ Insufficient {currency} to complete purchase.")
 
-    # Step 3: finalize sale
-    await daily_shop_collection.update_one(
-        {"code": code, "reserved_by": uid},
-        {"$set": {"sold_to": uid, "sold_at": now}}
+    # add character to user's characters array
+    await user_collection.update_one(
+        {"id": uid},
+        {"$push": {"characters": {
+            "_id": ObjectId(),
+            "id": char_id,
+            "name": char.get("name"),
+            "anime": char.get("anime"),
+            "rarity": char.get("rarity"),
+            "img_url": char.get("img_url"),
+            "acquired_at": now_dt
+        }}}
     )
 
-    await message.reply_text(f"🎉 Purchase complete! You bought **{char.get('name')}** for `{price}` {currency}.\nIt was added to your collection.", parse_mode="MARKDOWN")
+    # append to sold_to for tracking (do not hide/remove item)
+    await daily_shop_collection.update_one(
+        {"code": code},
+        {"$push": {"sold_to": uid}}
+    )
 
-# ---------- Admin helper (optional) ----------
-def _is_partner(user_id: int) -> bool:
-    if not PARTNER:
-        return False
+    # final UX: delete confirmation message and post purchased photo
     try:
-        s = {int(x) if isinstance(x, str) and x.isdigit() else x for x in PARTNER}
-        return int(user_id) in s
-    except Exception:
-        return False
+        await cq.message.delete()
+    except:
+        pass
 
+    await cq.message.reply_photo(
+        photo=char.get("img_url"),
+        caption=(
+            f"🎉 **Successfully Purchased {char.get('name')}!**\n\n"
+            f"💰 Spent `{price}` {currency}\n"
+            f"✨ Added to your collection."
+        )
+    )
+    await cq.answer()
+
+# -------------------------
+# CANCEL HANDLER
+# -------------------------
+@app.on_callback_query(filters.regex("^cancelbuy_"))
+async def buy_cancel(client, cq):
+    code = cq.data.split("_", 1)[1]
+    try:
+        await cq.message.edit_caption("❌ Purchase cancelled.")
+    except:
+        # fallback: reply a small message
+        await cq.message.reply_text("❌ Purchase cancelled.")
+    await cq.answer()
+
+# -------------------------
+# OPTIONAL ADMIN: force regenerate shop
+# -------------------------
 @app.on_message(filters.command("regenshop") & filters.private)
-async def cmd_regenshop(client: Client, message):
-    """Force regenerate shop (partner only)"""
-    if not _is_partner(message.from_user.id):
-        await message.reply_text("⛔ You are not authorized.")
-        return
-    # delete existing active
-    await daily_shop_collection.delete_many({"expires_at": {"$gt": _now_utc()}})
-    items = await _generate_shop_if_needed()
-    await message.reply_text(f"✅ Shop regenerated with {len(items)} items.")
-
-# End of module
+async def regen_shop_cmd(client, message):
+    # restrict to bot owner/partner if you want (not enforced here)
+    await daily_shop_collection.delete_many({"expires_at": {"$gt": now()}})
+    items = await generate_shop_if_needed()
+    await message.reply_text(f"✅ Shop regenerated: {len(items)} items.")
