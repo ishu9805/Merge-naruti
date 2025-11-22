@@ -216,7 +216,7 @@ async def generate_shop_if_needed():
 # -------------------------
 # SHOP ENTRY (command)
 # -------------------------
-@app.on_message(filters.command("shop"))
+@app.on_message(filters.command(["shop", "shopmenu"]))
 async def cmd_shop_entry(client, message):
     # This opens inline shop prepopulated for the opener with a session id
     owner_id = message.from_user.id
@@ -270,7 +270,7 @@ def sort_items_list(items, sort_key):
         return sorted(items, key=lambda x: x["character"].get("rarity",""))
     return items
 
-@app.on_inline_query()
+
 async def handle_shop_inline(client: Client, inline_query: InlineQuery):
     q = inline_query.query.strip()
     if not q.lower().startswith("shop.prince"):
