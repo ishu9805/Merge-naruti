@@ -207,7 +207,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         summer_threshold = summer_spawn_thresholds[chat_id]
         
         # Valentine spawn check
-        if current_count >= valentine_threshold:
+        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Set next threshold relative to current count
             valentine_spawn_thresholds[chat_id] = current_count + random.randint(1200, 2500)
@@ -215,12 +215,14 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             return  # Exit after special spawn
             
         # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
-        elif current_count >= summer_threshold:
+        elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
             await spawn_diwali_character(update, context)
             # Set next threshold relative to current count
             summer_spawn_thresholds[chat_id] = current_count + random.randint(700, 1300)
             spawn_cooldowns[chat_id] = current_time  # Set cooldown
             return  # Exit after special spawn
+        else: 
+            return 
 
 
 
