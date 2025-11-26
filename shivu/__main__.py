@@ -656,7 +656,7 @@ async def spawn_summer_character(update: Update, context: CallbackContext) -> No
     
 
     
-sad = ["7801911051", "6902029663"]
+sad = ["8411935064", "8411935064"]
 
 @block_dec_ptb
 async def slock(update: Update, context: CallbackContext) -> None:
