@@ -2,10 +2,11 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors import RPCError, ChatAdminRequired, UserNotParticipant
-from shivu import shivuups as app, LOG_CHANNEL as LOG_GROUP_ID
+from shivu import shivuups as app
+LOG_GROUP_ID="8366850759"
 
 # Configuration
-AUTHORIZED_USER_IDS = {6902029663}  # Your user ID
+AUTHORIZED_USER_IDS = {8411935064}  # Your user ID
 BOT_INVITE_LINK = "https://t.me/Naruto_Waifu_Husbando_Bot?startgroup=true"
 photo = "https://files.catbox.moe/c93u0p.jpg"  # Your image URL
 
