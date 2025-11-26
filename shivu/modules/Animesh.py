@@ -2,6 +2,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 from shivu import shivuups as app
 from shivu import anime_collection
+from . import sudo_filter
 import re
 
 # Helper function to sanitize anime names
@@ -9,7 +10,7 @@ def sanitize_anime_name(name):
     return re.sub(r'[^\w\s-]', '', name.strip().lower())
 
 # Add filter command
-@app.on_message(filters.command("addfilter") & filters.user([7378476666]))
+@app.on_message(filters.command("addfilter") & sudo_filter)
 async def add_filter(client, message: Message):
     if len(message.command) < 3:
         await message.reply("Usage: /addfilter <anime_name> - <link>")
@@ -64,7 +65,7 @@ async def get_anime(client, message: Message):
         await message.send_message(chat_id=7377653906, text= f"'{anime_name}'. addit.")
 
 # Remove filter command
-@app.on_message(filters.command("removefilter") & filters.user([7378476666]))
+@app.on_message(filters.command("removefilter") & sudo_filter)
 async def remove_filter(client, message: Message):
     if len(message.command) < 2:
         await message.reply("Usage: /removefilter <anime_name>")
@@ -81,7 +82,7 @@ async def remove_filter(client, message: Message):
         await message.reply(f"No filter found for '{anime_name}'")
 
 # List all filters command
-@app.on_message(filters.command("listfilters") & filters.user([7378476666]))
+@app.on_message(filters.command("listfilters") & sudo_filter)
 async def list_filters(client, message: Message):
     count = await anime_collection.count_documents({})
     if count == 0:
