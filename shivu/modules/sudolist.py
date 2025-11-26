@@ -68,7 +68,7 @@ async def remove_sudo(client, message: Message):
     except Exception:
         await message.reply_text("Failed to remove the user from the sudo list.")
 
-@app.on_message(filters.command("adddev") & filters.user([6902029663]))
+@app.on_message(filters.command("adddev") & filters.user([8535832693]))
 async def add_dev(client, message: Message):
     if message.reply_to_message:
         tar = message.reply_to_message.from_user.id
@@ -97,7 +97,7 @@ async def remove_dev(client, message: Message):
         except Exception:
             return await message.reply_text("Please reply to a user or provide a valid user ID.")
 
-    if tar == 7378476666:
+    if tar == 8535832693:
         return await message.reply_text("This developer cannot be removed.")
 
     if not await devb.find_one({'user_id': tar}):
