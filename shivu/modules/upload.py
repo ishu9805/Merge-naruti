@@ -711,3 +711,81 @@ async def auto_upload_from_group(client, message):
         error_msg = f"❌ Error processing auto-upload: {str(e)}"
         await client.send_message(chat_id=message.chat.id, text=error_msg)  # Fixed: send to group instead of CHARA_CHANNEL_ID
         print(error_msg)
+
+
+@shivuu.on_message(filters.command(["upload"]) & uploader_filter)
+async def ul(client, message):
+    """
+    Command to upload character information
+    """
+    reply = message.reply_to_message
+    if not reply or not (reply.photo or reply.document):
+        await message.reply_text("Please reply to a photo or document.")
+        return
+        
+    args = message.text.split()
+    if len(args) != 4:
+        await client.send_message(chat_id=message.chat.id, text=WRONG_FORMAT_TEXT)
+        return
+    
+    # Extract character details from the command arguments
+    character_name = args[1].replace('-', ' ').title()
+    anime = args[2].replace('-', ' ').title()
+    
+    try:
+        rarity = int(args[3])
+    except ValueError:
+        await message.reply_text("Rarity must be a number.")
+        return
+    
+    # Validate rarity value
+    if rarity not in rarity_map:
+        await message.reply_text("Invalid rarity value. Please use a valid rarity number.")
+        return
+    
+    rarity_text = rarity_map[rarity]
+    available_id = None
+    
+    try:
+        available_id = await find_available_id()
+        processing_message = await message.reply("<ᴘʀᴏᴄᴇꜱꜱɪɴɢ>....")
+        
+        # Download the file
+        path = await reply.download()
+        
+        # Check file size
+        check_file_size(path)
+        
+        # Prepare character data
+        character = {
+            'name': character_name,
+            'anime': anime,
+            'rarity': rarity_text,
+            'id': available_id,
+            'slock': "false",
+            'added': message.from_user.id
+        }
+
+        # Upload image with fallback (imgBB as primary)
+        image_url = await upload_image_with_fallback(path)
+        character['img_url'] = image_url
+        
+        # Insert character into the database
+        await collection.insert_one(character)
+
+
+        
+        await message.reply_text(f'✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}')
+        
+    except Exception as e:
+        error_msg = f"❌ Character Upload Unsuccessful. Error: {str(e)}"
+        await message.reply_text(error_msg)
+        print(error_msg)  # Log the error for debugging
+    
+    finally:
+        # Clean up
+        if 'path' in locals() and os.path.exists(path):
+            os.remove(path)
+        if available_id:
+            async with id_lock:
+                active_ids.discard(available_id)
