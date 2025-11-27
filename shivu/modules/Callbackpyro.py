@@ -122,7 +122,7 @@ async def callback_query_handler(client, callback_query):
             await button(client, callback_query)
         # Schedule the deletion of the callback query message after 20 seconds
         else:
-            pass
+            return
 
     except Exception as e:
         await callback_query.answer("An error occurred. Please try again.", show_alert=True)
