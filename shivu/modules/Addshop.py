@@ -208,7 +208,7 @@ async def cmd_shop_entry(client: Client, message):
 # -------------------------
 # INLINE QUERY HANDLER
 # -------------------------
-@app.on_inline_query()
+
 async def handle_shop_inline(client: Client, inline_query: InlineQuery):
     q = inline_query.query.strip()
     if not q.lower().startswith("shop.prince"):
