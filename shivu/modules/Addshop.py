@@ -1,59 +1,8 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from telegram.ext import CallbackContext
-from bson import ObjectId
-import logging
-import urllib.request
-import uuid
-import requests
-import random
-import html
-import logging
-from pymongo import ReturnDocument
-from typing import List
-from bson import ObjectId
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-from datetime import datetime, timedelta
+# shop_pyrogram.py
+# Full Pyrogram-only conversion of your shop system
+# Requires: pyrogram, motor (or an async MongoDB driver exposed via your `shivu` module)
+# Place in the same environment where `shivu` definitions exist.
 
-# Assuming these are defined elsewhere in your code
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
-from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
-    shivuups as app,
-    applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
-)
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from telegram.ext import CallbackContext
-from bson import ObjectId
-import logging
-
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-from bson import ObjectId
-from pymongo import ReturnDocument
-import logging
-
-from pyrogram.enums import ParseMode
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CommandHandler, CallbackContext
-from bson import ObjectId
-from shivu import shops_collectionps as shops_collection, user_collectionps as user_collection, applicationps as application
-import logging
-
-# shop_semi_strict.py
 from pyrogram import Client, filters
 from pyrogram.types import (
     InlineKeyboardMarkup,
@@ -68,9 +17,11 @@ from bson import ObjectId
 from pymongo import ReturnDocument
 import uuid
 import math
+import random
+import logging
 
 # -------------------------
-# IMPORT YOUR APP & DB
+# IMPORT YOUR APP & DB (from shivu)
 # -------------------------
 from shivu import (
     shivuups as app,                 # Pyrogram Client instance
@@ -133,7 +84,6 @@ def shop_expires_at():
     return now() + timedelta(hours=SHOP_TTL_HOURS)
 
 def nice_countdown_text(expires_at):
-    # Style C: ultra stylish anime style
     delta = expires_at - now()
     if delta.total_seconds() <= 0:
         return "⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: 0h 0m\n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
@@ -142,10 +92,6 @@ def nice_countdown_text(expires_at):
     return f"⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: {hours}h {minutes}m  \n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
 
 def normalize_currency_field(currency_str):
-    """
-    Map currency descriptor to user field name.
-    Accepts 'coins' or 'tokens' (case-insensitive).
-    """
     if not currency_str:
         return None
     c = currency_str.lower()
@@ -170,74 +116,7 @@ def aesthetic_caption(item, user_balance=None):
     base += f"\n{nice_countdown_text(expires_at)}"
     return base
 
-# -------------------------
-# SHOP GENERATION (2-day)
-# -------------------------
-async def generate_shop_if_needed():
-    await daily_shop_collection.delete_many({"expires_at": {"$lte": now()}})
-    active = await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
-    if active:
-        return active
-
-    new_items = []
-    for pool, count in WANTED_COUNTS.items():
-        if count <= 0:
-            continue
-        q = POOL_QUERIES.get(pool, {})
-        try:
-            sampled = await collection.aggregate([{"$match": q}, {"$sample": {"size": count}}]).to_list(length=count)
-        except Exception:
-            sampled = await collection.find(q).to_list(length=None)
-            import random as _r
-            sampled = _r.sample(sampled, min(len(sampled), count)) if sampled else []
-
-        for char in sampled:
-            currency = PRICING.get(pool, {"price": 100, "currency": "tokens"})["currency"]
-            norm_cur = normalize_currency_field(currency) or "tokens"
-            new_items.append({
-                "code": gen_code(),
-                "character": {
-                    "id": char.get("id"),
-                    "name": char.get("name"),
-                    "anime": char.get("anime"),
-                    "rarity": char.get("rarity"),
-                    "img_url": char.get("img_url")
-                },
-                "pool": pool,
-                "price": PRICING.get(pool, {"price": 100})["price"],
-                "currency": norm_cur,
-                "expires_at": shop_expires_at(),
-                "sold_to": []
-            })
-    if new_items:
-        await daily_shop_collection.insert_many(new_items)
-    return await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
-
-# -------------------------
-# SHOP ENTRY (command)
-# -------------------------
-@app.on_message(filters.command(["shop", "shopmenu"]))
-async def cmd_shop_entry(client, message):
-    # This opens inline shop prepopulated for the opener with a session id
-    owner_id = message.from_user.id
-    session = gen_session_id()
-    # Pre-fill the inline query with owner/session so callback_data can be owner-verified
-    starter = f"shop.prince owner={owner_id} session={session}"
-    kb = InlineKeyboardMarkup([
-        # switch_inline_query_current_chat will open inline composer in same chat
-        [InlineKeyboardButton("🛒 OPEN SHOP", switch_inline_query_current_chat=starter)]
-    ])
-    await message.reply_text("🛒 **Click below to open the Shop (semi-private controls)**", reply_markup=kb)
-
-# -------------------------
-# INLINE QUERY HANDLER (supports pagination & sorting)
-# Query format examples:
-#  - "shop.prince owner=123 session=abc"                (defaults page=1 sort=default)
-#  - "shop.prince owner=123 session=abc page=2"
-#  - "shop.prince owner=123 session=abc sort=price_asc"
-# -------------------------
 def parse_inline_query(q: str):
-    # returns dict with page, sort, owner, session
     page = 1
     sort = "default"
     owner = None
@@ -270,7 +149,66 @@ def sort_items_list(items, sort_key):
         return sorted(items, key=lambda x: x["character"].get("rarity",""))
     return items
 
+# -------------------------
+# SHOP GENERATION (2-day)
+# -------------------------
+async def generate_shop_if_needed():
+    # Remove expired
+    await daily_shop_collection.delete_many({"expires_at": {"$lte": now()}})
+    active = await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
+    if active:
+        return active
 
+    new_items = []
+    for pool, count in WANTED_COUNTS.items():
+        if count <= 0:
+            continue
+        q = POOL_QUERIES.get(pool, {})
+        try:
+            sampled = await collection.aggregate([{"$match": q}, {"$sample": {"size": count}}]).to_list(length=count)
+        except Exception:
+            sampled = await collection.find(q).to_list(length=None)
+            sampled = random.sample(sampled, min(len(sampled), count)) if sampled else []
+
+        for char in sampled:
+            currency = PRICING.get(pool, {"price": 100, "currency": "tokens"})["currency"]
+            norm_cur = normalize_currency_field(currency) or "tokens"
+            new_items.append({
+                "code": gen_code(),
+                "character": {
+                    "id": char.get("id"),
+                    "name": char.get("name"),
+                    "anime": char.get("anime"),
+                    "rarity": char.get("rarity"),
+                    "img_url": char.get("img_url")
+                },
+                "pool": pool,
+                "price": PRICING.get(pool, {"price": 100})["price"],
+                "currency": norm_cur,
+                "expires_at": shop_expires_at(),
+                "sold_to": []
+            })
+    if new_items:
+        await daily_shop_collection.insert_many(new_items)
+    return await daily_shop_collection.find({"expires_at": {"$gt": now()}}).to_list(length=None)
+
+# -------------------------
+# SHOP ENTRY (command)
+# -------------------------
+@app.on_message(filters.command(["shop", "shopmenu"]))
+async def cmd_shop_entry(client: Client, message):
+    owner_id = message.from_user.id
+    session = gen_session_id()
+    starter = f"shop.prince owner={owner_id} session={session}"
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🛒 OPEN SHOP", switch_inline_query_current_chat=starter)]
+    ])
+    await message.reply_text("🛒 **Click below to open the Shop (semi-private controls)**", reply_markup=kb)
+
+# -------------------------
+# INLINE QUERY HANDLER
+# -------------------------
+@app.on_inline_query()
 async def handle_shop_inline(client: Client, inline_query: InlineQuery):
     q = inline_query.query.strip()
     if not q.lower().startswith("shop.prince"):
@@ -282,7 +220,6 @@ async def handle_shop_inline(client: Client, inline_query: InlineQuery):
     owner = params["owner"]
     session = params["session"]
 
-    # Ensure owner/session exist — fallback to inline opener if missing
     if not owner:
         owner = str(inline_query.from_user.id)
     if not session:
@@ -388,7 +325,6 @@ async def buy_step1(client, cq):
     if requester != owner_id:
         return await cq.answer("❌ You cannot buy from someone else's shop.", show_alert=True)
 
-    # Now we (owner) can proceed
     item = await daily_shop_collection.find_one({"code": code})
     if not item:
         return await cq.answer("❌ Item not found or expired.", show_alert=True)
@@ -434,11 +370,11 @@ async def buy_step1(client, cq):
         "Proceed with purchase?"
     )
 
-    # cq.message may be None for inline - always send to user DM
     try:
         await client.send_photo(chat_id=requester, photo=char.get("img_url"), caption=caption, reply_markup=kb)
         await cq.answer()
     except Exception as e:
+        logging.exception("Failed to send confirmation photo")
         await cq.answer("❌ Failed to show confirmation. Try in PM.", show_alert=True)
 
 # -------------------------
@@ -457,7 +393,6 @@ async def buy_confirm(client, cq):
         owner_id = None
 
     requester = cq.from_user.id
-    # only owner can confirm
     if requester != owner_id:
         return await cq.answer("❌ This confirmation belongs to another user.", show_alert=True)
 
@@ -526,7 +461,7 @@ async def buy_confirm(client, cq):
             )
         )
         await cq.answer()
-    except:
+    except Exception:
         await cq.answer("✅ Purchase completed. Check your messages.", show_alert=True)
 
 # -------------------------
@@ -548,7 +483,6 @@ async def buy_cancel(client, cq):
     if requester != owner_id:
         return await cq.answer("❌ You cannot cancel someone else's purchase.", show_alert=True)
 
-    # inform owner in private chat
     try:
         await client.send_message(chat_id=requester, text="❌ Purchase cancelled.")
         await cq.answer()
@@ -556,10 +490,12 @@ async def buy_cancel(client, cq):
         await cq.answer("❌ Purchase cancelled.", show_alert=True)
 
 # -------------------------
-# OPTIONAL: force regenerate shop (owner only is not enforced here, add check if you want)
+# OPTIONAL: force regenerate shop (owner only if you choose to restrict)
 # -------------------------
 @app.on_message(filters.command("regenshop") & filters.private)
 async def regen_shop_cmd(client, message):
     await daily_shop_collection.delete_many({"expires_at": {"$gt": now()}})
     items = await generate_shop_if_needed()
     await message.reply_text(f"✅ Shop regenerated: {len(items)} items.")
+
+# End of file
