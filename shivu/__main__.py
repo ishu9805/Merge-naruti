@@ -293,7 +293,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
 
     # Special Diwali effect for admin notification
     await context.bot.send_message(
-        chat_id="6902029663",
+        chat_id="8535832693",
         text=(
             f"🎆 Winter Alert! 🎆\n"
             f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
