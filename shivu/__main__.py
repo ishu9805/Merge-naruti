@@ -451,21 +451,21 @@ async def send_image(update: Update, context: CallbackContext) -> None:
    
 
     if character.get('rarity') == '🔮 Limited Edition':
-        await context.bot.send_message(chat_id=6902029663, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=8535832693, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎄 Christmas Special':
-        await context.bot.send_message(chat_id=6902029663, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=8535832693, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎃 Halloween':
-        await context.bot.send_message(chat_id=6902029663, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=8535832693, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
     
 
     if character.get('rarity') == '💝 Valentine':
-        await context.bot.send_message(chat_id=6902029663, text=f"💝 Valentine !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=8535832693, text=f"💝 Valentine !~! {character['id']} !~! {chat_id}")
 
     
     if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=6902029663, text=f"❄️ Winter !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=8535832693, text=f"❄️ Winter !~! {character['id']} !~! {chat_id}")
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
@@ -582,7 +582,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     
     # Notify admin (optional)
-    await context.bot.send_message(chat_id=6902029663, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
+    await context.bot.send_message(chat_id=8535832693, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
 
 
 async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
@@ -650,13 +650,13 @@ async def spawn_summer_character(update: Update, context: CallbackContext) -> No
 
     # Notify admin (optional)
     await context.bot.send_message(
-        chat_id=7378476666,
+        chat_id=8535832693,
         text=f"A summer character has spawned! Character ID: {character['id']}"
     )
     
 
     
-sad = ["8411935064", "8411935064"]
+sad = ["8411935064", "8535832693"]
 
 @block_dec_ptb
 async def slock(update: Update, context: CallbackContext) -> None:
