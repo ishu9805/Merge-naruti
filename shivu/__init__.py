@@ -30,7 +30,12 @@ class Client(PyrogramClient):
         obj = ResolvePeer(self)
         return await obj.resolve_peer(id)
 
-
+userbot = Client(
+    "userbot_session",
+    api_id,
+    api_hash,
+    session_string
+)
 applicationps = Application.builder().token(TOKENsingings).concurrent_updates(True).build()
 shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
 #app = TelegramClient('bot', api_id, api_hash).start(bot_token=TOKEN)
