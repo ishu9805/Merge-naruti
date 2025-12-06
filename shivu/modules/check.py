@@ -2,8 +2,23 @@ import asyncio
 import logging
 from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import shivuups as bot, user_collectionps as user_collection, collectionps as collection
+from shivu import shivuups as bot, userbot, user_collectionps as user_collection, collectionps as collection
 
+async def fetch_user(user_id):
+    try:
+        # Try with bot first
+        return await bot.get_users(user_id)
+    except:
+        pass
+
+    try:
+        # Fallback: Try with userbot
+        return await userbot.get_users(user_id)
+    except:
+        pass
+
+    return None
+    
 def escape_md(text: str) -> str:
     """Escape Markdown special characters."""
     if not text:
@@ -40,7 +55,7 @@ async def build_user_links(top_users, offset=0, limit=10):
     for i, user_info in enumerate(top_users[offset:offset+limit], start=offset+1):
         user_id = user_info['_id']
         try:
-            user = await bot.get_users(user_id)
+            user = await fetch_user(user_id)
             # Use username if available, otherwise fallback to silent mention
             if user.username:
                 user_link = f"https://t.me/{user.username}"
