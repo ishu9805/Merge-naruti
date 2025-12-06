@@ -5,12 +5,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuups as bot, userbot, user_collectionps as user_collection, collectionps as collection
 
 async def fetch_user(user_id):
-    try:
-        # Try with bot first
-        return await bot.get_users(user_id)
-    except:
-        pass
-
+    
     try:
         # Fallback: Try with userbot
         return await userbot.get_users(user_id)
