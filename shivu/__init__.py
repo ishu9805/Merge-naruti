@@ -31,10 +31,10 @@ class Client(PyrogramClient):
         return await obj.resolve_peer(id)
 
 userbot = Client(
-    "userbot_session",
-    api_id,
-    api_hash,
-    session_string
+    name="userbot",
+    api_id=api_id,
+    api_hash=api_hash,
+    session_string=session_string
 )
 applicationps = Application.builder().token(TOKENsingings).concurrent_updates(True).build()
 shivuups = Client("Shivu", api_id, api_hash, bot_token=TOKENsingings)
