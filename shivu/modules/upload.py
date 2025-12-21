@@ -35,7 +35,7 @@ from shivu import (
 )
 
 # Channel ID for posting character information
-CHARA_CHANNEL_ID = -1003046490021
+CHARA_CHANNEL_ID = -1003295207951
 
 # Your imgBB API Key
 IMGBB_API_KEY = "6d52008ec9026912f9f50c8ca96a09c3"
@@ -570,13 +570,13 @@ async def update_image(client, message):
         try:
             if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
                 await client.send_video(
-                    chat_id=-1002519377646,
+                    chat_id=-1003295207951,
                     video=image_url,
                     caption=caption,
                 )
             else:
                 await client.send_photo(
-                    chat_id=-1002519377646,
+                    chat_id=-1003295207951,
                     photo=image_url,
                     caption=caption,
                 )
