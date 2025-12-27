@@ -33,7 +33,8 @@ from shivu import (
     user_countps as user_count, 
     chat_dataps as chat_data,
 )
-
+# import sendall helpers
+from Sendall import generate_caption, _send_media_to_channel
 # Channel ID for posting character information
 CHARA_CHANNEL_ID = -1003295207951
 
@@ -261,7 +262,23 @@ async def delete(client: Client, message: Message):
 
     character_id = args[0]
     character = await collection.find_one_and_delete({'id': character_id})
-   
+
+    if character:
+        caption = (
+            "❌ <b>CHARACTER DELETED</b>\n\n"
+            f"🆔 ID: {character['id']}\n"
+            f"👤 Name: {character['name']}\n"
+            f"🎌 Anime: {character['anime']}\n"
+            f"🌟 Rarity: {character['rarity']}\n\n"
+            "✦━━━━━━━━━━━━━━━━━━━━✦"
+        )
+
+        await app.send_message(
+            chat_id=CHARA_CHANNEL_ID,
+            text=caption,
+            parse_mode="HTML"
+        )
+        
     if character:
         bulk_operations = []
         async for user in user_collection.find():
@@ -350,7 +367,16 @@ async def update(client: Client, message: Message):
             return
 
     await collection.update_one({'id': character_id}, {'$set': {field: new_value}})
-    
+    # refresh character
+    updated_character = await collection.find_one({'id': character_id})
+
+    await _send_media_to_channel(
+        updated_character,
+        action="updated",
+        actor_id=message.from_user.id,
+        actor_name=message.from_user.full_name
+    )
+
     bulk_operations = []
     async for user in user_collection.find():
         if 'characters' in user:
@@ -772,8 +798,12 @@ async def ul(client, message):
         
         # Insert character into the database
         await collection.insert_one(character)
-
-
+        await _send_media_to_channel(
+            character,
+            action="added",
+            actor_id=message.from_user.id,
+            actor_name=message.from_user.full_name
+        )
         
         await message.reply_text(f'✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}')
         
