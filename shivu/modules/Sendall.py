@@ -146,8 +146,19 @@ def _render_banner_and_label(rarity_field: Any) -> (str, str):
 
     return "✨ Character Drop ✨", str(rarity_field)
 
+def _user_link(user_id: Optional[int], name: Optional[str] = None) -> str:
+    if not user_id:
+        return "Unknown"
+    display = name or "User"
+    return f'<a href="tg://user?id={user_id}">{display}</a>'
 
-def generate_caption(character: Dict[str, Any]) -> str:
+
+def generate_caption(
+    character: Dict[str, Any],
+    action: Optional[str] = None,   # "added" | "updated" | "deleted"
+    actor_id: Optional[int] = None,
+    actor_name: Optional[str] = None
+) -> str:
     cid = character.get("id", "N/A")
     name = character.get("name", "Unknown")
     anime = character.get("anime", "Unknown")
@@ -171,7 +182,18 @@ def generate_caption(character: Dict[str, Any]) -> str:
     caption_lines.append("")
     caption_lines.append("✦━━━━━━━━━━━━━━━━━━━━✦")
 
+    # 🔔 ACTION FOOTER
+    if action and actor_id:
+        user = _user_link(actor_id, actor_name)
+        if action == "added":
+            caption_lines.append(f"➕ <b>Added by:</b> {user}")
+        elif action == "updated":
+            caption_lines.append(f"🔄 <b>Updated by:</b> {user}")
+        elif action == "deleted":
+            caption_lines.append(f"❌ <b>Deleted by:</b> {user}")
+
     return "\n".join(caption_lines)
+
 
 
 # ---------- MEDIA SENDER ----------
