@@ -34,7 +34,7 @@ from shivu import (
     chat_dataps as chat_data,
 )
 # import sendall helpers
-from Sendall import generate_caption, _send_media_to_channel
+from shivu.modules.Sendall import generate_caption, _send_media_to_channel
 # Channel ID for posting character information
 CHARA_CHANNEL_ID = -1003295207951
 
