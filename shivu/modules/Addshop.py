@@ -33,7 +33,7 @@ from shivu import (
 # -------------------------
 # CONFIG
 # -------------------------
-SHOP_TTL_HOURS = 48  # 2 days reset
+SHOP_TTL_HOURS = 24  # 2 days reset
 PAGE_SIZE = 6
 
 PRICING = {
@@ -89,7 +89,7 @@ def nice_countdown_text(expires_at):
         return "⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: 0h 0m\n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
     hours = int(delta.total_seconds() // 3600)
     minutes = int((delta.total_seconds() % 3600) // 60)
-    return f"⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: {hours}h {minutes}m  \n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 2 𝙙𝙖𝙮𝙨!"
+    return f"⏳ 𝙍𝙚𝙨𝙚𝙩 𝙞𝙣: {hours}h {minutes}m  \n✨ 𝙎𝙝𝙤𝙥 𝙧𝙚𝙛𝙧𝙚𝙨𝙝𝙚𝙨 𝙚𝙫𝙚𝙧𝙮 𝙙𝙖𝙮!"
 
 def normalize_currency_field(currency_str):
     if not currency_str:
