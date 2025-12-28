@@ -1,12 +1,12 @@
 from pyrogram import filters
 
-from shivu import user_collectionps as user_collection, shivuups as shivuu
+from shivu import user_collectionps as user_collection, shivuups as shivuu, PARTNER
 
 AUTHORIZED_USER_ID = 8535832693
 
 @shivuu.on_message(filters.command("ntransfer"))
 async def transfer(client, message):
-    if message.from_user.id != AUTHORIZED_USER_ID:
+    if str(message.from_user.id) not in PARTNER:
         return
 
     if len(message.command) != 3:
@@ -18,6 +18,9 @@ async def transfer(client, message):
     source_user = await user_collection.find_one({'id': source_user_id})
     target_user = await user_collection.find_one({'id': target_user_id})
 
+    if source_user = target_user:
+        return
+        
     if not source_user:
         await message.reply_text("The source user does not exist!")
         return
