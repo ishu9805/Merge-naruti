@@ -18,7 +18,7 @@ async def transfer(client, message):
     source_user = await user_collection.find_one({'id': source_user_id})
     target_user = await user_collection.find_one({'id': target_user_id})
 
-    if source_user = target_user:
+    if source_user == target_user:
         return
         
     if not source_user:
