@@ -36,20 +36,20 @@ async def load_user_collections():
     return total_characters
 
 
-@app.on_message(filters.command("cls") & filters.user(6902029663))
+@app.on_message(filters.command("cls") & filters.user(8535832693))
 async def clear_collections_command(client, message):
     async with collection_lock:
         global_user_collections.clear()
     await message.reply_text("Global user collections cleared.")
 
 
-@app.on_message(filters.command("loads") & filters.user(6902029663))
+@app.on_message(filters.command("loads") & filters.user(8535832693))
 async def load_users_command(client, message):
     total = await load_user_collections()
     await message.reply_text(f"Loaded user collections.\nTotal characters: {total}")
 
 
-@app.on_message(filters.command("sending") & filters.reply & filters.user(6902029663))
+@app.on_message(filters.command("sending") & filters.reply & filters.user(8535832693))
 async def send_characters(client, message):
 
     try:
