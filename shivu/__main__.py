@@ -25,6 +25,7 @@ from shivu import (
     userbot
     
 )
+from shivu import LOG_CHANNEL as log 
 from shivu import user_countps as user_count, chat_dataps as chat_data
 from shivu.modules import ALL_MODULES
 from shivu.modules.coin import add_coins
@@ -293,9 +294,10 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
         )
 
     # Special Diwali effect for admin notification
-    await context.bot.send_message(
-        chat_id="8535832693",
-        text=(
+    await context.bot.send_photo(
+        chat_id=log,
+        photo=character['img_url'],
+        caption=(
             f"🎆 Winter Alert! 🎆\n"
             f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
             f"Only {7 - global_count} remaining claims available worldwide!"
@@ -452,10 +454,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
    
 
     if character.get('rarity') == '🔮 Limited Edition':
-        await context.bot.send_message(chat_id=8535832693, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=log, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎄 Christmas Special':
-        await context.bot.send_message(chat_id=8535832693, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
+        await context.bot.send_message(chat_id=log,, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
     
     if character.get('rarity') == '🎃 Halloween':
         await context.bot.send_message(chat_id=8535832693, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
