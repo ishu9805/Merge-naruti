@@ -64,6 +64,93 @@ def home():
     return "Bot is running"
 """
     
+LOG_RARITIES = {
+    "🔮 Limited Edition",
+    "💸 Premium Edition",
+    "🌤 Summer",
+    "🎐 Celestial",
+    "❄️ Winter",
+    "💝 Valentine",
+    "🎃 Halloween",
+    "🎄 Christmas Special",
+    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    "🎭 Cosplay Master 🎭",
+    "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    "🎖 Apex Lot ( AUCTION )",
+    "🍑 Echhi",
+    "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊",
+    "☔ Monsoon",
+    "🪸 Aquatic",
+    "🎨 Artistic",
+    "💳 VIP SLOT",
+    "👶 Chibi",
+    "🏴‍☠️ Marauds",
+}
+
+async def send_spawn_log(character: dict, chat_id: int, context: CallbackContext):
+    """
+    Sends spawn log to LOG_CHANNEL with photo/video and formatted caption
+    """
+    if character.get("rarity") not in LOG_RARITIES:
+        return
+
+    chat_link = await get_chat_link(chat_id, context)
+
+    caption = (
+        "✨ <b>CHARACTER SPAWNED</b> ✨\n\n"
+        f"🆔 <b>ID:</b> <code>{character.get('id')}</code>\n"
+        f"👤 <b>Name:</b> {escape(character.get('name', 'Unknown'))}\n"
+        f"📺 <b>Anime:</b> {escape(character.get('anime', 'Unknown'))}\n"
+        f"🎐 <b>Rarity:</b> {character.get('rarity')}\n"
+        f"💬 <b>Chat:</b> {chat_link}"
+    )
+
+    try:
+        if character.get("img_url"):
+            await context.bot.send_photo(
+                chat_id=log,
+                photo=character["img_url"],
+                caption=caption,
+                parse_mode="HTML"
+            )
+
+        elif character.get("vid_url"):
+            await context.bot.send_video(
+                chat_id=log,
+                video=character["vid_url"],
+                caption=caption,
+                parse_mode="HTML",
+                supports_streaming=True
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=log,
+                text=caption,
+                parse_mode="HTML"
+            )
+
+    except Exception as e:
+        print(f"[LOG ERROR] {e}")
+
+
+async def get_chat_link(chat_id: int, context: CallbackContext) -> str:
+    try:
+        chat = await context.bot.get_chat(chat_id)
+
+        # Public group/channel
+        if chat.username:
+            return f"https://t.me/{chat.username}"
+
+        # Private supergroup with invite link (bot must be admin)
+        if chat.invite_link:
+            return chat.invite_link
+
+    except Exception:
+        pass
+
+    # Fallback
+    return f"Chat ID: <code>{chat_id}</code>"
+
 
 async def preload_characters(context: CallbackContext) -> None:
     global all_characters, amv_characters
@@ -293,17 +380,7 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
             supports_streaming=True
         )
 
-    # Special Diwali effect for admin notification
-    await context.bot.send_photo(
-        chat_id=log,
-        photo=character['img_url'],
-        caption=(
-            f"🎆 Winter Alert! 🎆\n"
-            f"Character ID: {character['id']} has appeared in chat {chat_id}\n"
-            f"Only {7 - global_count} remaining claims available worldwide!"
-        )
-    )
-    
+    await send_spawn_log(character, chat_id, context)
 
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
@@ -339,7 +416,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         if chat_id in first_correct_guesses:
             del first_correct_guesses[chat_id]
 
-        await context.bot.send_message(chat_id=-1002783891820, text="🎗️")
+    await context.bot.send_message(chat_id=-1002783891820, text="🎗️")
         await asyncio.sleep(2)
         # Store AMV character info
 
@@ -354,7 +431,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         )
         
       
-        
+        await send_spawn_log(character, chat_id, context)
     except Exception as e:
         print(f"Error spawning AMV: {e}")
 
@@ -453,22 +530,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     
    
 
-    if character.get('rarity') == '🔮 Limited Edition':
-        await context.bot.send_message(chat_id=log, text=f"🔮 Limited Edition !~! {character['id']} !~! {chat_id}")
-    
-    if character.get('rarity') == '🎄 Christmas Special':
-        await context.bot.send_message(chat_id=log,, text=f"🎄 Christmas !~! {character['id']} !~! {chat_id}")
-    
-    if character.get('rarity') == '🎃 Halloween':
-        await context.bot.send_message(chat_id=8535832693, text=f"🎃 Halloween !~! {character['id']} !~! {chat_id}")
-    
-
-    if character.get('rarity') == '💝 Valentine':
-        await context.bot.send_message(chat_id=8535832693, text=f"💝 Valentine !~! {character['id']} !~! {chat_id}")
-
-    
-    if character.get('rarity') == '❄️ Winter':
-        await context.bot.send_message(chat_id=8535832693, text=f"❄️ Winter !~! {character['id']} !~! {chat_id}")
     rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
 
     sent_characters[chat_id].append(character.get('id'))
@@ -514,8 +575,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             parse_mode='Markdown',
             supports_streaming=True
         )
+    
 
-
+    await send_spawn_log(character, chat_id, context)
 
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -585,8 +647,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
     
     # Notify admin (optional)
-    await context.bot.send_message(chat_id=8535832693, text=f"A celestial character chat :- {chat_id} Character id: {character['id']}")
-
+    await send_spawn_log(character, chat_id, context)
 
 async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -651,15 +712,12 @@ async def spawn_summer_character(update: Update, context: CallbackContext) -> No
             supports_streaming=True
         )
 
-    # Notify admin (optional)
-    await context.bot.send_message(
-        chat_id=8535832693,
-        text=f"A summer character has spawned! Character ID: {character['id']}"
-    )
+    
+    await send_spawn_log(character, chat_id, context)
     
 
     
-sad = ["8411935064", "8535832693"]
+sad = ["8213641719", "8213641719"]
 
 @block_dec_ptb
 async def slock(update: Update, context: CallbackContext) -> None:
