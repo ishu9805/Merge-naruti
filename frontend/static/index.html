@@ -1,22 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- BASIC META -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- SEO -->
-  <title>Blade — Premium Modern Web Experience</title>
-  <meta name="description" content="Blade is a high-performance, minimalist, premium web experience with immersive visuals and blazing fast speed.">
-  <meta name="keywords" content="Blade, modern website, premium UI, fast website, minimalist design">
-  <meta name="author" content="Blade">
+  <title>Blade — Premium Web Experience</title>
+  <meta name="description" content="Blade is a fast, minimalist, premium web experience with immersive UI and smooth interactions.">
 
-  <!-- OPEN GRAPH -->
-  <meta property="og:title" content="Blade — Premium Web Experience">
-  <meta property="og:description" content="Minimalist. Fast. Immersive.">
-  <meta property="og:type" content="website">
-
-  <!-- FONTS -->
+  <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,29 +21,26 @@
 
 <body>
 
-<!-- ===================== NAVBAR ===================== -->
-<header class="navbar" role="navigation">
-  <div class="nav-left">
-    <span class="logo">Blade</span>
-  </div>
+<!-- ================= LOADER (JS CONTROLLED) ================= -->
+<!-- injected via JS -->
+
+<!-- ================= NAVBAR ================= -->
+<header class="navbar">
+  <div class="logo">Blade</div>
 
   <nav class="nav-links">
     <a href="#features">Features</a>
     <a href="#preview">Preview</a>
     <a href="#stats">Stats</a>
-    <a href="#testimonials">Reviews</a>
     <a href="#faq">FAQ</a>
     <a href="#cta" class="nav-cta">Get Started</a>
   </nav>
 
-  <!-- Mobile Toggle -->
-  <div class="menu-toggle" aria-label="Open Menu">
-    ☰
-  </div>
+  <div class="menu-toggle">☰</div>
 </header>
 
-<!-- ===================== HERO ===================== -->
-<section class="hero" aria-label="Hero Section">
+<!-- ================= HERO ================= -->
+<section class="hero">
   <div class="hero-bg"></div>
 
   <div class="hero-content">
@@ -62,151 +50,124 @@
     </h1>
 
     <p>
-      A modern, lightning-fast, minimalist web experience designed
-      for performance and beauty.
+      Clean design. Smooth animations. Lightning-fast performance.
     </p>
 
     <div class="hero-actions">
-      <button class="btn-primary">Get Started</button>
+      <button class="btn-primary">Start Now</button>
       <button class="btn-secondary">Live Preview</button>
     </div>
   </div>
 
-  <!-- Scroll Indicator -->
   <div class="scroll-indicator">
     <span></span>
   </div>
 </section>
 
-<!-- ===================== FEATURES ===================== -->
-<section id="features" class="features section">
-  <header class="section-header">
+<!-- ================= FEATURES ================= -->
+<section id="features" class="section features">
+  <div class="section-header">
     <h2>Powerful Features</h2>
-    <p>Everything you need for a premium web presence</p>
-  </header>
+    <p>Designed to look amazing and work flawlessly</p>
+  </div>
 
   <div class="features-grid">
-    <article class="feature-card">
+    <div class="feature-card">
       <h3>⚡ Ultra Fast</h3>
-      <p>Optimized assets and minimal scripts for blazing speed.</p>
-    </article>
+      <p>Optimized assets and zero-lag interactions.</p>
+    </div>
 
-    <article class="feature-card">
-      <h3>🎨 Clean Design</h3>
-      <p>Minimalist layouts with strong visual hierarchy.</p>
-    </article>
+    <div class="feature-card">
+      <h3>🎨 Premium UI</h3>
+      <p>Minimalist layouts with modern aesthetics.</p>
+    </div>
 
-    <article class="feature-card">
-      <h3>📱 Fully Responsive</h3>
-      <p>Perfect on desktop, tablet, and mobile devices.</p>
-    </article>
+    <div class="feature-card">
+      <h3>📱 Responsive</h3>
+      <p>Perfect on desktop, tablet, and mobile.</p>
+    </div>
 
-    <article class="feature-card">
+    <div class="feature-card">
+      <h3>🌗 Theme Toggle</h3>
+      <p>Dark & Light mode with saved preference.</p>
+    </div>
+
+    <div class="feature-card">
       <h3>🧠 Smart UX</h3>
-      <p>Designed for clarity, flow, and ease of use.</p>
-    </article>
+      <p>Smooth scrolling, reveal animations, counters.</p>
+    </div>
 
-    <article class="feature-card">
-      <h3>🔒 Secure</h3>
-      <p>Best practices for safety and performance.</p>
-    </article>
-
-    <article class="feature-card">
+    <div class="feature-card">
       <h3>🚀 Scalable</h3>
-      <p>Ready to grow with more pages and features.</p>
-    </article>
-  </div>
-</section>
-
-<!-- ===================== PREVIEW ===================== -->
-<section id="preview" class="preview section">
-  <header class="section-header">
-    <h2>Immersive Visuals</h2>
-    <p>Designed to feel alive and premium</p>
-  </header>
-
-  <div class="preview-container">
-    <div class="preview-card glass">
-      <p>Place screenshots, videos, or UI mockups here.</p>
+      <p>Easy to extend with more sections & logic.</p>
     </div>
   </div>
 </section>
 
-<!-- ===================== STATS ===================== -->
-<section id="stats" class="stats section">
+<!-- ================= PREVIEW ================= -->
+<section id="preview" class="section preview">
+  <div class="section-header">
+    <h2>Immersive Visuals</h2>
+    <p>High-quality, modern and clean</p>
+  </div>
+
+  <div class="preview-container">
+    <div class="preview-card glass">
+      <p>Add screenshots, videos, or UI previews here.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section id="stats" class="section stats">
   <div class="stat-box">
     <h3 data-count="99">0</h3>
-    <p>Performance Score</p>
+    <p>Performance</p>
   </div>
 
   <div class="stat-box">
     <h3 data-count="100">0</h3>
-    <p>Responsive Design</p>
+    <p>Responsive</p>
   </div>
 
   <div class="stat-box">
     <h3 data-count="0">0</h3>
-    <p>Lag Experience</p>
+    <p>Lag Feeling</p>
   </div>
 </section>
 
-<!-- ===================== TESTIMONIALS ===================== -->
-<section id="testimonials" class="testimonials section">
-  <header class="section-header">
-    <h2>What People Say</h2>
-    <p>Loved by developers and creators</p>
-  </header>
-
-  <div class="testimonial-grid">
-    <div class="testimonial-card">
-      <p>“This feels insanely smooth and premium.”</p>
-      <span>— Developer</span>
-    </div>
-
-    <div class="testimonial-card">
-      <p>“Clean design, fast loading, perfect UX.”</p>
-      <span>— Designer</span>
-    </div>
-
-    <div class="testimonial-card">
-      <p>“Exactly how modern websites should feel.”</p>
-      <span>— Founder</span>
-    </div>
+<!-- ================= FAQ ================= -->
+<section id="faq" class="section faq">
+  <div class="section-header">
+    <h2>FAQ</h2>
   </div>
-</section>
-
-<!-- ===================== FAQ ===================== -->
-<section id="faq" class="faq section">
-  <header class="section-header">
-    <h2>Frequently Asked Questions</h2>
-  </header>
 
   <div class="faq-list">
     <details>
       <summary>Is Blade fast?</summary>
-      <p>Yes. It is optimized for performance and speed.</p>
+      <p>Yes. Everything is optimized for speed.</p>
     </details>
 
     <details>
       <summary>Is it mobile-friendly?</summary>
-      <p>Absolutely. Fully responsive across all devices.</p>
+      <p>Fully responsive across all screen sizes.</p>
     </details>
 
     <details>
       <summary>Can I extend it?</summary>
-      <p>Yes. The structure is scalable and feature-ready.</p>
+      <p>Absolutely. The structure is scalable.</p>
     </details>
   </div>
 </section>
 
-<!-- ===================== CTA ===================== -->
-<section id="cta" class="cta section">
-  <h2>Start Building Something Amazing</h2>
-  <p>Experience speed, clarity, and premium design.</p>
+<!-- ================= CTA ================= -->
+<section id="cta" class="section cta">
+  <h2>Ready to Build Something Amazing?</h2>
+  <p>Start with a premium foundation.</p>
   <button class="btn-primary large">Launch Now</button>
 </section>
 
-<!-- ===================== FOOTER ===================== -->
+<!-- ================= FOOTER ================= -->
 <footer class="footer">
   <div class="footer-grid">
     <div>
@@ -223,8 +184,8 @@
 
     <div>
       <h4>Social</h4>
-      <a href="#">Twitter</a>
       <a href="#">GitHub</a>
+      <a href="#">Twitter</a>
       <a href="#">Discord</a>
     </div>
   </div>
