@@ -1,126 +1,175 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const searchForm = document.getElementById('multi-search-form');
-    const searchResultsDiv = document.getElementById('search-results');
-    const prevPageButton = document.getElementById('prev-page');
-    const nextPageButton = document.getElementById('next-page');
-    const appliedFiltersDiv = document.getElementById('applied-filters');
-    const modal = document.getElementById('image-popup');
-    const modalImg = document.getElementById('popup-image');
-    const closeBtn = document.querySelector('.modal .close');
-    let currentPage = 1;
-    const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
+/* =====================================================
+   GLOBAL SETTINGS
+===================================================== */
+const prefersReducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)"
+).matches;
 
-    const backgroundImages = [
-        'https://files.catbox.moe/9jbemn.jpg',
-        'https://files.catbox.moe/l5g4xp.jpg',
-        'https://files.catbox.moe/7tdou5.jpg',
-        'https://files.catbox.moe/4sgb37.jpg',
-        'https://files.catbox.moe/qggqe3.jpg'
-    ];
+/* =====================================================
+   NAVBAR SCROLL EFFECT
+===================================================== */
+const navbar = document.querySelector(".navbar");
 
-    // Set a random background image
-    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 20) {
+    navbar.style.boxShadow = "0 12px 40px rgba(0,0,0,0.5)";
+  } else {
+    navbar.style.boxShadow = "none";
+  }
+});
 
-    const updatePaginationButtons = (hasNextPage) => {
-        prevPageButton.disabled = currentPage === 1;
-        nextPageButton.disabled = !hasNextPage;
-    };
+/* =====================================================
+   MOBILE MENU TOGGLE
+===================================================== */
+const menuToggle = document.querySelector(".menu-toggle");
+const navLinks = document.querySelector(".nav-links");
 
-    const updateFilters = () => {
-        const filters = [];
-        const nameQuery = document.getElementById('name-query').value.trim();
-        const animeQuery = document.getElementById('anime-query').value.trim();
-        const rarityQuery = document.getElementById('rarity-query').value.trim();
-        const idQuery = document.getElementById('id-query').value.trim();
+if (menuToggle) {
+  menuToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("open");
+    menuToggle.classList.toggle("active");
+  });
+}
 
-        if (nameQuery) filters.push(`Name: ${nameQuery}`);
-        if (animeQuery) filters.push(`Anime: ${animeQuery}`);
-        if (rarityQuery) filters.push(`Rarity: ${rarityQuery}`);
-        if (idQuery) filters.push(`ID: ${idQuery}`);
+/* Close menu when clicking a link (mobile UX) */
+document.querySelectorAll(".nav-links a").forEach(link => {
+  link.addEventListener("click", () => {
+    navLinks.classList.remove("open");
+    menuToggle.classList.remove("active");
+  });
+});
 
-        appliedFiltersDiv.innerHTML = filters.map(filter => `
-            <span>${filter} <button class="remove-filter" data-filter="${filter}">x</button></span>
-        `).join(' ');
-    };
+/* =====================================================
+   SCROLL REVEAL ANIMATIONS
+===================================================== */
+const revealElements = document.querySelectorAll(
+  ".section, .feature-card, .testimonial-card, .preview-card"
+);
 
-const loadCharacters = async (page) => {
-    searchResultsDiv.innerHTML = 'Loading...';
-    const nameQuery = document.getElementById('name-query').value.trim();
-    const animeQuery = document.getElementById('anime-query').value.trim();
-    const rarityQuery = document.getElementById('rarity-query').value.trim();
-    const idQuery = document.getElementById('id-query').value.trim();
-
-    try {
-        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
-        let data = await response.json();
-
-        // Sort results in descending order by ID
-        data.results.sort((a, b) => b.id - a.id);
-
-        if (data.results && data.results.length > 0) {
-            searchResultsDiv.innerHTML = data.results.map(item => `
-                <div class="character-item">
-                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
-                    <h3>${item.character_name}</h3>
-                    <p>Anime: ${item.anime_name}</p>
-                    <p>Rarity: ${item.rarity}</p>
-                    <p>ID: ${item.id}</p>
-                </div>
-            `).join('');
-            updatePaginationButtons(data.hasNextPage);
-        } else {
-            searchResultsDiv.innerHTML = 'No characters found.';
-            updatePaginationButtons(false);
+if (!prefersReducedMotion) {
+  const revealObserver = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal");
+          revealObserver.unobserve(entry.target);
         }
-    } catch (error) {
-        searchResultsDiv.innerHTML = 'Error fetching results.';
-        console.error('Error:', error);
+      });
+    },
+    {
+      threshold: 0.15,
     }
+  );
+
+  revealElements.forEach(el => {
+    el.classList.add("reveal-hidden");
+    revealObserver.observe(el);
+  });
+}
+
+/* =====================================================
+   STATS COUNTER ANIMATION
+===================================================== */
+const counters = document.querySelectorAll("[data-count]");
+
+const runCounter = counter => {
+  const target = +counter.dataset.count;
+  const duration = 1500;
+  const start = performance.now();
+
+  const update = now => {
+    const progress = Math.min((now - start) / duration, 1);
+    const value = Math.floor(progress * target);
+
+    counter.textContent = value;
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      counter.textContent = target;
+    }
+  };
+
+  requestAnimationFrame(update);
 };
 
-
-    prevPageButton.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadCharacters(currentPage);
-        }
+const counterObserver = new IntersectionObserver(
+  entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        runCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
     });
+  },
+  { threshold: 0.6 }
+);
 
-    nextPageButton.addEventListener('click', () => {
-        currentPage++;
-        loadCharacters(currentPage);
-    });
+counters.forEach(counter => counterObserver.observe(counter));
 
-    searchForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        updateFilters();
-        loadCharacters(currentPage);
-    });
+/* =====================================================
+   SMOOTH SCROLL OFFSET FIX (STICKY NAV)
+===================================================== */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener("click", e => {
+    const targetId = anchor.getAttribute("href");
+    const target = document.querySelector(targetId);
 
-    document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remove-filter')) {
-            const filter = event.target.getAttribute('data-filter');
-            const [key, value] = filter.split(': ');
-            document.getElementById(`${key.toLowerCase()}-query`).value = '';
-            updateFilters();
-            loadCharacters(currentPage);
-        } else if (event.target.tagName === 'IMG' && event.target.closest('.character-item')) {
-            // Open modal with image
-            modal.style.display = 'block';
-            modalImg.src = event.target.src;
-        }
-    });
+    if (target) {
+      e.preventDefault();
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+      const offset = navbar.offsetHeight + 10;
+      const top =
+        target.getBoundingClientRect().top +
+        window.pageYOffset -
+        offset;
 
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Initial load
-    loadCharacters(currentPage);
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
+    }
+  });
 });
+
+/* =====================================================
+   HERO BUTTON MICRO INTERACTION
+===================================================== */
+document.querySelectorAll(".btn-primary").forEach(btn => {
+  btn.addEventListener("mousemove", e => {
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    btn.style.setProperty("--x", `${x}px`);
+    btn.style.setProperty("--y", `${y}px`);
+  });
+});
+
+/* =====================================================
+   PERFORMANCE SAFE IMAGE LAZY LOAD (OPTIONAL)
+===================================================== */
+const lazyImages = document.querySelectorAll("img[data-src]");
+
+if ("IntersectionObserver" in window) {
+  const imageObserver = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src;
+          img.removeAttribute("data-src");
+          imageObserver.unobserve(img);
+        }
+      });
+    },
+    { rootMargin: "200px" }
+  );
+
+  lazyImages.forEach(img => imageObserver.observe(img));
+}
+
+/* =====================================================
+   DEBUG (DEV ONLY)
+===================================================== */
+console.log("Blade UI scripts loaded successfully ⚡");
