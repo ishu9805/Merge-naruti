@@ -1,11 +1,16 @@
 {% extends "base.html" %}
-
-{% block title %}BladeWeb{% endblock %}
-
 {% block content %}
-  {% include "components/search.html" %}
 
-  <section id="results" class="grid-container"></section>
+<section class="container">
 
-  {% include "components/card.html" %}
+  <div class="search-grid">
+    <input id="searchName" placeholder="Name">
+    <input id="searchAnime" placeholder="Anime">
+    <input id="searchRarity" placeholder="Rarity">
+  </div>
+
+  <div id="grid" class="grid-container"></div>
+
+</section>
+
 {% endblock %}
