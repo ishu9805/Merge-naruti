@@ -1,189 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blade Network</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: url('https://files.catbox.moe/9jbemn.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #333;
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-        }
-        header img {
-            height: 50px;
-        }
-        header h1 {
-            font-size: 24px;
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        .character-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .character-item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 150px;
-            height: auto;
-        }
-        .character-item img {
-            width: 120px; /* Adjust width */
-            height: 120px; /* Adjust height */
-            object-fit: cover; /* Maintain aspect ratio */
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 10px /* Lazy load images */
-            cursor: pointer; /* Change cursor to pointer */
-        }
-        .character-item h3 {
-            margin: 10px 0 5px;
-            font-size: 1.0em;
-        }
-        .character-item p {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pagination button {
-            margin: 0 5px;
-            padding: 10px 20px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            font-size: 1em;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .pagination button:disabled {
-            background-color: #ccc;
-        }
+  <!-- BASIC META -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        /* Modal (Popup) */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.8); /* Black with opacity */
-            animation: fadeIn 0.5s; /* Animation for showing */
-        }
+  <!-- SEO -->
+  <title>Blade — Premium Modern Web Experience</title>
+  <meta name="description" content="Blade is a high-performance, minimalist, premium web experience with immersive visuals and blazing fast speed.">
+  <meta name="keywords" content="Blade, modern website, premium UI, fast website, minimalist design">
+  <meta name="author" content="Blade">
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; /* 15% from the top and centered */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; /* Could be more or less, depending on screen size */
-            max-width: 600px;
-            position: relative;
-        }
+  <!-- OPEN GRAPH -->
+  <meta property="og:title" content="Blade — Premium Web Experience">
+  <meta property="og:description" content="Minimalist. Fast. Immersive.">
+  <meta property="og:type" content="website">
 
-        .modal-content img {
-            width: 100%; /* Responsive image */
-        }
+  <!-- FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+  <!-- JS -->
+  <script src="scripts.js" defer></script>
 </head>
+
 <body>
-    <header>
-        <img src="https://files.catbox.moe/078cs5.jpg" alt="Blade Network">
-        <h1>Blade Network</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="#search">Search</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>        
-        <section id="search">
-            <h2>Search Characters</h2>
-            <form id="multi-search-form">
-                <input type="text" id="name-query" placeholder="Search by name">
-                <input type="text" id="anime-query" placeholder="Search by anime">
-                <input type="text" id="rarity-query" placeholder="Search by rarity">
-                <input type="text" id="id-query" placeholder="Search by ID">
-                <button type="submit">Search</button>
-            </form>
-            <div id="applied-filters"></div>
-            <div id="search-results" class="character-grid"></div>
-            <div class="pagination">
-                <button id="prev-page" disabled>Previous</button>
-                <button id="next-page">Next</button>
-            </div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 Blade Network</p>
-    </footer>
-    
-    <!-- Popup Modal -->
-    <div id="image-popup" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <img id="popup-image" src="" alt="Popup Image">
-        </div>
+
+<!-- ===================== NAVBAR ===================== -->
+<header class="navbar" role="navigation">
+  <div class="nav-left">
+    <span class="logo">Blade</span>
+  </div>
+
+  <nav class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#preview">Preview</a>
+    <a href="#stats">Stats</a>
+    <a href="#testimonials">Reviews</a>
+    <a href="#faq">FAQ</a>
+    <a href="#cta" class="nav-cta">Get Started</a>
+  </nav>
+
+  <!-- Mobile Toggle -->
+  <div class="menu-toggle" aria-label="Open Menu">
+    ☰
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" aria-label="Hero Section">
+  <div class="hero-bg"></div>
+
+  <div class="hero-content">
+    <h1>
+      Build Experiences<br>
+      <span class="accent">That Feel Premium</span>
+    </h1>
+
+    <p>
+      A modern, lightning-fast, minimalist web experience designed
+      for performance and beauty.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn-primary">Get Started</button>
+      <button class="btn-secondary">Live Preview</button>
     </div>
-    
-    <script src="scripts.js"></script>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator">
+    <span></span>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section id="features" class="features section">
+  <header class="section-header">
+    <h2>Powerful Features</h2>
+    <p>Everything you need for a premium web presence</p>
+  </header>
+
+  <div class="features-grid">
+    <article class="feature-card">
+      <h3>⚡ Ultra Fast</h3>
+      <p>Optimized assets and minimal scripts for blazing speed.</p>
+    </article>
+
+    <article class="feature-card">
+      <h3>🎨 Clean Design</h3>
+      <p>Minimalist layouts with strong visual hierarchy.</p>
+    </article>
+
+    <article class="feature-card">
+      <h3>📱 Fully Responsive</h3>
+      <p>Perfect on desktop, tablet, and mobile devices.</p>
+    </article>
+
+    <article class="feature-card">
+      <h3>🧠 Smart UX</h3>
+      <p>Designed for clarity, flow, and ease of use.</p>
+    </article>
+
+    <article class="feature-card">
+      <h3>🔒 Secure</h3>
+      <p>Best practices for safety and performance.</p>
+    </article>
+
+    <article class="feature-card">
+      <h3>🚀 Scalable</h3>
+      <p>Ready to grow with more pages and features.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ===================== PREVIEW ===================== -->
+<section id="preview" class="preview section">
+  <header class="section-header">
+    <h2>Immersive Visuals</h2>
+    <p>Designed to feel alive and premium</p>
+  </header>
+
+  <div class="preview-container">
+    <div class="preview-card glass">
+      <p>Place screenshots, videos, or UI mockups here.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STATS ===================== -->
+<section id="stats" class="stats section">
+  <div class="stat-box">
+    <h3 data-count="99">0</h3>
+    <p>Performance Score</p>
+  </div>
+
+  <div class="stat-box">
+    <h3 data-count="100">0</h3>
+    <p>Responsive Design</p>
+  </div>
+
+  <div class="stat-box">
+    <h3 data-count="0">0</h3>
+    <p>Lag Experience</p>
+  </div>
+</section>
+
+<!-- ===================== TESTIMONIALS ===================== -->
+<section id="testimonials" class="testimonials section">
+  <header class="section-header">
+    <h2>What People Say</h2>
+    <p>Loved by developers and creators</p>
+  </header>
+
+  <div class="testimonial-grid">
+    <div class="testimonial-card">
+      <p>“This feels insanely smooth and premium.”</p>
+      <span>— Developer</span>
+    </div>
+
+    <div class="testimonial-card">
+      <p>“Clean design, fast loading, perfect UX.”</p>
+      <span>— Designer</span>
+    </div>
+
+    <div class="testimonial-card">
+      <p>“Exactly how modern websites should feel.”</p>
+      <span>— Founder</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section id="faq" class="faq section">
+  <header class="section-header">
+    <h2>Frequently Asked Questions</h2>
+  </header>
+
+  <div class="faq-list">
+    <details>
+      <summary>Is Blade fast?</summary>
+      <p>Yes. It is optimized for performance and speed.</p>
+    </details>
+
+    <details>
+      <summary>Is it mobile-friendly?</summary>
+      <p>Absolutely. Fully responsive across all devices.</p>
+    </details>
+
+    <details>
+      <summary>Can I extend it?</summary>
+      <p>Yes. The structure is scalable and feature-ready.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section id="cta" class="cta section">
+  <h2>Start Building Something Amazing</h2>
+  <p>Experience speed, clarity, and premium design.</p>
+  <button class="btn-primary large">Launch Now</button>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <h3>Blade</h3>
+      <p>Premium modern web experience.</p>
+    </div>
+
+    <div>
+      <h4>Links</h4>
+      <a href="#features">Features</a>
+      <a href="#preview">Preview</a>
+      <a href="#faq">FAQ</a>
+    </div>
+
+    <div>
+      <h4>Social</h4>
+      <a href="#">Twitter</a>
+      <a href="#">GitHub</a>
+      <a href="#">Discord</a>
+    </div>
+  </div>
+
+  <p class="copyright">
+    © 2026 Blade. All rights reserved.
+  </p>
+</footer>
+
 </body>
 </html>
