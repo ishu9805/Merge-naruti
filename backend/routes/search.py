@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from db import global_collection, user_collection
-from search_engine import run_search
+from backend.db import global_collection, user_collection
+from backend.search_engine import run_search
 
 search_bp = Blueprint("search", __name__)
 
