@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from routes.search import search_bp
+from backend.routes.search import search_bp
 
 app = Flask(
     __name__,
