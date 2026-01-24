@@ -1,5 +1,5 @@
 import math
-from utils.media import resolve_media
+from backend.utils.media import resolve_media
 
 
 def build_search_pipeline(query, page, limit):
