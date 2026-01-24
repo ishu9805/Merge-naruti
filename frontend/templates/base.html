@@ -1,28 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <title>{% block title %}BladeWeb{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BladeWeb</title>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/grid.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-
-  <!-- GSAP -->
-  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
 </head>
-
 <body>
-  {% include "components/navbar.html" %}
 
-  <main class="app-container">
-    {% block content %}{% endblock %}
-  </main>
+<nav class="glass-nav">
+  <div class="logo">⚔ BladeWeb</div>
 
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <div class="nav-links" id="navLinks">
+    <button data-mode="global">Global</button>
+    <button data-mode="user">User</button>
+    <button id="themeToggle">🌗</button>
+  </div>
+
+  <div class="hamburger" id="hamburger">☰</div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- Viewer Modal -->
+<div id="viewer" class="viewer hidden">
+  <div class="viewer-content">
+    <div class="viewer-media"></div>
+    <div class="viewer-info"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
