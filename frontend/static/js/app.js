@@ -126,3 +126,98 @@ new IntersectionObserver(e => {
 
 /* INIT */
 fetchResults();
+
+
+
+const grid = document.getElementById("grid");
+const viewer = document.getElementById("viewer");
+const viewerMedia = document.querySelector(".viewer-media");
+const viewerInfo = document.querySelector(".viewer-info");
+const themeToggle = document.getElementById("themeToggle");
+
+let page = 1;
+const LIMIT = 30;
+let loading = false;
+
+/* Theme */
+themeToggle.onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+};
+
+/* Load items (mock fetch, replace with backend API) */
+async function loadItems() {
+  if (loading) return;
+  loading = true;
+
+  const res = await fetch(`/api/search?page=${page}&limit=${LIMIT}`);
+  const data = await res.json();
+
+  data.forEach(renderCard);
+  page++;
+  loading = false;
+}
+
+function renderCard(item) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <div class="media">
+      ${item.vid_url
+        ? `<video muted loop src="${item.vid_url}"></video>`
+        : `<img src="${item.img_url}">`}
+    </div>
+    <div class="info">
+      <strong>${item.name}</strong><br>
+      ${item.anime}<br>
+      ${item.rarity}
+    </div>
+  `;
+
+  card.onclick = () => openViewer(item);
+
+  grid.appendChild(card);
+
+  gsap.from(card, {
+    opacity: 0,
+    y: 60,
+    rotateX: 15,
+    duration: .8,
+    ease: "power4.out"
+  });
+}
+
+/* Viewer */
+function openViewer(item) {
+  viewer.classList.remove("hidden");
+
+  viewerMedia.innerHTML = item.vid_url
+    ? `<video controls autoplay src="${item.vid_url}"></video>`
+    : `<img src="${item.img_url}">`;
+
+  viewerInfo.innerHTML = `
+    <h2>${item.name}</h2>
+    <p>${item.anime}</p>
+    <span>${item.rarity}</span>
+    <small>ID: ${item.id}</small>
+  `;
+
+  gsap.fromTo(".viewer-content",
+    { scale:.6, opacity:0, rotateX:20 },
+    { scale:1, opacity:1, rotateX:0, duration:.8, ease:"power4.out" }
+  );
+}
+
+viewer.onclick = e => {
+  if (e.target === viewer) viewer.classList.add("hidden");
+};
+
+/* Infinite Scroll */
+window.addEventListener("scroll", () => {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400) {
+    loadItems();
+  }
+});
+
+loadItems();
