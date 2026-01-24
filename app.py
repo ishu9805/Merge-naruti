@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder='frontend/static')
 CORS(app)
 
 # MongoDB connection URL
-mongo_url = "mongodb+srv://abhi47903:sashtadev143@naruto.svojv.mongodb.net/"
+mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(mongo_url)
 db = client['NARUTOGAMEBOT']
 collection = db['anime_characters_lol']
