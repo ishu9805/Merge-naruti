@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}BladeWeb{% endblock %}
+
+{% block content %}
+  {% include "components/search.html" %}
+
+  <section id="results" class="grid-container"></section>
+
+  {% include "components/card.html" %}
+{% endblock %}
