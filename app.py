@@ -3,13 +3,12 @@ from pymongo import MongoClient
 import requests
 from flask import Flask, jsonify, send_from_directory, request, Response
 
-
-
-# Other routes...
-
-
-app = Flask(__name__, static_folder='frontend/static')
-CORS(app)
+from flask import Flask, jsonify, request, send_from_directory, Response
+from flask_cors import CORS
+from pymongo import MongoClient
+import requests
+import os
+from dotenv import load_dotenv
 
 # MongoDB connection URL
 mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -19,92 +18,155 @@ collection = db['anime_characters_lol']
 user_collection = db['user_collection_lmaoooo']  # Collection storing user collections with a 'characters' array
 
 
-@app.route('/proxy-image/<path:url>')
+load_dotenv()
+
+app = Flask(__name__, static_folder="frontend/static", static_url_path="")
+CORS(app)
+
+media_collection = db["anime_characters_lol"]   # images + videos
+engagement_collection = db["media_engagement"]
+
+# =======================
+# IMAGE PROXY
+# =======================
+@app.route("/proxy-image/<path:url>")
 def proxy_image(url):
     telegraph_url = f"https://telegra.ph/{url}"
     try:
-        response = requests.get(telegraph_url, stream=True)
-        response.raise_for_status()
-        return Response(response.content, mimetype=response.headers['Content-Type'])
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': 'Image not found or could not be retrieved'}), 404
-    
-# Serve homepage
-@app.route('/')
+        r = requests.get(telegraph_url, stream=True, timeout=5)
+        return Response(r.content, mimetype=r.headers.get("Content-Type"))
+    except:
+        return jsonify({"error": "Image not found"}), 404
+
+# =======================
+# HOME
+# =======================
+@app.route("/")
 def home():
-    return send_from_directory('frontend/static', 'index.html')
+    return send_from_directory("frontend/static", "index.html")
 
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('frontend/static', filename)
+# =======================
+# MEDIA FEED (IMAGES + VIDEOS)
+# =======================
+@app.route("/media", methods=["GET"])
+def get_media():
+    page = int(request.args.get("page", 1))
+    size = int(request.args.get("size", 12))
+    skip = (page - 1) * size
 
-# Search waifus by name, anime, rarity, or ID
-@app.route('/waifus/search', methods=['GET'])
-def search_waifus():
-    name_query = request.args.get('name', '')
-    anime_query = request.args.get('anime', '')
-    rarity_query = request.args.get('rarity', '')
-    id_query = request.args.get('id', '')
+    total = media_collection.count_documents({})
+    has_next = total > page * size
 
-    query_filters = {}
-    if name_query:
-        query_filters['name'] = {'$regex': name_query, '$options': 'i'}
-    if anime_query:
-        query_filters['anime'] = {'$regex': anime_query, '$options': 'i'}
-    if rarity_query:
-        query_filters['rarity'] = {'$regex': rarity_query, '$options': 'i'}
-    if id_query:
-        query_filters['id'] = {'$regex': id_query, '$options': 'i'}
+    docs = list(media_collection.find().skip(skip).limit(size))
 
-    waifus = list(collection.find(query_filters))
-    results = [{
-        'character_name': waifu['name'],
-        'anime_name': waifu['anime'],
-        'image_url': waifu['img_url'],
-        'rarity': waifu.get('rarity', 'Unknown'),
-        'id': waifu.get('id', 'N/A')
-    } for waifu in waifus]
-    return jsonify({'results': results})
+    results = []
+    for doc in docs:
+        if "vid_url" in doc:
+            results.append({
+                "media_id": str(doc.get("id")),
+                "type": "video",
+                "url": doc["vid_url"],
+                "name": doc.get("name"),
+                "anime": doc.get("anime"),
+                "rarity": doc.get("rarity", "Unknown")
+            })
+        elif "img_url" in doc:
+            results.append({
+                "media_id": str(doc.get("id")),
+                "type": "image",
+                "url": f"/proxy-image/{doc['img_url'].replace('https://telegra.ph/', '')}",
+                "name": doc.get("name"),
+                "anime": doc.get("anime"),
+                "rarity": doc.get("rarity", "Unknown")
+            })
 
-@app.route('/waifus', methods=['GET'])
-def get_characters():
-    try:
-        page = int(request.args.get('page', 1))
-        size = int(request.args.get('size', 15))
-        skip = (page - 1) * size
-        limit = size
+    return jsonify({
+        "results": results,
+        "hasNextPage": has_next
+    })
 
-        total_count = collection.count_documents({})
-        has_next_page = (total_count > page * size)
+# =======================
+# SEARCH (IMAGE + VIDEO)
+# =======================
+@app.route("/media/search", methods=["GET"])
+def search_media():
+    name = request.args.get("name", "")
+    anime = request.args.get("anime", "")
 
-        waifus = list(collection.find().skip(skip).limit(limit))
-        results = [{
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': f"/proxy-image/{waifu['img_url'].replace('https://telegra.ph/', '')}",
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        } for waifu in waifus]
+    query = {}
+    if name:
+        query["name"] = {"$regex": name, "$options": "i"}
+    if anime:
+        query["anime"] = {"$regex": anime, "$options": "i"}
 
-        return jsonify({'results': results, 'hasNextPage': has_next_page})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    docs = list(media_collection.find(query))
 
+    results = []
+    for doc in docs:
+        if "vid_url" in doc:
+            results.append({
+                "media_id": str(doc.get("id")),
+                "type": "video",
+                "url": doc["vid_url"],
+                "name": doc.get("name"),
+                "anime": doc.get("anime")
+            })
+        elif "img_url" in doc:
+            results.append({
+                "media_id": str(doc.get("id")),
+                "type": "image",
+                "url": f"/proxy-image/{doc['img_url'].replace('https://telegra.ph/', '')}",
+                "name": doc.get("name"),
+                "anime": doc.get("anime")
+            })
 
-# Get specific waifu by character name
-@app.route('/waifus/<string:character_name>', methods=['GET'])
-def get_waifu(character_name):
-    waifu = collection.find_one({'name': {'$regex': character_name, '$options': 'i'}})
-    if waifu:
-        return jsonify({
-            'character_name': waifu['name'],
-            'anime_name': waifu['anime'],
-            'image_url': waifu['img_url'],
-            'rarity': waifu.get('rarity', 'Unknown'),
-            'id': waifu.get('id', 'N/A')
-        })
-    else:
-        return jsonify({'error': 'Waifu not found'}), 404
+    return jsonify({"results": results})
+
+# =======================
+# LIKE MEDIA
+# =======================
+@app.route("/media/like", methods=["POST"])
+def like_media():
+    media_id = request.json.get("media_id")
+
+    engagement_collection.update_one(
+        {"media_id": media_id},
+        {"$inc": {"likes": 1}},
+        upsert=True
+    )
+
+    return jsonify({"success": True})
+
+# =======================
+# COMMENT MEDIA
+# =======================
+@app.route("/media/comment", methods=["POST"])
+def comment_media():
+    data = request.json
+
+    engagement_collection.update_one(
+        {"media_id": data["media_id"]},
+        {"$push": {
+            "comments": {
+                "user": data.get("user", "anon"),
+                "text": data["text"]
+            }
+        }},
+        upsert=True
+    )
+
+    return jsonify({"success": True})
+
+# =======================
+# GET COMMENTS + LIKES
+# =======================
+@app.route("/media/<media_id>/engagement", methods=["GET"])
+def get_engagement(media_id):
+    doc = engagement_collection.find_one({"media_id": media_id}) or {}
+    return jsonify({
+        "likes": doc.get("likes", 0),
+        "comments": doc.get("comments", [])
+    })
 
 # Search user by ID and get their characters array
 @app.route('/user/search', methods=['GET'])
@@ -135,6 +197,10 @@ def get_user_collection(user_id):
         })
     else:
         return jsonify({'error': 'User not found'}), 404
+        
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+# =======================
+# RUN
+# =======================
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
