@@ -124,3 +124,20 @@ const loadCharacters = async (page) => {
     // Initial load
     loadCharacters(currentPage);
 });
+
+
+// 🆕 ADDITION: Open 3D Ring on Image Click
+document.addEventListener("click", (event) => {
+    if (event.target.tagName === "IMG" && event.target.closest(".character-item")) {
+
+        const images = [...document.querySelectorAll(".character-item img")]
+            .map(img => img.src);
+
+        document.getElementById("ring-modal").style.display = "block";
+        buildRing(images);
+    }
+});
+
+document.getElementById("ring-close").onclick = () => {
+    document.getElementById("ring-modal").style.display = "none";
+};
