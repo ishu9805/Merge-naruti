@@ -33,6 +33,36 @@ engagement_collection = db["media_engagement"]
 def home():
     return send_from_directory("frontend/static", "index.html")
 
+
+#rariti3w
+RARITY_MAP = {
+    1: "⚪️ Common",
+    2: "🟣 Rare",
+    3: "🟡 Legendary",
+    4: "🟢 Medium",
+    5: "💮 Special Edition",
+    6: "🔮 Limited Edition",
+    7: "💸 Premium Edition",
+    8: "🌤 Summer",
+    9: "🎐 Celestial",
+    10: "❄️ Winter",
+    11: "💝 Valentine",
+    12: "🎃 Halloween",
+    13: "🎄 Christmas Special",
+    14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    15: "🎭 Cosplay Master 🎭",
+    16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    17: "🎖 Apex Lot ( AUCTION )",
+    18: "🍑 Echhi",
+    19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊",
+    20: "☔ Monsoon",
+    21: "🪸 Aquatic",
+    22: "🎨 Artistic",
+    23: "💳 VIP SLOT",
+    24: "👶 Chibi",
+    25: "🏴‍☠️ Marauds"
+}
+
 # =======================
 # MEDIA FEED (IMAGES + VIDEOS)
 # =======================
@@ -82,13 +112,17 @@ def search_media():
     anime = request.args.get("anime", "")
     rarity = request.args.get("rarity", "0")
 
-    if rarity != "0":
-        query["rarity"] = rarity
     query = {}
+
     if name:
         query["name"] = {"$regex": name, "$options": "i"}
+
     if anime:
         query["anime"] = {"$regex": anime, "$options": "i"}
+
+    # RARITY FILTER
+    if rarity != "0":
+        query["rarity"] = RARITY_MAP.get(int(rarity))
 
     docs = list(media_collection.find(query))
 
@@ -100,15 +134,17 @@ def search_media():
                 "type": "video",
                 "url": doc["vid_url"],
                 "name": doc.get("name"),
-                "anime": doc.get("anime")
+                "anime": doc.get("anime"),
+                "rarity": doc.get("rarity")
             })
         elif "img_url" in doc:
             results.append({
                 "media_id": str(doc.get("id")),
                 "type": "image",
-                "url": doc["img_url"],
+                "url": f"/proxy-image/{doc['img_url'].replace('https://telegra.ph/', '')}",
                 "name": doc.get("name"),
-                "anime": doc.get("anime")
+                "anime": doc.get("anime"),
+                "rarity": doc.get("rarity")
             })
 
     return jsonify({"results": results})
