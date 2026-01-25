@@ -75,8 +75,14 @@ def get_media():
     total = media_collection.count_documents({})
     has_next = total > page * size
 
-    docs = list(media_collection.find().skip(skip).limit(size))
-
+    docs = list(
+        media_collection
+        .find()
+        .sort("_id", -1)   # NEWEST FIRST
+        .skip(skip)
+        .limit(size)
+    )
+    
     results = []
     for doc in docs:
         if "vid_url" in doc:
