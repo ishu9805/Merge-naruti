@@ -92,7 +92,10 @@ def get_media():
 def search_media():
     name = request.args.get("name", "")
     anime = request.args.get("anime", "")
+    rarity = request.args.get("rarity", "0")
 
+    if rarity != "0":
+        query["rarity"] = rarity
     query = {}
     if name:
         query["name"] = {"$regex": name, "$options": "i"}
