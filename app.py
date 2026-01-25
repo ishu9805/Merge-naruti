@@ -170,36 +170,10 @@ def like_media():
 
     return jsonify({"success": True})
 
-# =======================
-# COMMENT MEDIA
-# =======================
-@app.route("/media/comment", methods=["POST"])
-def comment_media():
-    data = request.json
-
-    engagement_collection.update_one(
-        {"media_id": data["media_id"]},
-        {"$push": {
-            "comments": {
-                "user": data.get("user", "anon"),
-                "text": data["text"]
-            }
-        }},
-        upsert=True
-    )
-
-    return jsonify({"success": True})
-
-# =======================
-# GET COMMENTS + LIKES
-# =======================
-@app.route("/media/<media_id>/engagement", methods=["GET"])
-def get_engagement(media_id):
+@app.route("/media/likes/<media_id>")
+def get_likes(media_id):
     doc = engagement_collection.find_one({"media_id": media_id}) or {}
-    return jsonify({
-        "likes": doc.get("likes", 0),
-        "comments": doc.get("comments", [])
-    })
+    return jsonify(likes=doc.get("likes", 0))
 
 # Search user by ID and get their characters array
 @app.route('/user/search', methods=['GET'])
