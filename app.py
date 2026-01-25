@@ -106,7 +106,7 @@ def search_media():
             results.append({
                 "media_id": str(doc.get("id")),
                 "type": "image",
-                "url": f"/proxy-image/{doc['img_url'].replace('https://telegra.ph/', '')}",
+                "url": doc["img_url"],
                 "name": doc.get("name"),
                 "anime": doc.get("anime")
             })
