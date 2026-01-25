@@ -14,6 +14,23 @@ body {
     100% { background-position: 0% 50%; }
 }
 
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 30%, #6a00ff55, transparent 40%),
+      radial-gradient(circle at 80% 20%, #00f0ff55, transparent 40%),
+      radial-gradient(circle at 50% 80%, #ff00cc55, transparent 40%);
+    animation: aurora 12s infinite alternate;
+    z-index: -1;
+}
+
+@keyframes aurora {
+    0% { filter: blur(40px); }
+    100% { filter: blur(70px); }
+}
+
 .top-bar {
     text-align: center;
     padding: 16px;
@@ -173,3 +190,25 @@ body {
     padding: 16px;
     border-radius: 14px;
 }
+
+.media-card {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    backdrop-filter: blur(18px);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform .3s, box-shadow .3s;
+}
+
+.media-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 0 25px rgba(150,120,255,.6);
+}
+
+.media-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
