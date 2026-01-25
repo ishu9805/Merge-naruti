@@ -1,143 +1,164 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const searchForm = document.getElementById('multi-search-form');
-    const searchResultsDiv = document.getElementById('search-results');
-    const prevPageButton = document.getElementById('prev-page');
-    const nextPageButton = document.getElementById('next-page');
-    const appliedFiltersDiv = document.getElementById('applied-filters');
-    const modal = document.getElementById('image-popup');
-    const modalImg = document.getElementById('popup-image');
-    const closeBtn = document.querySelector('.modal .close');
-    let currentPage = 1;
-    const pageSize = 15; // This is declared but not used in this script. Consider removing it if not needed.
+let currentMedia = [];
+let swiper;
+let activeMediaId = null;
+let selectedRarity = "0";
 
-    const backgroundImages = [
-        'https://files.catbox.moe/9jbemn.jpg',
-        'https://files.catbox.moe/l5g4xp.jpg',
-        'https://files.catbox.moe/7tdou5.jpg',
-        'https://files.catbox.moe/4sgb37.jpg',
-        'https://files.catbox.moe/qggqe3.jpg'
-    ];
-
-    // Set a random background image
-    document.body.style.backgroundImage = `url('${backgroundImages[Math.floor(Math.random() * backgroundImages.length)]}')`;
-
-    const updatePaginationButtons = (hasNextPage) => {
-        prevPageButton.disabled = currentPage === 1;
-        nextPageButton.disabled = !hasNextPage;
-    };
-
-    const updateFilters = () => {
-        const filters = [];
-        const nameQuery = document.getElementById('name-query').value.trim();
-        const animeQuery = document.getElementById('anime-query').value.trim();
-        const rarityQuery = document.getElementById('rarity-query').value.trim();
-        const idQuery = document.getElementById('id-query').value.trim();
-
-        if (nameQuery) filters.push(`Name: ${nameQuery}`);
-        if (animeQuery) filters.push(`Anime: ${animeQuery}`);
-        if (rarityQuery) filters.push(`Rarity: ${rarityQuery}`);
-        if (idQuery) filters.push(`ID: ${idQuery}`);
-
-        appliedFiltersDiv.innerHTML = filters.map(filter => `
-            <span>${filter} <button class="remove-filter" data-filter="${filter}">x</button></span>
-        `).join(' ');
-    };
-
-const loadCharacters = async (page) => {
-    searchResultsDiv.innerHTML = 'Loading...';
-    const nameQuery = document.getElementById('name-query').value.trim();
-    const animeQuery = document.getElementById('anime-query').value.trim();
-    const rarityQuery = document.getElementById('rarity-query').value.trim();
-    const idQuery = document.getElementById('id-query').value.trim();
-
-    try {
-        const response = await fetch(`/waifus/search?name=${encodeURIComponent(nameQuery)}&anime=${encodeURIComponent(animeQuery)}&rarity=${encodeURIComponent(rarityQuery)}&id=${encodeURIComponent(idQuery)}`);
-        let data = await response.json();
-
-        // Sort results in descending order by ID
-        data.results.sort((a, b) => b.id - a.id);
-
-        if (data.results && data.results.length > 0) {
-            searchResultsDiv.innerHTML = data.results.map(item => `
-                <div class="character-item">
-                    <img src="${item.image_url}" alt="${item.character_name}" loading="lazy">
-                    <h3>${item.character_name}</h3>
-                    <p>Anime: ${item.anime_name}</p>
-                    <p>Rarity: ${item.rarity}</p>
-                    <p>ID: ${item.id}</p>
-                </div>
-            `).join('');
-            updatePaginationButtons(data.hasNextPage);
-        } else {
-            searchResultsDiv.innerHTML = 'No characters found.';
-            updatePaginationButtons(false);
-        }
-    } catch (error) {
-        searchResultsDiv.innerHTML = 'Error fetching results.';
-        console.error('Error:', error);
-    }
+/* ================= RARITIES ================= */
+const RARITIES = {
+  0: "All",
+  1: "⚪️ Common",
+  2: "🟣 Rare",
+  3: "🟡 Legendary",
+  4: "🟢 Medium",
+  5: "💮 Special Edition",
+  6: "🔮 Limited Edition",
+  7: "💸 Premium Edition",
+  8: "🌤 Summer",
+  9: "🎐 Celestial",
+  10: "❄️ Winter",
+  11: "💝 Valentine",
+  12: "🎃 Halloween",
+  13: "🎄 Christmas Special",
+  14: "🪐 Omniversal",
+  15: "🎭 Cosplay Master",
+  16: "🧧 Events",
+  17: "🎖 Apex Lot",
+  18: "🍑 Echhi",
+  19: "☠️ Divine",
+  20: "☔ Monsoon",
+  21: "🪸 Aquatic",
+  22: "🎨 Artistic",
+  23: "💳 VIP SLOT",
+  24: "👶 Chibi",
+  25: "🏴‍☠️ Marauds"
 };
 
+/* ================= LOAD MEDIA ================= */
+async function loadMedia() {
+    const res = await fetch("/media");
+    const data = await res.json();
+    currentMedia = data.results;
+    renderGrid(currentMedia);
+}
 
-    prevPageButton.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadCharacters(currentPage);
-        }
+function renderGrid(items) {
+    const grid = document.getElementById("mediaGrid");
+    grid.innerHTML = "";
+
+    items.forEach((m, i) => {
+        const card = document.createElement("div");
+        card.className = "glass-card";
+        card.onclick = () => openReels(i);
+
+        card.innerHTML = `
+          ${m.type === "video"
+            ? `<video muted loop src="${m.url}"></video>`
+            : `<img src="${m.url}">`}
+          <div class="shine"></div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+/* ================= REELS ================= */
+function openReels(index) {
+    const wrapper = document.getElementById("reelsWrapper");
+    wrapper.innerHTML = "";
+
+    currentMedia.forEach(m => {
+        const slide = document.createElement("div");
+        slide.className = "swiper-slide";
+
+        slide.innerHTML = `
+          ${m.type === "video"
+            ? `<video src="${m.url}" autoplay loop controls></video>`
+            : `<img src="${m.url}">`}
+          <div class="reel-actions">
+            <button onclick="likeMedia('${m.media_id}')">❤️</button>
+            <button onclick="openComments('${m.media_id}')">💬</button>
+          </div>
+        `;
+        wrapper.appendChild(slide);
     });
 
-    nextPageButton.addEventListener('click', () => {
-        currentPage++;
-        loadCharacters(currentPage);
+    swiper = new Swiper(".reelsSwiper", {
+        direction: "vertical",
+        initialSlide: index
     });
 
-    searchForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        updateFilters();
-        loadCharacters(currentPage);
-    });
+    document.getElementById("reelsModal").style.display = "block";
+}
 
-    document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remove-filter')) {
-            const filter = event.target.getAttribute('data-filter');
-            const [key, value] = filter.split(': ');
-            document.getElementById(`${key.toLowerCase()}-query`).value = '';
-            updateFilters();
-            loadCharacters(currentPage);
-        } else if (event.target.tagName === 'IMG' && event.target.closest('.character-item')) {
-            // Open modal with image
-            modal.style.display = 'block';
-            modalImg.src = event.target.src;
-        }
-    });
+function closeReels() {
+    document.getElementById("reelsModal").style.display = "none";
+}
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+/* ================= SEARCH ================= */
+async function searchMedia() {
+    const name = searchName.value;
+    const anime = searchAnime.value;
 
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    const res = await fetch(
+        `/media/search?name=${name}&anime=${anime}&rarity=${selectedRarity}`
+    );
+    const data = await res.json();
+    currentMedia = data.results;
+    renderGrid(currentMedia);
+}
 
-    // Initial load
-    loadCharacters(currentPage);
+function clearSearch() {
+    searchName.value = "";
+    searchAnime.value = "";
+    selectedRarity = "0";
+    rarityBtn.innerText = "🎖 All";
+    loadMedia();
+}
+
+/* ================= RARITY UI ================= */
+const rarityBtn = document.getElementById("rarityBtn");
+const rarityDropdown = document.getElementById("rarityDropdown");
+
+Object.entries(RARITIES).forEach(([k, v]) => {
+    const div = document.createElement("div");
+    div.innerText = v;
+    div.onclick = () => {
+        selectedRarity = k;
+        rarityBtn.innerText = `🎖 ${v}`;
+        rarityDropdown.style.display = "none";
+    };
+    rarityDropdown.appendChild(div);
 });
 
-
-// 🆕 ADDITION: Open 3D Ring on Image Click
-document.addEventListener("click", (event) => {
-    if (event.target.tagName === "IMG" && event.target.closest(".character-item")) {
-
-        const images = [...document.querySelectorAll(".character-item img")]
-            .map(img => img.src);
-
-        document.getElementById("ring-modal").style.display = "block";
-        buildRing(images);
-    }
-});
-
-document.getElementById("ring-close").onclick = () => {
-    document.getElementById("ring-modal").style.display = "none";
+rarityBtn.onclick = () => {
+    rarityDropdown.style.display =
+        rarityDropdown.style.display === "block" ? "none" : "block";
 };
+
+/* ================= LIKE & COMMENT ================= */
+function likeMedia(id) {
+    fetch("/media/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ media_id: id })
+    });
+}
+
+function openComments(id) {
+    activeMediaId = id;
+    document.getElementById("commentModal").style.display = "block";
+}
+
+function postComment() {
+    fetch("/media/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            media_id: activeMediaId,
+            text: commentInput.value
+        })
+    });
+    commentInput.value = "";
+}
+
+/* ================= INIT ================= */
+loadMedia();
