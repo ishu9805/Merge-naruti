@@ -27,18 +27,6 @@ media_collection = db["anime_characters_lol"]   # images + videos
 engagement_collection = db["media_engagement"]
 
 # =======================
-# IMAGE PROXY
-# =======================
-@app.route("/proxy-image/<path:url>")
-def proxy_image(url):
-    telegraph_url = f"https://telegra.ph/{url}"
-    try:
-        r = requests.get(telegraph_url, stream=True, timeout=5)
-        return Response(r.content, mimetype=r.headers.get("Content-Type"))
-    except:
-        return jsonify({"error": "Image not found"}), 404
-
-# =======================
 # HOME
 # =======================
 @app.route("/")
@@ -74,7 +62,7 @@ def get_media():
             results.append({
                 "media_id": str(doc.get("id")),
                 "type": "image",
-                "url": f"/proxy-image/{doc['img_url'].replace('https://telegra.ph/', '')}",
+                "url": doc["img_url"],
                 "name": doc.get("name"),
                 "anime": doc.get("anime"),
                 "rarity": doc.get("rarity", "Unknown")
