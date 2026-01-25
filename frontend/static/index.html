@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blade Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top-bar">
+    <h1>Blade Network</h1>
+</header>
+
+<!-- ================= SEARCH BAR ================= -->
+<section class="search-bar">
+    <input type="text" id="searchName" placeholder="🔍 Name">
+    <input type="text" id="searchAnime" placeholder="🎬 Anime">
+
+    <div class="rarity-select">
+        <button id="rarityBtn">🎖 All</button>
+        <div class="rarity-dropdown" id="rarityDropdown"></div>
+    </div>
+
+    <button onclick="searchMedia()">Search</button>
+    <button onclick="clearSearch()" class="clear-btn">Clear</button>
+</section>
+
+<!-- ================= MEDIA GRID ================= -->
+<main>
+    <section class="media-grid" id="mediaGrid"></section>
+</main>
+
+<!-- ================= REELS MODAL ================= -->
+<div id="reelsModal" class="modal">
+    <span class="close-modal" onclick="closeReels()">✕</span>
+    <div class="swiper reelsSwiper">
+        <div class="swiper-wrapper" id="reelsWrapper"></div>
+    </div>
+</div>
+
+<!-- ================= COMMENT MODAL ================= -->
+<div id="commentModal" class="comment-modal">
+    <div class="comment-box">
+        <h3>Comments</h3>
+        <div id="commentList"></div>
+        <input id="commentInput" placeholder="Add comment...">
+        <button onclick="postComment()">Post</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="/js/scripts.js"></script>
+</body>
+</html>
