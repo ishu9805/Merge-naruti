@@ -164,9 +164,14 @@ def generate_caption(
     anime = character.get("anime", "Unknown")
     rarity_field = character.get("rarity", 1)
 
-    banner, rarity_label = _render_banner_and_label(rarity_field)
     detected_type = _detect_type_from_doc(character)
 
+    # 🎄 FORCE CHRISTMAS RARITY
+    if detected_type and "Christmas" in detected_type:
+        banner = RARITY_BANNERS[13]
+        rarity_label = RARITY_LABELS[13]
+    else:
+        banner, rarity_label = _render_banner_and_label(rarity_field)
     caption_lines = []
     caption_lines.append(banner)
     caption_lines.append("")
