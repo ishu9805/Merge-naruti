@@ -374,7 +374,7 @@ async def update(client: Client, message: Message):
         updated_character,
         action="updated",
         actor_id=message.from_user.id,
-        actor_name=message.from_user.full_name
+        actor_name=message.from_user.first_name
     )
 
     bulk_operations = []
@@ -802,7 +802,7 @@ async def ul(client, message):
             character,
             action="added",
             actor_id=message.from_user.id,
-            actor_name=message.from_user.full_name
+            actor_name=message.from_user.first_name
         )
         
         await message.reply_text(f'✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}')
