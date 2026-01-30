@@ -25,55 +25,73 @@ from shivu import (
     chat_dataps as chat_data,
 )
 
-# Lock to ensure thread-safe access to the global variable
+ALL_RARITIES = [
+    "⚪️ Common",
+    "🟣 Rare",
+    "🟡 Legendary",
+    "🟢 Medium",
+    "💮 Special Edition",
+    "🔮 Limited Edition",
+    "💸 Premium Edition",
+    "🌤 Summer",
+    "🎐 Celestial",
+    "❄️ Winter",
+    "💝 Valentine",
+    "🎃 Halloween",
+    "🎄 Christmas Special",
+    "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+    "🎭 Cosplay Master 🎭",
+    "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+    "🎖 Apex Lot ( AUCTION )",
+    "🍑 Echhi",
+    "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊",
+    "☔ Monsoon",
+    "🪸 Aquatic",
+    "🎨 Artistic",
+    "💳 VIP SLOT",
+    "👶 Chibi",
+    "🏴‍☠️ Marauds"
+]
+
 async def rarities(update: Update, context: CallbackContext):
+    user = update.effective_user
 
-    user_id = update.effective_user.id
-
-    is_banned = await ban_collection.find_one({"user_id": user_id})
-    if is_banned:
-        # If the user is banned, do nothing
+    if await ban_collection.find_one({"user_id": user.id}):
         return
-    else:
-        pass
-    characters_cursor = collection.find({})  # Get the cursor for all characters
 
-    rarity_counts = {
-        "⚪️ Common": 0,
-        "🟣 Rare": 0,
-        "🟡 Legendary": 0,
-        "🟢 Medium": 0,
-        "💮 Special Edition": 0,
-        "🔮 Limited Edition": 0,
-        "💸 Premium Edition": 0,
-        "🌤 Summer": 0,
-        "🎐 Celestial": 0,
-        "❄️ Winter": 0,
-        "💝 Valentine": 0,
-        "🎃 Halloween": 0,
-        "🎄 Christmas Special": 0,
-        "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐": 0,
-        "🎭 Cosplay Master 🎭": 0,
-        "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": 0,
-        "🧧 𝙀𝙫𝙚𝙣𝙩𝙨": 0,
-        "🍑 Echhi":0
-    }
+    # Init counters
+    global_counts = {r: 0 for r in ALL_RARITIES}
+    user_counts = {r: 0 for r in ALL_RARITIES}
 
-    async for character in characters_cursor:  # Iterate over the cursor asynchronously
-        rarity = character.get('rarity')
-        print(f"Encountered rarity: '{rarity}'")  # Print out the rarity value
-        if rarity in rarity_counts:
-            rarity_counts[rarity] += 1
-        else:
-            print(f"Unknown rarity: '{rarity}'")
+    # 🌍 Global rarities
+    async for char in collection.find({}):
+        rarity = char.get("rarity")
+        if rarity in global_counts:
+            global_counts[rarity] += 1
 
-    rarity_message = "<b>Rarity Counts:</b>\n"
-    for rarity, count in rarity_counts.items():
-        rarity_message += f"{rarity}: {count}\n"
+    # 👤 User rarities
+    async for char in user_collection.find({"user_id": user.id}):
+        rarity = char.get("rarity")
+        if rarity in user_counts:
+            user_counts[rarity] += 1
 
-    await update.message.reply_text(rarity_message, parse_mode='HTML')
-    
-application.add_handler(CommandHandler("rarities", rarities))
+    # Build message
+    msg = "<b>📊 RARITY STATS</b>\n\n"
+    msg += "<b>🌍 Global (Bot)</b>\n"
+    for r in ALL_RARITIES:
+        msg += f"{r} : <b>{global_counts[r]}</b>\n"
+
+    msg += "\n<b>👤 Your Collection</b>\n"
+    total_user = 0
+    for r in ALL_RARITIES:
+        if user_counts[r] > 0:
+            msg += f"{r} : <b>{user_counts[r]}</b>\n"
+            total_user += user_counts[r]
+
+    msg += f"\n<b>🎒 Total Owned:</b> {total_user}"
+
+    await update.message.reply_text(msg, parse_mode="HTML")
+
 
 async def give_character_reply(update: Update, context: CallbackContext) -> None:
     if str(update.effective_user.id) not in PARTNER:
