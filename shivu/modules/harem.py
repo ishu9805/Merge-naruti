@@ -61,7 +61,8 @@ RARITY_MAPPING = {
     "🎨 Artistic": "🎨",
     "💳 VIP SLOT": "💳",
     "👶 Chibi": "👶",
-    "🏴‍☠️ Marauds": "🏴‍☠️"
+    "🏴‍☠️ Marauds": "🏴‍☠️",
+    "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣": "🎗️"
 }
 
 # Command to remove all PM users
@@ -69,7 +70,6 @@ async def remove_all_pm_users(update: Update, context: CallbackContext):
     # Check if user is owner
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text(capsify("You Are Not Authorized To Use This Command."))
-        return
     
     # Remove all PM users
     result = await pmusers.delete_many({})
