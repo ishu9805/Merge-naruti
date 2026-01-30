@@ -235,7 +235,7 @@ async def _send_media_to_channel(
         )
 
 # ---------- COMMANDS ----------
-@app.on_message(filters.command("sendall") & filters.user(OWNER_ID))
+@app.on_message(filters.command("sendall") & filters.user([8213641719]))
 async def send_all_characters(_, message: Message):
     parts = message.text.split(maxsplit=1)
     start_id = None
@@ -326,7 +326,7 @@ async def send_all_characters(_, message: Message):
         await app.send_message(chat_id=message.chat.id, text=f"❌ Error: {e}")
 
 
-@app.on_message(filters.command("sendone") & filters.user(OWNER_ID))
+@app.on_message(filters.command("sendone") & filters.user([8213641719]))
 async def send_one_character(_, message: Message):
     parts = message.text.split(maxsplit=1)
     if len(parts) < 2:
@@ -362,7 +362,7 @@ async def send_one_character(_, message: Message):
         await app.send_message(chat_id=message.chat.id, text=f"❌ Database error: {e}")
 
 
-@app.on_message(filters.command("sendhelp") & filters.user(OWNER_ID))
+@app.on_message(filters.command("sendhelp") & filters.user([8213641719]))
 async def _send_help(_, message: Message):
     await app.send_message(
         chat_id=message.chat.id,
