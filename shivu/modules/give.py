@@ -53,7 +53,7 @@ ALL_RARITIES = [
     "🏴‍☠️ Marauds"
 ]
 
-application.add_handler(CommandHandler("rarities", rarities))
+
 
 async def rarities(update: Update, context: CallbackContext):
     user = update.effective_user
@@ -94,6 +94,7 @@ async def rarities(update: Update, context: CallbackContext):
 
     await update.message.reply_text(msg, parse_mode="HTML")
 
+application.add_handler(CommandHandler("rarities", rarities))
 
 async def give_character_reply(update: Update, context: CallbackContext) -> None:
     if str(update.effective_user.id) not in PARTNER:
