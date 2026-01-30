@@ -53,6 +53,8 @@ ALL_RARITIES = [
     "🏴‍☠️ Marauds"
 ]
 
+application.add_handler(CommandHandler("rarities", rarities))
+
 async def rarities(update: Update, context: CallbackContext):
     user = update.effective_user
 
