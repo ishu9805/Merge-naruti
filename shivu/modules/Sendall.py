@@ -197,34 +197,42 @@ def generate_caption(
 
 
 # ---------- MEDIA SENDER ----------
-async def _send_media_to_channel(character: Dict[str, Any]) -> None:
-    caption = generate_caption(character)
+async def _send_media_to_channel(
+    character: Dict[str, Any],
+    action: Optional[str] = None,
+    actor_id: Optional[int] = None,
+    actor_name: Optional[str] = None
+) -> None:
+    caption = generate_caption(
+        character,
+        action=action,
+        actor_id=actor_id,
+        actor_name=actor_name
+    )
     media_key = _get_media_key(character)
 
     if media_key:
-        key_lower = media_key.lower()
-        if "vid" in key_lower or "video" in key_lower:
+        if "vid" in media_key.lower():
             await app.send_video(
                 chat_id=CHANNEL_ID,
                 video=character[media_key],
                 caption=caption,
                 supports_streaming=True,
-                parse_mode=ParseMode.HTML   # ✅ UPDATED
+                parse_mode=ParseMode.HTML
             )
         else:
             await app.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=character[media_key],
                 caption=caption,
-                parse_mode=ParseMode.HTML   # ✅ UPDATED
+                parse_mode=ParseMode.HTML
             )
     else:
         await app.send_message(
             chat_id=CHANNEL_ID,
             text=caption,
-            parse_mode=ParseMode.HTML   # ✅ UPDATED
+            parse_mode=ParseMode.HTML
         )
-
 
 # ---------- COMMANDS ----------
 @app.on_message(filters.command("sendall") & filters.user(OWNER_ID))
