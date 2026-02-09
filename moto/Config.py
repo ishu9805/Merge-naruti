@@ -10,7 +10,7 @@ LOG_CHANNEL = -1003146495040
 session_string = "AQFbytYAXiBaZ7IYSAAtuqASpp6oB0gIuPEmHIDu32airyTIVtwyY1IrspZFeovkljZv0QHGJQ1_Vq6c5T3aLvfJ24uscUbQL01LSkCouJ4JtI9xLPmAR4cLiT6J-l2sjKk6JMLBZ-vIK3rOjbLttmuQccErb5TH1R_8l7EF2RI6dHKXOt0YiQbBetx42VDRJ4C1vP8rkzyf91rC7zR3h9nuDY34QNyM7MS1GAwJF2Bu-Umt9nBok3tYfq6ZDGxFhA59IPDL7alCXTwPTuykgIcpehgkieTjtqzKNQaCXLbk-av_FstIXotZQVowVtnRn3c5AAz5AdziN9mYvmw0q0nxekLIYQAAAAH1Y_FYAA"
 
 #TOKEN = "7187229883:AAFO_cZf76s6dDupZc-PJ_6la9iFoLxY-t"TOKENsingings = "8366850759:AAH0vGg4EKDRYekyJaVSwIlt1rCvRLjyT5s"
-mongo_urlings = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_urlings = "mongodb+srv://Ishu9805:narutohinatabf@ishu9805.bsxrhw9.mongodb.net/?appName=Ishu9805"
 PHOTO_URL = ["https://envs.sh/Eiz.mp4", "https://envs.sh/EiL.mp4", "https://envs.sh/Eic.mp4"]
 SUPPORT_CHAT = "https://t.me/+77WFaB7bj9k2OTll"
 SUPPORT_CHATps = "https://t.me/+77WFaB7bj9k2OTll"
