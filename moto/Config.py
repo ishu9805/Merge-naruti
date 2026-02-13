@@ -1,6 +1,6 @@
 #TOKENsingings = "7107840748:AAFc8v9lLpHPafEplEXLcoOmNSiiqe-O2XE"
 
-TOKENsingings = "8366850759:AAH0vGg4EKDRYekyJaVSwIlt1rCvRLjyT5s"
+TOKENsingings = "8366850759:AAFzavhm5Lyd2egFWtBctNf8nc55Q65iw0g"
 # Get this value from my.telegram.org/app
 OWNER_ID = "8213641719"
 PARTNER =  ["8213641719", "8535832693", "8155445557", "6810407620"]
