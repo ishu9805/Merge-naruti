@@ -51,7 +51,7 @@ amv_claim_limit = 1  #
 AMV_GROUP_ID = -1002783891820 # Your main group ID
 VALENTINE_SPECIAL_GROUP_ID = "-1002783891820"
 VALENTINE_THRESHOLD_SPECIAL = 300
-VALENTINE_THRESHOLD_DEFAULT = 800
+VALENTINE_THRESHOLD_DEFAULT = 1000
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
 amv_characters = []  # Stores preloaded AMV characters
@@ -282,6 +282,28 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
+        # Check for special spawns using relative threshold approach (PRIORITY over regular spawn)
+        current_count = total_message_counts[chat_id]
+        valentine_spawn_thresholds[chat_id]
+        summer_spawn_thresholds[chat_id]
+
+        # Valentine spawn check: every 300 msgs in special group, every 1000 msgs in others
+        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
+            await spawn_valentine_character(update, context)
+            if chat_id == VALENTINE_SPECIAL_GROUP_ID:
+                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
+            else:
+                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_DEFAULT
+            spawn_cooldowns[chat_id] = current_time
+            return
+
+        # Summer/Event spawn check
+        if total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
+            await spawn_diwali_character(update, context)
+            summer_spawn_thresholds[chat_id] = current_count + random.randint(500, 1300)
+            spawn_cooldowns[chat_id] = current_time
+            return
+
         # Initialize and increment regular message counter
         if chat_id not in message_counts:
             message_counts[chat_id] = 0
@@ -295,34 +317,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if message_counts[chat_id] >= message_frequency:
             await send_image(update, context)
             message_counts[chat_id] = 0
-            spawn_cooldowns[chat_id] = current_time  # Set cooldown after regular spawn
-            return  # Exit after spawning to prevent multiple spawns
+            spawn_cooldowns[chat_id] = current_time
+            return
 
-        # Check for special spawns using relative threshold approach
-        current_count = total_message_counts[chat_id]
-        valentine_spawn_thresholds[chat_id]
-        summer_spawn_thresholds[chat_id]
-        
-        # Valentine spawn check
-        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
-            await spawn_valentine_character(update, context)
-            # Set next threshold relative to current count
-            if chat_id == VALENTINE_SPECIAL_GROUP_ID:
-                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
-            else:
-                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_DEFAULT
-            spawn_cooldowns[chat_id] = current_time  # Set cooldown
-            return  # Exit after special spawn
-            
-        # Summer spawn check (elif to prevent both spawning at once if thresholds overlap)
-        elif total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
-            await spawn_diwali_character(update, context)
-            # Set next threshold relative to current count
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(500, 1300)
-            spawn_cooldowns[chat_id] = current_time  # Set cooldown
-            return  # Exit after special spawn
-        else: 
-            return 
+        return
 
 
 
@@ -768,7 +766,7 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         return
     
     if not context.args or len(context.args) < 1:
-        await update.message.reply_text("Usage: /spawn {char|amv|}")
+        await update.message.reply_text("Usage: /spawn {char|amv|summer|celestial|valentine|monsoon}")
         return
     
     game_type = context.args[0].lower()
@@ -779,7 +777,7 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_amv_character(update, context)
     elif game_type == 'summer':
         await spawn_summer_character(update, context)
-    elif game_type == 'celestial':
+    elif game_type in ('celestial', 'valentine'):
         await spawn_valentine_character(update, context)
     elif game_type == 'monsoon':
         await spawn_monsoon_character(update, context)
