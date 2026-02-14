@@ -61,33 +61,48 @@ async def callback_query_handler(client, callback_query):
             # Create buttons for rarities (only emojis)
             rarities_buttons = [
                 [
-                    InlineKeyboardButton("⚪️", callback_data="rarity:⚪️ Common"),
-                    InlineKeyboardButton("🟣", callback_data="rarity:🟣 Rare"),
-                    InlineKeyboardButton("🟡", callback_data="rarity:🟡 Legendary"),
-                    InlineKeyboardButton("🟢", callback_data="rarity:🟢 Medium")
+                    InlineKeyboardButton("⚪️ ᴄᴏᴍᴍᴏɴ", callback_data="rarity:⚪️ Common"),
+                    InlineKeyboardButton("🟣 ʀᴀʀᴇ", callback_data="rarity:🟣 Rare"),
+                    InlineKeyboardButton("🟡 ʟᴇɢᴇɴᴅᴀʀʏ", callback_data="rarity:🟡 Legendary")
                 ],
                 [
-                    InlineKeyboardButton("💮", callback_data="rarity:💮 Special Edition"),
-                    InlineKeyboardButton("🔮", callback_data="rarity:🔮 Limited Edition"),
-                    InlineKeyboardButton("💸", callback_data="rarity:💸 Premium Edition"),
-                    InlineKeyboardButton("🎖", callback_data="rarity:🎖 Apex Lot (AUCTION)")
+                    InlineKeyboardButton("🟢 ᴍᴇᴅɪᴜᴍ", callback_data="rarity:🟢 Medium"),
+                    InlineKeyboardButton("💮 ꜱᴘᴇᴄɪᴀʟ ᴇᴅɪᴛɪᴏɴ", callback_data="rarity:💮 Special Edition"),
+                    InlineKeyboardButton("🔮 ʟɪᴍɪᴛᴇᴅ ᴇᴅɪᴛɪᴏɴ", callback_data="rarity:🔮 Limited Edition")
                 ],
                 [
-                    InlineKeyboardButton("🌤", callback_data="rarity:🌤 Summer"),
-                    InlineKeyboardButton("🎐", callback_data="rarity:🎐 Celestial"),
-                    InlineKeyboardButton("☃️", callback_data="rarity:❄️ Winter"),
-                    InlineKeyboardButton("💝", callback_data="rarity:💝 Valentine")
+                    InlineKeyboardButton("💸 ᴘʀᴇᴍɪᴜᴍ ᴇᴅɪᴛɪᴏɴ", callback_data="rarity:💸 Premium Edition"),
+                    InlineKeyboardButton("🌤 ꜱᴜᴍᴍᴇʀ", callback_data="rarity:🌤 Summer"),
+                    InlineKeyboardButton("🎐 ᴄᴇʟᴇꜱᴛɪᴀʟ", callback_data="rarity:🎐 Celestial")
                 ],
                 [
-                    InlineKeyboardButton("🎃", callback_data="rarity:🎃 Halloween"),
-                    InlineKeyboardButton("🎄", callback_data="rarity:🎄 Christmas Special"),
-                    InlineKeyboardButton("🪐", callback_data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"),
-                    InlineKeyboardButton("🎭", callback_data="rarity:🎭 Cosplay Master 🎭")
+                    InlineKeyboardButton("❄️ ᴡɪɴᴛᴇʀ", callback_data="rarity:❄️ Winter"),
+                    InlineKeyboardButton("💝 ᴠᴀʟᴇɴᴛɪɴᴇ", callback_data="rarity:💝 Valentine"),
+                    InlineKeyboardButton("🎃 ʜᴀʟʟᴏᴡᴇᴇɴ", callback_data="rarity:🎃 Halloween")
                 ],
                 [
-                    InlineKeyboardButton("🎗️", callback_data="rarity:🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"),
-                    InlineKeyboardButton("🧧", callback_data="rarity:🧧 𝙀𝙫𝙚𝙣𝙩𝙨"),
-                    InlineKeyboardButton("☔", callback_data="rarity:☔ Monsoon")
+                    InlineKeyboardButton("🎄 ᴄʜʀɪꜱᴛᴍᴀꜱ ꜱᴘᴇᴄɪᴀʟ", callback_data="rarity:🎄 Christmas Special"),
+                    InlineKeyboardButton("🪐 ᴏᴍɴɪᴠᴇʀꜱᴀʟ", callback_data="rarity:🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐"),
+                    InlineKeyboardButton("🎭 ᴄᴏꜱᴘʟᴀʏ ᴍᴀꜱᴛᴇʀ", callback_data="rarity:🎭 Cosplay Master 🎭")
+                ],
+                [
+                    InlineKeyboardButton("🎖 ᴀᴘᴇx ʟᴏᴛ", callback_data="rarity:🎖 Apex Lot ( AUCTION )"),
+                    InlineKeyboardButton("🧧 ᴇᴠᴇɴᴛꜱ", callback_data="rarity:🧧 𝙀𝙫𝙚𝙣𝙩𝙨"),
+                    InlineKeyboardButton("🍑 ᴇᴄʜʜɪ", callback_data="rarity:🍑 Echhi")
+                ],
+                [
+                    InlineKeyboardButton("☠️ ᴅɪᴠɪɴᴇ", callback_data="rarity:☠️ 𝕯𝖎𝖛𝖎𝖓𝖊"),
+                    InlineKeyboardButton("☔ ᴍᴏɴꜱᴏᴏɴ", callback_data="rarity:☔ Monsoon"),
+                    InlineKeyboardButton("🪸 ᴀǫᴜᴀᴛɪᴄ", callback_data="rarity:🪸 Aquatic")
+                ],
+                [
+                    InlineKeyboardButton("🎨 ᴀʀᴛɪꜱᴛɪᴄ", callback_data="rarity:🎨 Artistic"),
+                    InlineKeyboardButton("💳 ᴠɪᴘ ꜱʟᴏᴛ", callback_data="rarity:💳 VIP SLOT"),
+                    InlineKeyboardButton("👶 ᴄʜɪʙɪ", callback_data="rarity:👶 Chibi")
+                ],
+                [
+                    InlineKeyboardButton("🏴‍☠️ ᴍᴀʀᴀᴜᴅꜱ", callback_data="rarity:🏴‍☠️ Marauds"),
+                    InlineKeyboardButton("🎗️ ᴀᴍᴠ ᴇᴅɪᴛɪᴏɴ", callback_data="rarity:🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣")
                 ]
             ]
 

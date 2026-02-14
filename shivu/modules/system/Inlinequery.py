@@ -62,6 +62,15 @@ RARITY_MAPPING = {
     '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': '🪐',
     '🎭 Cosplay Master 🎭': '🎭',
     '🎖 Apex Lot ( AUCTION )': '🎖',
+    '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': '🧧',
+    '🍑 Echhi': '🍑',
+    '☠️ 𝕯𝖎𝖛𝖎𝖓𝖊': '☠️',
+    '☔ Monsoon': '☔',
+    '🪸 Aquatic': '🪸',
+    '🎨 Artistic': '🎨',
+    '💳 VIP SLOT': '💳',
+    '👶 Chibi': '👶',
+    '🏴‍☠️ Marauds': '🏴‍☠️',
     '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': '🎗️'
 }
 

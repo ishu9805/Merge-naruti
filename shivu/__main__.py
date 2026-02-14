@@ -49,7 +49,9 @@ current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
 AMV_GROUP_ID = -1002783891820 # Your main group ID
- # Spawn every 100 messages
+VALENTINE_SPECIAL_GROUP_ID = "-1002783891820"
+VALENTINE_THRESHOLD_SPECIAL = 500
+VALENTINE_THRESHOLD_DEFAULT = 1200
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
 amv_characters = []  # Stores preloaded AMV characters
@@ -245,7 +247,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Initialize counters if they don't exist
         if chat_id not in total_message_counts:
             total_message_counts[chat_id] = 0
-            valentine_spawn_thresholds[chat_id] = random.randint(1000, 3000)
+            if chat_id == VALENTINE_SPECIAL_GROUP_ID:
+                valentine_spawn_thresholds[chat_id] = VALENTINE_THRESHOLD_SPECIAL
+            else:
+                valentine_spawn_thresholds[chat_id] = VALENTINE_THRESHOLD_DEFAULT
             summer_spawn_thresholds[chat_id] = random.randint(500, 1200)
             
             # Special AMV counter for the designated group
@@ -257,7 +262,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         total_message_counts[chat_id] += 1
 
         # Handle AMV group separately
-        if chat_id == "-1002783891820":
+        if chat_id == VALENTINE_SPECIAL_GROUP_ID:
             amv_message_count[chat_id] += 1
             if amv_message_count[chat_id] >= amv_spawn_thresholds[chat_id]:
                 await spawn_amv_character(update, context)
@@ -302,7 +307,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
             # Set next threshold relative to current count
-            valentine_spawn_thresholds[chat_id] = current_count + random.randint(700, 1000)
+            if chat_id == VALENTINE_SPECIAL_GROUP_ID:
+                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
+            else:
+                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_DEFAULT
             spawn_cooldowns[chat_id] = current_time  # Set cooldown
             return  # Exit after special spawn
             

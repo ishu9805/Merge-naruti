@@ -253,7 +253,7 @@ async def run_broadcast(client, message, target_ids, target_name):
     
     broadcast_data["is_active"] = True
     stats = BroadcastStats(total)
-    progress_msg = await message.reply(f"📤 Starting broadcast to {total} {target_name}...\n{stats.report()}")
+    progress_msg = await message.reply(f"🚀 **Amazing Broadcast Started**\n🎯 Targets: `{total}` {target_name}\n\n{stats.report()}")
     
     try:
         for i, target_id in enumerate(target_ids):
@@ -269,14 +269,14 @@ async def run_broadcast(client, message, target_ids, target_name):
             if i % PROGRESS_UPDATE_INTERVAL == 0 or i == total - 1:
                 try:
                     await progress_msg.edit_text(
-                        f"📤 Broadcasting to {target_name}...\n{stats.report()}"
+                        f"📡 **Broadcasting to {target_name}...**\n\n{stats.report()}"
                     )
                 except Exception as e:
                     logger.error(f"Progress update failed: {e}")
             
             await asyncio.sleep(MESSAGE_DELAY)
         
-        final_msg = f"✅ Broadcast complete!\n{stats.report()}"
+        final_msg = f"🎉 **Broadcast complete!**\n\n{stats.report()}"
         
     except Exception as e:
         final_msg = f"⚠️ Broadcast failed!\nError: {str(e)}\n{stats.report()}"
@@ -285,6 +285,48 @@ async def run_broadcast(client, message, target_ids, target_name):
     finally:
         broadcast_data["is_active"] = False
         await progress_msg.edit_text(final_msg)
+
+
+async def build_broadcast_targets():
+    """Collect unique target IDs from both groups and users."""
+    target_ids = set()
+
+    async for group in top_global_groups_collection.find({}):
+        group_id = group.get('group_id')
+        if group_id:
+            target_ids.add(group_id)
+
+    async for user in user_collection.find({}):
+        user_id = user.get('id')
+        if user_id:
+            target_ids.add(user_id)
+
+    return list(target_ids)
+
+
+@app.on_message(filters.command("broadcast") & dev_filter)
+async def broadcast_everywhere(client, message):
+    """Broadcast replied message to both groups and users with progress updates."""
+    if broadcast_data["is_active"]:
+        await message.reply("⚠️ Broadcast already running")
+        return
+
+    if not message.reply_to_message:
+        await message.reply(
+            "❌ Reply to the message you want to broadcast.\n"
+            "Usage: Reply any text/media and send /broadcast"
+        )
+        return
+
+    original_backup = broadcast_data["original_msg"]
+    broadcast_data["original_msg"] = message.reply_to_message
+
+    try:
+        target_ids = await build_broadcast_targets()
+        await run_broadcast(client, message, target_ids, "users + groups")
+    finally:
+        broadcast_data["original_msg"] = original_backup
+
 
 # ===== BROADCAST COMMANDS =====
 
