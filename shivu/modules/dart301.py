@@ -390,8 +390,8 @@ async def leave_301(_, message: Message):
 async def end_301(_, message: Message):
     """
     End game by id.
-    - Before start: refunds everyone.
-    - After start: only owner can stop, and refunds everyone.
+    - Allowed only before game starts (lobby cancel).
+    - Once started, game cannot be force-ended to avoid refund abuse/cheating.
     """
     if len(message.command) < 2:
         return await message.reply_text("Usage: /end301 <game_id>")
@@ -403,13 +403,14 @@ async def end_301(_, message: Message):
     if not game:
         return await message.reply_text("❌ Game not found.")
 
-    user = message.from_user
-    if not user or user.id != game.owner_id:
-        return await message.reply_text("❌ Only game creator can end this game.")
+    if game.started:
+        return await message.reply_text(
+            "❌ You cannot end a started game. Finish the match normally to decide winner."
+        )
 
     await _refund_all(game)
     _chat_games(chat_id).pop(game_id, None)
-    await message.reply_text("🛑 Game ended. Bets refunded to all players.")
+    await message.reply_text("🛑 Lobby cancelled. Bets refunded to all players.")
 
 
 @app.on_message(filters.command("list301"))
