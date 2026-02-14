@@ -1,9 +1,6 @@
 let currentMedia = [];
-let swiper;
-let activeMediaId = null;
 let selectedRarity = "0";
 
-/* ================= RARITIES ================= */
 const RARITIES = {
   0: "All",
   1: "⚪️ Common",
@@ -33,7 +30,6 @@ const RARITIES = {
   25: "🏴‍☠️ Marauds"
 };
 
-/* ================= LOAD MEDIA ================= */
 async function loadMedia() {
     const res = await fetch("/media");
     const data = await res.json();
@@ -50,19 +46,19 @@ function renderGrid(items) {
         return;
     }
 
-    items.forEach((m, i) => {
+    items.forEach((m) => {
         const card = document.createElement("div");
         card.className = "glass-card";
-        card.onclick = () => openReels(i);
 
         card.innerHTML = `
+          <span class="rarity-pill">${m.rarity || "Unknown rarity"}</span>
           ${m.type === "video"
-            ? `<video muted loop src="${m.url}"></video>`
+            ? `<video muted autoplay loop playsinline preload="metadata" src="${m.url}"></video>`
             : `<img src="${m.url}" alt="${m.name || "Anime card"}">`}
           <div class="card-meta">
             <h3>${m.name || "Unknown character"}</h3>
+            <p class="media-id">ID: ${m.media_id || "N/A"}</p>
             <p>${m.anime || "Unknown anime"}</p>
-            <span class="rarity-pill">${m.rarity || "Unknown rarity"}</span>
           </div>
           <div class="shine"></div>
         `;
@@ -70,40 +66,6 @@ function renderGrid(items) {
     });
 }
 
-/* ================= REELS ================= */
-function openReels(index) {
-    const wrapper = document.getElementById("reelsWrapper");
-    wrapper.innerHTML = "";
-
-    currentMedia.forEach(m => {
-        const slide = document.createElement("div");
-        slide.className = "swiper-slide";
-
-        slide.innerHTML = `
-          ${m.type === "video"
-            ? `<video src="${m.url}" autoplay loop controls></video>`
-            : `<img src="${m.url}">`}
-          <div class="reel-actions">
-            <button onclick="likeMedia('${m.media_id}')">❤️</button>
-            <button onclick="openComments('${m.media_id}')">💬</button>
-          </div>
-        `;
-        wrapper.appendChild(slide);
-    });
-
-    swiper = new Swiper(".reelsSwiper", {
-        direction: "vertical",
-        initialSlide: index
-    });
-
-    document.getElementById("reelsModal").style.display = "block";
-}
-
-function closeReels() {
-    document.getElementById("reelsModal").style.display = "none";
-}
-
-/* ================= SEARCH ================= */
 async function searchMedia() {
     const name = searchName.value;
     const anime = searchAnime.value;
@@ -124,7 +86,6 @@ function clearSearch() {
     loadMedia();
 }
 
-/* ================= RARITY UI ================= */
 const rarityBtn = document.getElementById("rarityBtn");
 const rarityDropdown = document.getElementById("rarityDropdown");
 
@@ -144,31 +105,4 @@ rarityBtn.onclick = () => {
         rarityDropdown.style.display === "block" ? "none" : "block";
 };
 
-/* ================= LIKE & COMMENT ================= */
-function likeMedia(id) {
-    fetch("/media/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ media_id: id })
-    });
-}
-
-function openComments(id) {
-    activeMediaId = id;
-    document.getElementById("commentModal").style.display = "block";
-}
-
-function postComment() {
-    fetch("/media/comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            media_id: activeMediaId,
-            text: commentInput.value
-        })
-    });
-    commentInput.value = "";
-}
-
-/* ================= INIT ================= */
 loadMedia();

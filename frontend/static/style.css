@@ -1,12 +1,12 @@
 :root {
-    --bg-dark: #070b1f;
-    --bg-mid: #101a3f;
-    --accent: #7c9dff;
-    --accent-2: #35d6ff;
-    --text: #f8faff;
-    --muted: #c8d4ff;
-    --surface: rgba(255, 255, 255, 0.08);
-    --border: rgba(255, 255, 255, 0.18);
+    --bg-deep: #040612;
+    --bg-mid: #0f1738;
+    --glow-a: #57b7ff;
+    --glow-b: #9f6bff;
+    --text: #f5f8ff;
+    --muted: #cdd8ff;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.24);
 }
 
 * {
@@ -16,29 +16,73 @@
 body {
     margin: 0;
     font-family: "Inter", "Segoe UI", Arial, sans-serif;
-    background:
-        radial-gradient(circle at 15% 20%, rgba(124, 157, 255, 0.32), transparent 30%),
-        radial-gradient(circle at 85% 0%, rgba(53, 214, 255, 0.26), transparent 28%),
-        linear-gradient(160deg, var(--bg-dark), var(--bg-mid));
     color: var(--text);
     min-height: 100vh;
+    background:
+        radial-gradient(circle at 16% 20%, rgba(87, 183, 255, 0.30), transparent 30%),
+        radial-gradient(circle at 84% 10%, rgba(159, 107, 255, 0.28), transparent 30%),
+        radial-gradient(circle at 70% 72%, rgba(255, 255, 255, 0.08), transparent 32%),
+        linear-gradient(150deg, var(--bg-deep), var(--bg-mid));
+    background-size: 140% 140%, 140% 140%, 120% 120%, 100% 100%;
+    animation: cosmicShift 14s ease-in-out infinite;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+body::before {
+    background-image: radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.45), transparent),
+                      radial-gradient(1px 1px at 75% 65%, rgba(255, 255, 255, 0.55), transparent),
+                      radial-gradient(1.5px 1.5px at 45% 80%, rgba(171, 198, 255, 0.55), transparent),
+                      radial-gradient(1px 1px at 60% 22%, rgba(210, 185, 255, 0.48), transparent);
+    animation: twinkle 5s ease-in-out infinite alternate;
+}
+
+body::after {
+    background: conic-gradient(from 40deg at 15% 40%, transparent 0deg, rgba(87, 183, 255, 0.15) 70deg, transparent 130deg);
+    filter: blur(48px);
+    opacity: 0.7;
+}
+
+@keyframes cosmicShift {
+    0%, 100% { background-position: 0% 0%, 100% 20%, 40% 80%, 50% 50%; }
+    50% { background-position: 100% 30%, 0% 0%, 80% 20%, 50% 50%; }
+}
+
+@keyframes twinkle {
+    from { opacity: 0.45; transform: translateY(0); }
+    to { opacity: 0.85; transform: translateY(-6px); }
+}
+
+@keyframes subtleShiver {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    25% { transform: translate3d(0.5px, -0.5px, 0); }
+    50% { transform: translate3d(-0.5px, 0.7px, 0); }
+    75% { transform: translate3d(0.5px, 0.3px, 0); }
 }
 
 .top-bar {
     text-align: center;
-    padding: 36px 20px 18px;
+    padding: 38px 20px 16px;
 }
 
 .top-bar h1 {
     margin: 0;
-    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-size: clamp(2rem, 4.2vw, 3.25rem);
     letter-spacing: 0.04em;
-    text-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+    text-shadow: 0 0 28px rgba(87, 183, 255, 0.30), 0 10px 26px rgba(0, 0, 0, 0.40);
 }
 
 .subtitle {
     margin: 10px auto 0;
-    max-width: 680px;
+    max-width: 700px;
     color: var(--muted);
     font-size: clamp(0.95rem, 2vw, 1.1rem);
 }
@@ -48,14 +92,14 @@ body {
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    margin: 0 auto 18px;
+    margin: 0 auto 20px;
     padding: 18px;
-    width: min(1100px, 94%);
+    width: min(1120px, 95%);
     border-radius: 18px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 16px 40px rgba(5, 8, 20, 0.4);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 16px 44px rgba(6, 9, 24, 0.45);
 }
 
 .search-bar input,
@@ -70,28 +114,28 @@ body {
 
 .search-bar input {
     min-width: 190px;
-    background: rgba(0, 0, 0, 0.26);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.28);
+    border-color: rgba(255, 255, 255, 0.16);
     outline: none;
 }
 
 .search-bar input::placeholder {
-    color: rgba(248, 250, 255, 0.75);
+    color: rgba(245, 248, 255, 0.75);
 }
 
 .search-bar input:focus,
 #rarityBtn:focus-visible,
 .search-bar button:focus-visible {
-    border-color: rgba(124, 157, 255, 0.8);
-    box-shadow: 0 0 0 3px rgba(124, 157, 255, 0.22);
+    border-color: rgba(87, 183, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(87, 183, 255, 0.20);
 }
 
 .search-bar button,
 #rarityBtn {
     cursor: pointer;
-    background: linear-gradient(120deg, rgba(124, 157, 255, 0.9), rgba(53, 214, 255, 0.88));
     font-weight: 600;
-    transition: transform 0.15s ease, filter 0.2s ease;
+    background: linear-gradient(120deg, rgba(87, 183, 255, 0.95), rgba(159, 107, 255, 0.92));
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .search-bar button:hover,
@@ -112,14 +156,14 @@ body {
     display: none;
     position: absolute;
     top: calc(100% + 8px);
-    width: 260px;
+    width: 270px;
     max-height: 300px;
     overflow-y: auto;
     border-radius: 12px;
     padding: 8px;
-    background: #0d1431;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+    background: rgba(8, 14, 36, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
     z-index: 1000;
 }
 
@@ -130,68 +174,94 @@ body {
 }
 
 .rarity-dropdown div:hover {
-    background: rgba(124, 157, 255, 0.24);
+    background: rgba(87, 183, 255, 0.24);
 }
 
 .media-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    width: min(1200px, 95%);
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 18px;
+    width: min(1220px, 95%);
     margin: 0 auto 40px;
 }
 
 .glass-card {
     position: relative;
-    height: 260px;
-    border-radius: 18px;
+    height: 295px;
+    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(12px);
+    animation: subtleShiver 2.8s ease-in-out infinite;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
 .glass-card img,
 .glass-card video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background: rgba(5, 8, 20, 0.6);
+}
+
+.rarity-pill {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.17);
+    backdrop-filter: blur(8px);
+    font-size: 0.72rem;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+    animation: subtleShiver 1.8s ease-in-out infinite;
 }
 
 .card-meta {
     position: absolute;
     inset: auto 0 0;
     padding: 10px;
-    background: linear-gradient(to top, rgba(6, 8, 20, 0.93), rgba(6, 8, 20, 0.24));
+    background: linear-gradient(to top, rgba(5, 7, 19, 0.96), rgba(5, 7, 19, 0.2));
 }
 
 .card-meta h3 {
     margin: 0;
-    font-size: 0.92rem;
-    line-height: 1.2;
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.card-meta .media-id {
+    margin: 3px 0 0;
+    font-size: 0.76rem;
+    color: #a7c9ff;
+    letter-spacing: 0.02em;
 }
 
 .card-meta p {
     margin: 2px 0 0;
     font-size: 0.78rem;
-    color: #d7defb;
+    color: #d6e0ff;
 }
 
-.rarity-pill {
-    display: inline-block;
-    margin-top: 7px;
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: rgba(124, 157, 255, 0.32);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 0.72rem;
+.shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 22%, rgba(255, 255, 255, 0.35), transparent 70%);
+    transform: translateX(-100%);
+}
+
+.glass-card:hover .shine {
+    transform: translateX(100%);
+    transition: transform 0.95s ease;
 }
 
 .empty-state {
@@ -200,85 +270,8 @@ body {
     padding: 38px 12px;
     border: 1px dashed rgba(255, 255, 255, 0.28);
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--muted);
-}
-
-.shine {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, transparent 25%, rgba(255, 255, 255, 0.33), transparent 70%);
-    transform: translateX(-100%);
-}
-
-.glass-card:hover .shine {
-    transform: translateX(100%);
-    transition: .9s;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: black;
-    z-index: 2000;
-}
-
-.close-modal {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 26px;
-    cursor: pointer;
-    z-index: 3000;
-}
-
-.reelsSwiper,
-.swiper-slide {
-    width: 100vw;
-    height: 100vh;
-}
-
-.swiper-slide img,
-.swiper-slide video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.reel-actions {
-    position: absolute;
-    right: 20px;
-    bottom: 120px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.reel-actions button {
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    color: white;
-    font-size: 22px;
-    padding: 12px;
-    border-radius: 50%;
-}
-
-.comment-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 3000;
-}
-
-.comment-box {
-    background: #111;
-    width: 90%;
-    max-width: 400px;
-    margin: 80px auto;
-    padding: 16px;
-    border-radius: 14px;
 }
 
 @media (max-width: 640px) {
@@ -290,5 +283,9 @@ body {
     .search-bar button,
     #rarityBtn {
         width: 100%;
+    }
+
+    .glass-card {
+        height: 270px;
     }
 }
