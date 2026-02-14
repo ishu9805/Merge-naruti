@@ -1,5 +1,6 @@
 let currentMedia = [];
 let selectedRarity = "0";
+let isFirstLoad = true;
 
 const RARITIES = {
   0: "All",
@@ -31,11 +32,45 @@ const RARITIES = {
   26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
 };
 
+function showSiteLoader() {
+    document.getElementById("siteLoader").classList.remove("hide");
+}
+
+function hideSiteLoader() {
+    document.getElementById("siteLoader").classList.add("hide");
+}
+
+function renderSkeletonCards(count = 10) {
+    const grid = document.getElementById("mediaGrid");
+    grid.innerHTML = "";
+
+    for (let i = 0; i < count; i += 1) {
+        const card = document.createElement("div");
+        card.className = "glass-card skeleton-card";
+        card.innerHTML = `
+          <div class="skeleton-media"></div>
+          <div class="skeleton-meta">
+            <div class="skeleton-line w-70"></div>
+            <div class="skeleton-line w-45"></div>
+            <div class="skeleton-line w-55"></div>
+          </div>
+        `;
+        grid.appendChild(card);
+    }
+}
+
 async function loadMedia() {
+    renderSkeletonCards();
+
     const res = await fetch("/media");
     const data = await res.json();
     currentMedia = data.results;
     renderGrid(currentMedia);
+
+    if (isFirstLoad) {
+        hideSiteLoader();
+        isFirstLoad = false;
+    }
 }
 
 function renderGrid(items) {
@@ -68,6 +103,8 @@ function renderGrid(items) {
 }
 
 async function searchMedia() {
+    renderSkeletonCards(8);
+
     const name = searchName.value;
     const anime = searchAnime.value;
 
@@ -106,4 +143,5 @@ rarityBtn.onclick = () => {
         rarityDropdown.style.display === "block" ? "none" : "block";
 };
 
+showSiteLoader();
 loadMedia();
