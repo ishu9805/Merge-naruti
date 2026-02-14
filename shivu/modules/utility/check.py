@@ -28,6 +28,25 @@ async def fetch_user(user_id, use_userbot: bool = True):
     except Exception:
         return None
     
+
+async def get_local_user_info(user_id):
+    """Get best-effort user data from DB for unresolved Telegram users."""
+    candidates = [user_id]
+    if isinstance(user_id, str) and user_id.isdigit():
+        candidates.append(int(user_id))
+    elif isinstance(user_id, int):
+        candidates.append(str(user_id))
+
+    for candidate in candidates:
+        try:
+            user_doc = await user_collection.find_one({'id': candidate})
+            if user_doc:
+                return user_doc
+        except Exception:
+            continue
+
+    return None
+
 def escape_md(text: str) -> str:
     """Escape Markdown special characters."""
     if not text:
@@ -78,7 +97,17 @@ async def build_user_links(top_users, offset=0, limit=10, use_userbot=True):
             usernames.append(f"{i}. [{name}]({user_link}) ×{user_info['count']}")
         except Exception as e:
             logging.error(f"Error getting user info for {user_id}: {e}")
-            usernames.append(f"{i}. [User {user_id}](tg://user?id={user_id}) ×{user_info['count']}")
+            local_user = await get_local_user_info(user_id)
+            if local_user:
+                local_name = escape_md(local_user.get('first_name') or local_user.get('username') or f"User {user_id}")
+                local_username = local_user.get('username')
+                if local_username:
+                    local_link = f"https://t.me/{local_username}"
+                else:
+                    local_link = f"tg://user?id={user_id}"
+                usernames.append(f"{i}. [{local_name}]({local_link}) ×{user_info['count']}")
+            else:
+                usernames.append(f"{i}. [User {user_id}](tg://user?id={user_id}) ×{user_info['count']}")
     return usernames
 
 @bot.on_message(filters.command(["check"]))
