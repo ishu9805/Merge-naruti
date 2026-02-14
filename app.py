@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv
 
 # MongoDB connection URL
-mongo_url = "mongodb+srv://babusona:hinatababy@cluster0.t0lfelh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_url = "mongodb+srv://Ishu9805:narutohinatabf@ishu9805.bsxrhw9.mongodb.net/?appName=Ishu9805"
 client = MongoClient(mongo_url)
 db = client['NARUTOGAMEBOT']
 collection = db['anime_characters_lol']
