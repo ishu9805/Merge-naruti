@@ -1,49 +1,109 @@
-/* ================= GLOBAL ================= */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e);
-    background-size: 400% 400%;
-    animation: bg 12s ease infinite;
-    color: white;
+:root {
+    --bg-dark: #070b1f;
+    --bg-mid: #101a3f;
+    --accent: #7c9dff;
+    --accent-2: #35d6ff;
+    --text: #f8faff;
+    --muted: #c8d4ff;
+    --surface: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.18);
 }
 
-@keyframes bg {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(124, 157, 255, 0.32), transparent 30%),
+        radial-gradient(circle at 85% 0%, rgba(53, 214, 255, 0.26), transparent 28%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-mid));
+    color: var(--text);
+    min-height: 100vh;
 }
 
 .top-bar {
     text-align: center;
-    padding: 16px;
-    font-size: 20px;
+    padding: 36px 20px 18px;
 }
 
-/* ================= SEARCH ================= */
+.top-bar h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    letter-spacing: 0.04em;
+    text-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+}
+
+.subtitle {
+    margin: 10px auto 0;
+    max-width: 680px;
+    color: var(--muted);
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+}
+
 .search-bar {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    margin: 20px;
+    margin: 0 auto 18px;
+    padding: 18px;
+    width: min(1100px, 94%);
+    border-radius: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 16px 40px rgba(5, 8, 20, 0.4);
 }
 
 .search-bar input,
-.search-bar button {
-    padding: 10px 14px;
+.search-bar button,
+#rarityBtn {
+    padding: 11px 15px;
     border-radius: 12px;
-    border: none;
-    background: rgba(255,255,255,0.15);
-    color: white;
-    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+.search-bar input {
+    min-width: 190px;
+    background: rgba(0, 0, 0, 0.26);
+    border-color: rgba(255, 255, 255, 0.12);
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: rgba(248, 250, 255, 0.75);
+}
+
+.search-bar input:focus,
+#rarityBtn:focus-visible,
+.search-bar button:focus-visible {
+    border-color: rgba(124, 157, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(124, 157, 255, 0.22);
+}
+
+.search-bar button,
+#rarityBtn {
+    cursor: pointer;
+    background: linear-gradient(120deg, rgba(124, 157, 255, 0.9), rgba(53, 214, 255, 0.88));
+    font-weight: 600;
+    transition: transform 0.15s ease, filter 0.2s ease;
+}
+
+.search-bar button:hover,
+#rarityBtn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
 }
 
 .clear-btn {
-    background: rgba(255,0,0,0.35);
+    background: linear-gradient(120deg, rgba(255, 95, 143, 0.9), rgba(255, 138, 83, 0.9)) !important;
 }
 
-/* ================= RARITY ================= */
 .rarity-select {
     position: relative;
 }
@@ -51,41 +111,51 @@ body {
 .rarity-dropdown {
     display: none;
     position: absolute;
-    top: 110%;
-    background: rgba(0,0,0,0.85);
+    top: calc(100% + 8px);
+    width: 260px;
     max-height: 300px;
     overflow-y: auto;
     border-radius: 12px;
     padding: 8px;
+    background: #0d1431;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
     z-index: 1000;
 }
 
 .rarity-dropdown div {
-    padding: 6px 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
 .rarity-dropdown div:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(124, 157, 255, 0.24);
 }
 
-/* ================= GRID ================= */
 .media-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 14px;
-    padding: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    width: min(1200px, 95%);
+    margin: 0 auto 40px;
 }
 
 .glass-card {
     position: relative;
-    height: 220px;
+    height: 260px;
     border-radius: 18px;
     overflow: hidden;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.25);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
     cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
 }
 
 .glass-card img,
@@ -95,19 +165,57 @@ body {
     object-fit: cover;
 }
 
+.card-meta {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 10px;
+    background: linear-gradient(to top, rgba(6, 8, 20, 0.93), rgba(6, 8, 20, 0.24));
+}
+
+.card-meta h3 {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.2;
+}
+
+.card-meta p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: #d7defb;
+}
+
+.rarity-pill {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(124, 157, 255, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.72rem;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 38px 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+}
+
 .shine {
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.4), transparent 70%);
+    background: linear-gradient(120deg, transparent 25%, rgba(255, 255, 255, 0.33), transparent 70%);
     transform: translateX(-100%);
 }
 
 .glass-card:hover .shine {
     transform: translateX(100%);
-    transition: .8s;
+    transition: .9s;
 }
 
-/* ================= REELS ================= */
 .modal {
     display: none;
     position: fixed;
@@ -148,7 +256,7 @@ body {
 }
 
 .reel-actions button {
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     color: white;
     font-size: 22px;
@@ -156,12 +264,11 @@ body {
     border-radius: 50%;
 }
 
-/* ================= COMMENTS ================= */
 .comment-modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.8);
     z-index: 3000;
 }
 
@@ -172,4 +279,16 @@ body {
     margin: 80px auto;
     padding: 16px;
     border-radius: 14px;
+}
+
+@media (max-width: 640px) {
+    .search-bar {
+        justify-content: stretch;
+    }
+
+    .search-bar input,
+    .search-bar button,
+    #rarityBtn {
+        width: 100%;
+    }
 }

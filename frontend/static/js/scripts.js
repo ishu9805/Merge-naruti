@@ -45,6 +45,11 @@ function renderGrid(items) {
     const grid = document.getElementById("mediaGrid");
     grid.innerHTML = "";
 
+    if (!items.length) {
+        grid.innerHTML = `<div class="empty-state">No media found. Try another name, anime, or rarity filter.</div>`;
+        return;
+    }
+
     items.forEach((m, i) => {
         const card = document.createElement("div");
         card.className = "glass-card";
@@ -53,7 +58,12 @@ function renderGrid(items) {
         card.innerHTML = `
           ${m.type === "video"
             ? `<video muted loop src="${m.url}"></video>`
-            : `<img src="${m.url}">`}
+            : `<img src="${m.url}" alt="${m.name || "Anime card"}">`}
+          <div class="card-meta">
+            <h3>${m.name || "Unknown character"}</h3>
+            <p>${m.anime || "Unknown anime"}</p>
+            <span class="rarity-pill">${m.rarity || "Unknown rarity"}</span>
+          </div>
           <div class="shine"></div>
         `;
         grid.appendChild(card);
@@ -99,7 +109,7 @@ async function searchMedia() {
     const anime = searchAnime.value;
 
     const res = await fetch(
-        `/media/search?name=${name}&anime=${anime}&rarity=${selectedRarity}`
+        `/media/search?name=${encodeURIComponent(name)}&anime=${encodeURIComponent(anime)}&rarity=${selectedRarity}`
     );
     const data = await res.json();
     currentMedia = data.results;
