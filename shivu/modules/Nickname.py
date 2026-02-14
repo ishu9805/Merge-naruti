@@ -3,10 +3,8 @@ import asyncio
 #from telethon.sync import TelegramClient
 from pymongo import MongoClient
 
-import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pymongo import MongoClient
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -18,7 +16,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,

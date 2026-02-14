@@ -15,7 +15,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -97,7 +97,7 @@ async def block_command(client, message: Message):
     else:
         try:
             target_id = int(message.text.split()[1])
-        except:
+        except Exception:
             return await message.reply("Please either reply to a user's message or provide their user ID.")
 
     reason = None
@@ -133,7 +133,7 @@ async def unblock_command(client, message: Message):
     else:
         try:
             target_id = int(message.text.split()[1])
-        except:
+        except Exception:
             return await message.reply("Please either reply to a user's message or provide their user ID.")
 
     if not await is_blocked(target_id):

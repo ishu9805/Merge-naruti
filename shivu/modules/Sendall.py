@@ -104,7 +104,7 @@ def _get_media_key(character: Dict[str, Any]) -> Optional[str]:
 def _numeric_id_val(character: Dict[str, Any]) -> int:
     try:
         return int(character.get("id", 0))
-    except:
+    except Exception:
         return 0
 
 
@@ -134,7 +134,7 @@ def _render_banner_and_label(rarity_field: Any) -> (str, str):
         if isinstance(rarity_field, int) or (isinstance(rarity_field, str) and rarity_field.isdigit()):
             rnum = int(rarity_field)
             return RARITY_BANNERS.get(rnum, "✨ Character Drop ✨"), RARITY_LABELS.get(rnum, str(rnum))
-    except:
+    except Exception:
         pass
 
     if isinstance(rarity_field, str):
@@ -247,7 +247,7 @@ async def send_all_characters(_, message: Message):
     if len(parts) > 1:
         try:
             start_id = int(parts[1].strip())
-        except:
+        except Exception:
             await app.send_message(
                 chat_id=message.chat.id,
                 text="❌ Provide a valid numeric start id. Usage: /sendall <start_id>"
@@ -310,7 +310,7 @@ async def send_all_characters(_, message: Message):
                         ),
                         parse_mode=ParseMode.HTML
                     )
-                except:
+                except Exception:
                     pass
 
             await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
@@ -352,7 +352,7 @@ async def send_one_character(_, message: Message):
             await _send_media_to_channel(character)
             try:
                 await collection.update_one({"_id": character["_id"]}, {"$set": {"sented": True}})
-            except:
+            except Exception:
                 pass
 
             await app.send_message(

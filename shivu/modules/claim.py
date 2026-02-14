@@ -15,7 +15,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -89,7 +89,7 @@ async def hclaim(_, message: t.Message):
         # Check if the user is banned
         user = await user_collection.find_one({"id": user_id})
         if not user:
-            await message.reply_text(f"Please start the bot in DM first [start](https://t.me/Naruto_waifu_husbando_bot?start=start)")
+            await message.reply_text("Please start the bot in DM first [start](https://t.me/Naruto_waifu_husbando_bot?start=start)")
             return
 
         
@@ -205,14 +205,15 @@ async def hfind(_, message: t.Message):
     for user_info in top_users:
         user_id = user_info['_id']
         try:
-            user = await bot.get_users(user_id)
+            user = await app.get_users(user_id)
             link = f"[{user.first_name}](tg://user?id={user.id})"
             usernames.append(f"{link} x{user_info['count']}")
         except Exception:
             usernames.append(f"[User {user_id}](tg://user?id={user_id}) x{user_info['count']}")
     
     # Escape Markdown characters in waifu fields
-    escape_md = lambda text: text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
+    def escape_md(text):
+        return text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
     waifu_name = escape_md(waifu['name'])
     waifu_rarity = escape_md(waifu['rarity'])
     waifu_anime = escape_md(waifu['anime'])

@@ -128,7 +128,7 @@ def parse_inline_query(q: str):
             if k == "page":
                 try:
                     page = max(1, int(v))
-                except:
+                except Exception:
                     page = 1
             elif k == "sort":
                 sort = v
@@ -294,7 +294,7 @@ async def handle_shop_inline(client: Client, inline_query: InlineQuery):
         InlineQueryResultPhoto(
             photo_url=thumb or "https://telegra.ph/file/placeholder.png",
             thumb_url=thumb or "https://telegra.ph/file/placeholder.png",
-            title=f"🔧 Shop Controls",
+            title="🔧 Shop Controls",
             description=f"Page {page}/{total_pages}  •  Sort: {sort_mode}",
             caption=nav_caption,
             parse_mode=ParseMode.MARKDOWN,
@@ -316,7 +316,7 @@ async def buy_step1(client, cq):
     _, code, owner_str, session = parts
     try:
         owner_id = int(owner_str)
-    except:
+    except Exception:
         owner_id = None
 
     requester = cq.from_user.id
@@ -342,7 +342,7 @@ async def buy_step1(client, cq):
     # global limit quick check
     pool = item.get("pool")
     if pool in GLOBAL_LIMITS:
-        count = await daily_shop_collection.count_documents({"character.id": char.get("id"), "sold_to": {"$exists": True}})
+        count = await daily_shop_collection.count_documents({"character.id": char.get("id"), "sold_to.0": {"$exists": True}})
         if count >= GLOBAL_LIMITS[pool]:
             return await cq.answer("❌ This character already reached its global limit.", show_alert=True)
 
@@ -373,7 +373,7 @@ async def buy_step1(client, cq):
     try:
         await client.send_photo(chat_id=requester, photo=char.get("img_url"), caption=caption, reply_markup=kb)
         await cq.answer()
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to send confirmation photo")
         await cq.answer("❌ Failed to show confirmation. Try in PM.", show_alert=True)
 
@@ -389,7 +389,7 @@ async def buy_confirm(client, cq):
     _, code, owner_str, session = parts
     try:
         owner_id = int(owner_str)
-    except:
+    except Exception:
         owner_id = None
 
     requester = cq.from_user.id
@@ -414,7 +414,7 @@ async def buy_confirm(client, cq):
 
     # global limit check
     if pool in GLOBAL_LIMITS:
-        count = await daily_shop_collection.count_documents({"character.id": char_id, "sold_to": {"$exists": True}})
+        count = await daily_shop_collection.count_documents({"character.id": char_id, "sold_to.0": {"$exists": True}})
         if count >= GLOBAL_LIMITS[pool]:
             return await cq.answer("❌ Global purchase limit reached for this character.", show_alert=True)
 
@@ -476,7 +476,7 @@ async def buy_cancel(client, cq):
     _, code, owner_str, session = parts
     try:
         owner_id = int(owner_str)
-    except:
+    except Exception:
         owner_id = None
 
     requester = cq.from_user.id
@@ -486,7 +486,7 @@ async def buy_cancel(client, cq):
     try:
         await client.send_message(chat_id=requester, text="❌ Purchase cancelled.")
         await cq.answer()
-    except:
+    except Exception:
         await cq.answer("❌ Purchase cancelled.", show_alert=True)
 
 # -------------------------

@@ -185,7 +185,7 @@ async def update_total_characters_for_all_users():
 async def react_to_message(chat_id, message_id, emoji):
     try:
        await shivuu.send_reaction(chat_id, message_id, emoji)
-    except:
+    except Exception:
        pass
 
 
@@ -292,8 +292,8 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
         # Check for special spawns using relative threshold approach
         current_count = total_message_counts[chat_id]
-        valentine_threshold = valentine_spawn_thresholds[chat_id]
-        summer_threshold = summer_spawn_thresholds[chat_id]
+        valentine_spawn_thresholds[chat_id]
+        summer_spawn_thresholds[chat_id]
         
         # Valentine spawn check
         if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
@@ -317,7 +317,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
 
 async def spawn_diwali_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    datetime.datetime.now().strftime("%Y-%m-%d")
 
     """if str(chat_id) != "-1002783891820":
         #await message.reply_text("you can only use this command here @hclaim_support")
@@ -386,7 +386,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
     try:
         chat_id = update.effective_chat.id
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+        datetime.datetime.now().strftime("%Y-%m-%d")
         # Filter characters with available slots
 
         if chat_id not in sent_characters:
@@ -420,7 +420,7 @@ async def spawn_amv_character(update: Update, context: CallbackContext):
         await asyncio.sleep(2)
         # Store AMV character info
 
-        msg = await context.bot.send_video(
+        await context.bot.send_video(
             chat_id= chat_id,
             video=character['vid_url'],
             parse_mode='Markdown',
@@ -468,7 +468,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         5: '🟣 Rare',
         6: '🟡 Legendary',
         7: '💮 Special Edition',
-        6: '🟡 Legendary',
         8: '🔮 Limited Edition',
         9: '🟢 Medium',
         10: '💸 Premium Edition',
@@ -493,20 +492,15 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         
         #'🟡 Legendary': 10,
         '💮 Special Edition': 2,
-        '🟡 Legendary': 5,
         '🔮 Limited Edition': 2,
         '💸 Premium Edition': 0,
         '🌤 Summer': 0 if today_message_count <= 4 else 0,
         '🎐 Celestial': 1 if datetime.datetime.today().weekday() in [0, 7] else 0,
         '❄️ Winter': 0,
-        '🟡 Legendary': 0, 
-        '⚪️ Common': 5,
         
          # Stop spawning Winter characters
         '💝 Valentine': 0, 
-        '⚪️ Common': 0,  # Start spawning Valentine characters
-        '🎃 Halloween': 0,
-        '🟡 Legendary': 5, 
+        '🎃 Halloween': 0, 
         '🎨 Artistic':1,
         #'⚪️ Common': 5,
         '🎄 Christmas Special': 0,
@@ -581,7 +575,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    datetime.datetime.now().strftime("%Y-%m-%d")
     
     
     if chat_id not in sent_characters:
@@ -651,7 +645,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
 
 async def spawn_summer_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+    datetime.datetime.now().strftime("%Y-%m-%d")
     
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
@@ -743,8 +737,11 @@ async def slock(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f"❌ Character {character_id} not found.")
 
 
+async def spawn_monsoon_character(update: Update, context: CallbackContext) -> None:
+    # Temporary alias until dedicated monsoon spawn logic is added
+    await spawn_summer_character(update, context)
+
 async def now_command(update: Update, context: CallbackContext) -> None:
-    chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     if str(user_id) not in sad:
         return
@@ -809,7 +806,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 return
 
         first_correct_guesses[chat_id] = user_id
-        rarity = character.get("rarity", "")
+        character.get("rarity", "")
         
         try:
             random_reaction = random.choice(reaction_list)

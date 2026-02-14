@@ -4,9 +4,6 @@ import time
 
 from .lock import command_lock as cl
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import time
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -18,7 +15,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -108,7 +105,7 @@ async def gift(client, message):
     process_id = str(time.time())
 
     # Store pending gift data
-    sent_message = await message.reply_text(
+    await message.reply_text(
         f"🎁 {message.from_user.mention}, do you confirm gifting this character?",
         reply_markup=InlineKeyboardMarkup(
             [
@@ -180,7 +177,7 @@ async def on_gift_callback_query(client, callback_query):
                 'characters': [gift['character']],
             })
         
-        rarity = gift['character']['rarity']
+        gift['character']['rarity']
         
         # Set the cooldown for the sender (15 seconds from now)
         cooldowns[sender_id] = time.time()
@@ -292,7 +289,7 @@ async def trade(client, message):
     process_id = str(time.time())
 
     # Store pending trade data
-    sent_message = await message.reply_text(
+    await message.reply_text(
         f"🎁 {message.from_user.mention} has proposed a trade. **{receiver_first_name}**, do you accept?",
         reply_markup=InlineKeyboardMarkup(
             [

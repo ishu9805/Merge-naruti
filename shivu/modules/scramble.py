@@ -19,7 +19,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -72,7 +72,6 @@ def generate_hint(code: str) -> str:
 
 @app.on_message(filters.command("gameplay") & filters.user(7378476666))
 async def send_scrambled_code(client: Client, message: Message):
-    user_id = message.from_user.id
 
     # Check if the user provided a character ID
     if len(message.command) < 2:
@@ -90,8 +89,8 @@ async def send_scrambled_code(client: Client, message: Message):
     # Extract character details
     character_name = character.get('name', '❓')
     character_anime = character.get('anime', '❓')
-    rarity = character.get('rarity', '❓')
-    image_url = character.get('img_url', '')
+    character.get('rarity', '❓')
+    character.get('img_url', '')
 
     # Generate and scramble the code
     original_code = generate_random_code()

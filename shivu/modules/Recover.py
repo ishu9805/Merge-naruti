@@ -83,14 +83,6 @@ async def recover_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         error_msg = f"❌ Recovery failed: {str(e)}"
         await update.message.reply_text(error_msg)
         LOGGER.error(f"Recovery failed: {e}", exc_info=True)
-    finally:
-        # Clean up downloaded file
-        if os.path.exists(download_path):
-            try:
-                os.remove(download_path)
-                LOGGER.info(f"Cleaned up recovery file: {download_path}")
-            except Exception as e:
-                LOGGER.warning(f"Could not remove recovery file: {e}")
 
 async def restore_backup(backup_data):
     """Restore backup data to MongoDB collections"""

@@ -95,7 +95,7 @@ async def enhance_then_upscale(client: Client, message: Message):
                     caption="✨ **Enhanced & Upscaled** (Enhanced + 2X)"
                 )
                 
-            except Exception as upscale_error:
+            except Exception:
                 # If upscaling fails, send enhanced version
                 await progress.edit_text("⚠️ Upscaling failed. Sending enhanced version...")
                 await message.reply_photo(
@@ -103,7 +103,7 @@ async def enhance_then_upscale(client: Client, message: Message):
                     caption="✨ **Enhanced Image** (Upscale failed)"
                 )
                 
-        except Exception as enhance_error:
+        except Exception:
             # If enhancement fails, try upscaling original
             try:
                 await progress.edit_text("⚠️ Enhancement failed. Trying upscaling...")
@@ -114,7 +114,7 @@ async def enhance_then_upscale(client: Client, message: Message):
                     caption="✨ **Upscaled Original** (2X, enhancement failed)"
                 )
                 
-            except Exception as upscale_error:
+            except Exception:
                 # If both fail, send original
                 await progress.edit_text("⚠️ Both failed. Sending original...")
                 await message.reply_photo(
@@ -131,7 +131,7 @@ async def enhance_then_upscale(client: Client, message: Message):
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
-                except:
+                except Exception:
                     pass
 
 # Standalone commands
@@ -161,7 +161,7 @@ async def enhance_only(client: Client, message: Message):
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
-                except:
+                except Exception:
                     pass
 
 @app.on_message(filters.command("upscale") & filters.reply)
@@ -190,5 +190,5 @@ async def upscale_only(client: Client, message: Message):
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
-                except:
+                except Exception:
                     pass

@@ -17,7 +17,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -287,7 +287,6 @@ async def handle_general_inline(client, update):
 
 
 
-from pyrogram import filters
 from shivu import shivuups as app
 
 @app.on_message(filters.command("finderrors"))

@@ -15,7 +15,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -51,7 +51,7 @@ async def change_time(client: Client, message: Message):
             return
 
         # Update the message frequency in the database
-        chat_frequency = await user_totals_collection.find_one_and_update(
+        await user_totals_collection.find_one_and_update(
             {'chat_id': str(chat_id)},
             {'$set': {'message_frequency': new_frequency}},
             upsert=True,

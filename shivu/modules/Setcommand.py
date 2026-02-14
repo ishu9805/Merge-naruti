@@ -44,13 +44,13 @@ async def set_commands(client, message):
         await message.reply_text(f"❌ Failed to set commands: {e}")
 
 
-from pyrogram import Client, filters
-from pyrogram.types import BotCommand, BotCommandScopeDefault
+from pyrogram import filters
+from pyrogram.types import BotCommandScopeDefault
 from shivu import shivuups as app
 
 # ✨ 𝖊𝖑𝖎𝖙𝖊 𝖘𝖒𝖆𝖑𝖑-𝖈𝖆𝖕 𝖘𝖊𝖙 𝖈𝖔𝖒𝖒𝖆𝖓𝖉𝖘
 @app.on_message(filters.command("setcommand2"))
-async def set_commands(client, message):
+async def set_commands(client, message):  # noqa: F811
 
     commands = [
 

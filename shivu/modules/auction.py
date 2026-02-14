@@ -12,7 +12,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -70,7 +70,7 @@ async def start_auction(client, message):
     await auction_collection.insert_one(auction_data)
 
     # Build and send the auction message
-    auction_message = f"🛎 **Auction Started!**\n\n"
+    auction_message = "🛎 **Auction Started!**\n\n"
     auction_message += f"**CHARACTER:** {waifu.get('name', 'Unknown Name')} ({waifu.get('anime', 'Unknown Anime')})\n"
     auction_message += f"**Starting Bid:** {starting_bid}\n"
     auction_message += f"**Rarity:** {waifu.get('rarity', 'Unknown Rarity')}\n\n"
@@ -280,12 +280,12 @@ async def view_auction(client, message):
         return
 
     # Get waifu details from the active auction
-    waifu_id = active_auction["waifu_id"]
+    active_auction["waifu_id"]
     waifu_name = active_auction["waifu_name"]
     waifu_anime = active_auction["waifu_anime"]
     starting_bid = active_auction["starting_bid"]
     highest_bid = active_auction["highest_bid"]
-    highest_bidder_id = active_auction["highest_bidder"]
+    active_auction["highest_bidder"]
     waifu_image_url = active_auction.get("img_url", None)
 
     
@@ -293,7 +293,7 @@ async def view_auction(client, message):
     highest_bidder = active_auction["highest_bidder_username"]
 
     # Prepare the message content
-    auction_message = f"🛎 **Current Auction**\n\n"
+    auction_message = "🛎 **Current Auction**\n\n"
     auction_message += f"**Waifu:** {waifu_name} ({waifu_anime})\n"
     auction_message += f"**Starting Bid:** {starting_bid}\n"
     auction_message += f"**Highest Bid:** {highest_bid} by @{highest_bidder}\n"

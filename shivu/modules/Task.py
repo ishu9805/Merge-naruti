@@ -16,60 +16,10 @@ from shivu import (
     shivuups as app,
     OWNER_ID
 )
-import logging
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from collections import defaultdict
-import asyncio
-import time
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu.modules.lock import command_lock as cmd
 
-import logging
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from collections import defaultdict
-import random
-import time
-import asyncio
-from datetime import datetime
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-from . import sudo_filter, dev_filter
-from shivu import (
-    collectionps as collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as app,
-    OWNER_ID
-)
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu.modules.lock import command_lock as cmd
 
-import logging
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from collections import defaultdict
-import random
-import time
-import asyncio
-from datetime import datetime
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-from . import sudo_filter, dev_filter
-from shivu import (
-    collectionps as collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as app,
-    OWNER_ID
-)
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu.modules.lock import command_lock as cmd
 
 # Initialize global variables
 claim_locks = defaultdict(asyncio.Lock)
@@ -512,7 +462,7 @@ async def cancel_claim(client, callback_query):
 
 @cmd
 @app.on_message(filters.command("tpending"))
-async def reset_pending_claim(client, message):
+async def reset_pending_claim(client, message):  # noqa: F811
     """Allow users to reset their pending claims"""
     user_id = message.from_user.id
     

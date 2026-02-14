@@ -11,8 +11,7 @@ from telegram.ext import CallbackContext
 from typing import Callable, Any
 from shivu import applicationps as application
 
-from pyrogram import filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.types import CallbackQuery
 from pyrogram.errors import UserNotParticipant
 
 def check_membership(group_id: int = -1002783891820, channel_id: int = -1001999201034):
@@ -35,7 +34,7 @@ def check_membership(group_id: int = -1002783891820, channel_id: int = -10019992
             try:
                 group_invite = await client.export_chat_invite_link(group_id)
                 #channel_invite = await client.export_chat_invite_link(channel_id)
-            except Exception as e:
+            except Exception:
                 await message.reply_text("⚠️ Could not generate invite links. Please contact admin.")
                 return
 
@@ -62,7 +61,6 @@ def check_membership(group_id: int = -1002783891820, channel_id: int = -10019992
 async def check_joined_callback(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     group_id = -1002783891820
-    channel_id = -1001999201034
     
     try:
         # Check both group and channel membership
@@ -85,8 +83,8 @@ async def check_joined_callback(client: Client, callback_query: CallbackQuery):
 
 
 
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackContext, CallbackQueryHandler
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton  # noqa: F811
+from telegram.ext import CallbackQueryHandler
 from telegram.error import BadRequest
 
 def ptb_check_membership(group_id: int = -1002783891820, channel_id: int = -1001999201034):
@@ -111,7 +109,7 @@ def ptb_check_membership(group_id: int = -1002783891820, channel_id: int = -1001
             try:
                 group_invite = await bot.export_chat_invite_link(group_id)
                 #channel_invite = await bot.export_chat_invite_link(channel_id)
-            except Exception as e:
+            except Exception:
                 await update.message.reply_text("⚠️ Could not generate invite links. Please contact admin.")
                 return
 
@@ -134,13 +132,12 @@ def ptb_check_membership(group_id: int = -1002783891820, channel_id: int = -1001
     return decorator
 
 # Callback handler function
-async def check_joined_callback(update: Update, context: CallbackContext):
+async def check_joined_callback(update: Update, context: CallbackContext):  # noqa: F811
     query = update.callback_query
     await query.answer()
     
     user_id = query.from_user.id
     group_id = -1002783891820
-    channel_id = -1001999201034
     
     try:
         # Check both memberships

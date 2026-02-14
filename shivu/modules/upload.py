@@ -6,14 +6,19 @@ from telegram.ext import CommandHandler, CallbackContext
 import requests
 from pyrogram import filters
 from pyrogram.types import InputMediaPhoto
-import os
-from pyrogram import Client, filters
+from pyrogram import Client
 from pyrogram.types import Message
-from pymongo import ReturnDocument, UpdateOne
-import urllib.request
+from pymongo import UpdateOne
 import random
 import aiohttp
 import asyncio
+
+try:
+    from telegraph import upload_file
+except Exception:
+    def upload_file(_file_path):
+        raise RuntimeError("telegraph package is not installed")
+
 from . import sudo_filter, uploader_filter
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
@@ -26,7 +31,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -309,7 +314,7 @@ async def check(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text('Incorrect format. Please use: /check id')
             return
             
-        character_id = context.args[0]
+        context.args[0]
         character = await collection.find_one({'id': args[0]}) 
             
         if character:
@@ -606,7 +611,7 @@ async def update_image(client, message):
                     photo=image_url,
                     caption=caption,
                 )
-        except:
+        except Exception:
             # Fallback to sending the local file if URL doesn't work
             if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
                 await client.send_video(
@@ -661,7 +666,7 @@ async def auto_upload_from_group(client, message):
         if len(parts) != 3:
             await client.send_message(
                 chat_id=message.chat.id,
-                text=f"❌ Wrong caption format. Use: Character Name - Anime Name - Rarity Number\n\nExample: `Naruto Uzumaki - Naruto - 3`"
+                text="❌ Wrong caption format. Use: Character Name - Anime Name - Rarity Number\n\nExample: `Naruto Uzumaki - Naruto - 3`"
             )
             return
         

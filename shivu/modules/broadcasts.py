@@ -14,7 +14,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -22,9 +22,6 @@ from shivu import (
     chat_dataps as chat_data,
 )
 
-import asyncio
-import logging
-from pyrogram import filters
 from pyrogram.types import (
     InlineKeyboardButton, 
     InlineKeyboardMarkup,
@@ -32,14 +29,9 @@ from pyrogram.types import (
 )
 from pyrogram.enums import MessageEntityType
 from pyrogram.errors import (
-    PeerIdInvalid, 
-    FloodWait, 
-    ChatWriteForbidden, 
-    UserIsBlocked,
     ChannelPrivate,
     ChatAdminRequired
 )
-from . import dev_filter
 
 # ===== CONFIGURATION =====
 MESSAGE_DELAY = 1  # Seconds between messages

@@ -9,12 +9,6 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 from typing import Callable, Any
-from functools import wraps
-from telegram import Update
-from telegram.ext import CallbackContext
-from pymongo import MongoClient
-from datetime import datetime, timedelta
-import logging
 from shivu import dm_collection
 
 

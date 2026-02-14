@@ -14,7 +14,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -46,7 +46,7 @@ async def change_time(client: Client, message: Message):
         pass
 
     # Check if the user is an admin
-    if not await get_member_status(chat_id, user_id) in ADMINS:
+    if await get_member_status(chat_id, user_id) not in ADMINS:
         await message.reply_text("⚠️ **Admin Access Only!**")
         return
 

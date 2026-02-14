@@ -14,7 +14,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -24,6 +24,20 @@ from shivu import (
 # Global variables to store giveaway data
 giveaway_character = None
 participants = []
+
+ADMIN_ID = 7378476666
+CHAT_ID = -1001999201034
+
+class GiveawayState:
+    def __init__(self):
+        self.character = None
+        self.participants = []
+
+giveaway = GiveawayState()
+
+async def send_photo_with_caption(client: Client, chat_id: int, photo_url: str, caption: str):
+    await client.send_photo(chat_id=chat_id, photo=photo_url, caption=caption)
+
 
 # Start a giveaway
 @app.on_message(filters.command("rgiveaway"))
@@ -52,6 +66,8 @@ async def start_giveaway(client: Client, message: Message):
     # Store the character in the global variable
     giveaway_character = character
     participants = []  # Reset participants list
+    giveaway.character = character
+    giveaway.participants = []
 
     # Send a photo with caption to the specified chat ID
     try:

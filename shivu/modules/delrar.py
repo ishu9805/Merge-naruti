@@ -1,13 +1,12 @@
 import logging
 from telegram import Update
 from telegram.ext import CallbackContext
-from telegram import Update
 from itertools import groupby
 import math
 from html import escape 
 import random
 
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
@@ -21,7 +20,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -88,7 +87,6 @@ async def delete_rarity_characters(update: Update, context: CallbackContext) -> 
         await update.message.reply_text(f'An error occurred: {str(e)}')
 
 
-import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 from collections import defaultdict

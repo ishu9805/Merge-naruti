@@ -11,7 +11,7 @@ from shivu import (
     dbps as db,
     user_collectionps as user_collection,
     pmusersps as pmusers,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     PHOTO_URL,
 )
 from .block import block_dec, temp_block, block_cbq
@@ -71,8 +71,8 @@ credits_text = f"""
 """
 
 support_buttons = [
-    [IKB("💬 Support Chat", url=f"https://t.me/anime_x_blade"),
-     IKB("📢 Updates", url=f"https://t.me/NARUTOO_UPDATE")],
+    [IKB("💬 Support Chat", url="https://t.me/anime_x_blade"),
+     IKB("📢 Updates", url="https://t.me/NARUTOO_UPDATE")],
     [IKB("➕ Add to Group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
     [IKB("❓ Help", callback_data="help"),
      IKB("🌟 Credits", callback_data="credits")]
@@ -186,7 +186,7 @@ async def generate_team_buttons(_, collection):
                 user_data = await _.get_users(user_id)
                 name = user_data.first_name
                 buttons.append(IKB(f"👤 {name}", url=f"tg://user?id={user_id}"))
-            except:
+            except Exception:
                 continue
     return [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
 

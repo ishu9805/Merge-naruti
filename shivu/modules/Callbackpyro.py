@@ -2,10 +2,8 @@ import asyncio
 #from telethon import events, Button
 #from telethon.sync import TelegramClient and 
 from pymongo import MongoClient
-import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pymongo import MongoClient
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
 from shivu.modules.fav import button
 from shivu.modules.Animelist import anime_letter_callback, anime_selection_callback, back_to_az_callback
@@ -22,7 +20,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,

@@ -75,7 +75,7 @@ async def join_watcher(_, message):
                 error_msg = f"Error in new chat handler: {str(e)}"
                 try:
                     await app.send_message(LOG_GROUP_ID, error_msg)
-                except:
+                except Exception:
                     pass  # Avoid infinite error loop
 
 @app.on_message(filters.left_chat_member)
@@ -102,5 +102,5 @@ async def on_left_chat_member(_, message: Message):
             error_msg = f"Error in left chat handler: {str(e)}"
             try:
                 await app.send_message(LOG_GROUP_ID, error_msg)
-            except:
+            except Exception:
                 pass  # Avoid infinite error loop

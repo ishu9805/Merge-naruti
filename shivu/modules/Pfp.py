@@ -9,7 +9,7 @@ from .block import block_dec, temp_block
 #from . import top_global_groups_collection as bot_chats
 from .lock import command_lock as cmd
 
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER  # noqa: F811
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
@@ -20,7 +20,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -32,6 +32,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CATBOX_API_URL = "https://catbox.moe/user/api.php"
+pending_profile_media = {}
 
 def upload_to_catbox(file_path: str) -> str:
     """
@@ -76,10 +77,10 @@ async def set_profile_media(client: Client, message: Message):
         img_url = upload_to_catbox(photo_path)
 
         # Send the photo to the admin group with Approve and Reject buttons
-        caption = f"**📸 New Profile Media Request!**\n\n"
+        caption = "**📸 New Profile Media Request!**\n\n"
         caption += f"👤 **User ID:** `{user_id}`\n"
         caption += f"📎 **Media URL:** {img_url}\n"
-        caption += f" @sashta_dev"
+        caption += " @sashta_dev"
 
         buttons = InlineKeyboardMarkup(
             [
@@ -115,7 +116,12 @@ async def approve_profile_media(client, callback_query):
     # Check if the user is authorized to approve (e.g., admin)
     if callback_query.from_user.id == 7378476666:  # Replace with your admin check logic
         # Update the user's profile media in the database
-        await user_collection.update_one({'id': user_id}, {'$set': {'profile_media': img_url}})
+        media_url = pending_profile_media.get(user_id)
+        if not media_url:
+            await callback_query.answer("❌ No pending media found.", show_alert=True)
+            return
+        await user_collection.update_one({'id': user_id}, {'$set': {'profile_media': media_url}})
+        pending_profile_media.pop(user_id, None)
         await callback_query.answer("✅ Profile media approved.")
 
         # Notify the user

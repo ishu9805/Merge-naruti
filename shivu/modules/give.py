@@ -17,7 +17,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -126,7 +126,7 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
             {'id': user_id},
             {'$push': {'characters': character}}
         )
-        rarity = character['rarity']
+        character['rarity']
         '''await user_count.update_one(
             {'user_id': user_id},
             {'$inc': {f'rarity_count.{rarity}': 1}},
@@ -141,8 +141,7 @@ async def give_character_reply(update: Update, context: CallbackContext) -> None
 
 
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram.ext import CommandHandler
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -236,23 +235,10 @@ from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from . import sudo_filter, dev_filter
 from shivu import LOG_CHANNEL as LOG_CHAT_ID
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT  # noqa: F811
 from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
-    shivuups as app,
     applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
+    UPDATE_CHATps as UPDATE_CHAT_PS,  # noqa: F811
 )
 
 
@@ -441,29 +427,13 @@ async def remove_character_command(client, message):
 
 
 import logging
-from pyrogram import Client, filters
-from pyrogram.errors import UserIsBlocked
-from pymongo import MongoClient
-from pymongo.errors import PyMongoError
-from . import sudo_filter, dev_filter
-from shivu import LOG_CHANNEL as LOG_CHAT_ID
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from pyrogram import filters
+from . import sudo_filter
+from shivu import UPDATE_CHAT  # noqa: F811
 from shivu import (
-    collectionps as collection,
-    top_global_groups_collectionps as top_global_groups_collection,
-    group_user_totals_collectionps as group_user_totals_collection,
-    user_collectionps as user_collection,
-    user_totals_collectionps as user_totals_collection,
-    shivuups as shivuu,
     shivuups as app,
     applicationps as application,
-    SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
-    dbps as db,
-    pmusersps as pmusers,
-    ban_collectionps as ban_collection,
-    user_countps as user_count, 
-    chat_dataps as chat_data,
+    UPDATE_CHATps as UPDATE_CHAT_PS,  # noqa: F811
 )
 
 CHARACTERS_FIELD = "characters"
@@ -541,7 +511,7 @@ async def give_balance_command(client, message):
             logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
             pass  # Skip sending the log if the bot is blocked
 
-    except (IndexError, ValueError) as e:
+    except (IndexError, ValueError):
         await message.reply_text("Please provide a valid amount.")
     except Exception as e:
         logger.error(f"Error in give_balance_command: {e}")
@@ -596,7 +566,7 @@ async def take_balance_command(client, message):
             logger.warning(f"Bot is blocked by the user. Skipping log message to {LOG_CHAT_ID}.")
             pass  # Skip sending the log if the bot is blocked
 
-    except (IndexError, ValueError) as e:
+    except (IndexError, ValueError):
         await message.reply_text("Please provide a valid amount.")
     except Exception as e:
         logger.error(f"Error in take_balance_command: {e}")

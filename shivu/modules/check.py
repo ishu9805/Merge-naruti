@@ -9,7 +9,7 @@ async def fetch_user(user_id):
     try:
         # Fallback: Try with userbot
         return await userbot.get_users(user_id)
-    except:
+    except Exception:
         pass
 
     return None
@@ -102,7 +102,7 @@ async def hfind(_, message: t.Message):
     )
     
     if usernames:
-        caption += f"🏆 **Top Collectors**:\n" + "\n".join(usernames)
+        caption += "🏆 **Top Collectors**:\n" + "\n".join(usernames)
     
     # Create buttons for pagination
     buttons = []

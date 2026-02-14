@@ -17,7 +17,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -220,7 +220,7 @@ async def elimination_process(client: Client):
             winner2 = await client.get_users(winner2_id)
 
             # Prepare media for the first winner
-            media = InputMediaPhoto(giveaway_character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway_character1.get('name', 'Unknown')}\n**ID:** {giveaway_character1.get('id')}\n**Rarity:** {giveaway_character1.get('rarity')}")
+            InputMediaPhoto(giveaway_character1.get("img_url"), caption=f"🏆 **Prize 1:** {giveaway_character1.get('name', 'Unknown')}\n**ID:** {giveaway_character1.get('id')}\n**Rarity:** {giveaway_character1.get('rarity')}")
 
             # Prepare caption for winners
             caption = (

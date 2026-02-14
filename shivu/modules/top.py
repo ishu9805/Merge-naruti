@@ -9,7 +9,7 @@ from telegram.ext import CommandHandler, CallbackContext, Application, ContextTy
 
 from cachetools import TTLCache
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from datetime import datetime
+from datetime import datetime, timedelta
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
     collectionps as collection,
@@ -21,7 +21,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -31,9 +31,6 @@ from shivu import (
 )
 # Logging setup
 import json
-import logging
-import os
-from datetime import datetime
 
 from pyrogram import Client
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -175,17 +172,17 @@ async def get_group_data(group_id: int):
 async def reset_daily_tops():
     """Reset daily_top for all users at midnight."""
     await user_collection.update_many({}, {"$set": {"daily_top": 0}})
-    logger.info("Daily tops reset.")
+    LOGGER.info("Daily tops reset.")
 
 async def reset_weekly_tops():
     """Reset weekly_top for all users at midnight on Sunday."""
     await user_collection.update_many({}, {"$set": {"weekly_top": 0}})
-    logger.info("Weekly tops reset.")
+    LOGGER.info("Weekly tops reset.")
 
 async def reset_monthly_tops():
     """Reset monthly_top for all users at midnight on the last day of the month."""
     await user_collection.update_many({}, {"$set": {"monthly_top": 0}})
-    logger.info("Monthly tops reset.")
+    LOGGER.info("Monthly tops reset.")
 
 
 async def reset_all_tasks_daily():
@@ -286,7 +283,7 @@ async def daily_top_grabbers(update: Update, context: CallbackContext) -> None:
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in daily_top_grabbers: {e}")
+        LOGGER.error(f"Error in daily_top_grabbers: {e}")
         await update.message.reply_text("An error occurred while generating the daily leaderboard.")
 
 async def weekly_top_grabbers(update: Update, context: CallbackContext) -> None:
@@ -317,7 +314,7 @@ async def weekly_top_grabbers(update: Update, context: CallbackContext) -> None:
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in weekly_top_grabbers: {e}")
+        LOGGER.error(f"Error in weekly_top_grabbers: {e}")
         await update.message.reply_text("An error occurred while generating the weekly leaderboard.")
 
 async def monthly_top_grabbers(update: Update, context: CallbackContext) -> None:
@@ -348,7 +345,7 @@ async def monthly_top_grabbers(update: Update, context: CallbackContext) -> None
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in monthly_top_grabbers: {e}")
+        LOGGER.error(f"Error in monthly_top_grabbers: {e}")
         await update.message.reply_text("An error occurred while generating the monthly leaderboard.")
 
 
@@ -377,7 +374,7 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in global_leaderboard: {e}")
+        LOGGER.error(f"Error in global_leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the leaderboard.")
 
 # Fetch top 10 users in a specific group
@@ -406,7 +403,7 @@ async def ctop(update: Update, context: CallbackContext) -> None:
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in ctop: {e}")
+        LOGGER.error(f"Error in ctop: {e}")
         await update.message.reply_text("An error occurred while generating the group leaderboard.")
 
 # Fetch top 10 users globally (using total_characters field)
@@ -434,7 +431,7 @@ async def leaderboard(update: Update, context: CallbackContext) -> None:
         photo_url = random.choice(PHOTO_URL)
         await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
     except Exception as e:
-        logger.error(f"Error in leaderboard: {e}")
+        LOGGER.error(f"Error in leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the user leaderboard.")
 
 # Display statistics (only for the owner)
@@ -446,7 +443,7 @@ async def stats(update: Update, context: CallbackContext) -> None:
         group_count = await group_user_totals_collection.count_documents({})
         await update.message.reply_text(f'Total Users: {user_count}\nTotal Groups: {group_count}')
     except Exception as e:
-        logger.error(f"Error in stats: {e}")
+        LOGGER.error(f"Error in stats: {e}")
         await update.message.reply_text("An error occurred while fetching statistics.")
 
 # Initialize the bot with handlers

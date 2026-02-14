@@ -1,3 +1,4 @@
+import logging
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -8,8 +9,8 @@ from shivu import collectionps as collection, user_collectionps as user_collecti
 from . import nopvt
 from .watchers import scrabble_watcher
 from .block import block_dec, temp_block
+logger = logging.getLogger(__name__)
 
-from datetime import datetime
 
 from . import sudo_filter
 
@@ -98,7 +99,6 @@ async def scrabble(client, message: Message):
     user_id = message.from_user.id
     if temp_block(user_id):
         return
-    chat_id = message.chat.id
     
     if user_id in cooldown_users:
         remaining_time = COOLDOWN_TIME - (datetime.now() - cooldown_users[user_id]).total_seconds()
@@ -225,7 +225,6 @@ async def remove_cooldown(user_id):
 @app.on_message(filters.command("xshuffle"))
 async def xscrabble(client, message: Message):
     user_id = message.from_user.id
-    chat_id = message.chat.id
 
     if user_id in active_scrabbles:
         del active_scrabbles[user_id]

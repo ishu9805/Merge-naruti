@@ -9,7 +9,7 @@ from .block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
 
 from .coin import is_member
 from .lock import command_lock
-from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
+from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, PHOTO_URL, OWNER_ID
 from shivu import (
     collectionps as collection,
     top_global_groups_collectionps as top_global_groups_collection,
@@ -20,7 +20,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -28,7 +28,7 @@ from shivu import (
     chat_dataps as chat_data,
 )
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup  # noqa: F811
 # MongoDB Collection for user sho
 
 # Handlers
@@ -42,13 +42,7 @@ def generate_random_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
 
-import random
-import string
-import datetime
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 #rom shivu import user_collection, PARTNER, shivuu as app
-from .lock import command_lock
 
 # Constants
 GROUP_LINK = "https://t.me/BLADE_X_COMMUNITY"  # Replace with your group link
@@ -58,7 +52,7 @@ generated_codes = {}  # Stores codes and their details
 user_last_daily_code = {}  # Tracks the last time a user generated a daily code
 
 # Function to generate a random code
-def generate_random_code():
+def generate_random_code():  # noqa: F811
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
 

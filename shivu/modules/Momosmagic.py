@@ -140,9 +140,7 @@ async def top_collectors(client, message: Message):
 
 from pyrogram import filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import shivuups as app, user_collectionps as user_collection
-from collections import Counter
-import re
+from shivu import shivuups as app
 
 rarity_map = {
     1: "⚪️ Common", 2: "🟣 Rare", 3: "🟡 Legendary", 4: "🟢 Medium",
@@ -218,7 +216,7 @@ async def profile_cmd(client, message: Message):
 
 
 from pyrogram import filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 from shivu import shivuups as app, BOT_USERNAME
 
 @app.on_message(filters.command("inline"))

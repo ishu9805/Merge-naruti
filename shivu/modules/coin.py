@@ -24,7 +24,7 @@ from shivu import (
     shivuups as app,
     applicationps as application,
     SUPPORT_CHATps as SUPPORT,
-    UPDATE_CHATps as UPDATE_CHAT,
+    UPDATE_CHATps as UPDATE_CHAT_PS,
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
@@ -49,12 +49,11 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 
-OWNER_ID = "5856750053"
+OWNER_ID = "5856750053"  # noqa: F811
 
 
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from datetime import datetime, timedelta
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup  # noqa: F811
 from pymongo import MongoClient
 import logging
 

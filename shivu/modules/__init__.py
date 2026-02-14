@@ -2,8 +2,6 @@ import logging
 import sys
 import time
 import random
-import sys
-import time
 from shivu import *
 from functools import wraps
 from telegram import Update
