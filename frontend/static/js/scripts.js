@@ -16,18 +16,19 @@ const RARITIES = {
   11: "💝 Valentine",
   12: "🎃 Halloween",
   13: "🎄 Christmas Special",
-  14: "🪐 Omniversal",
-  15: "🎭 Cosplay Master",
-  16: "🧧 Events",
-  17: "🎖 Apex Lot",
+  14: "🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐",
+  15: "🎭 Cosplay Master 🎭",
+  16: "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+  17: "🎖 Apex Lot ( AUCTION )",
   18: "🍑 Echhi",
-  19: "☠️ Divine",
+  19: "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊",
   20: "☔ Monsoon",
   21: "🪸 Aquatic",
   22: "🎨 Artistic",
   23: "💳 VIP SLOT",
   24: "👶 Chibi",
-  25: "🏴‍☠️ Marauds"
+  25: "🏴‍☠️ Marauds",
+  26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
 };
 
 async function loadMedia() {
