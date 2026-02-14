@@ -51,6 +51,13 @@ LOGGER = logging.getLogger(__name__)
 
 OWNER_ID = "5856750053"  # noqa: F811
 
+SUPPORT_GROUP_LINK = "https://t.me/animechatiac"
+SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
+
+
+def support_group_markup() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)]])
+
 
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup  # noqa: F811
@@ -120,7 +127,7 @@ async def daily_reward(client: Client, message: Message):
     if user:
         last_claimed = user.get("last_daily_claimed")
         if last_claimed and last_claimed.date() == datetime.now().date():
-            await message.reply_text("You Have Already Claimed Your Daily Reward.")
+            await message.reply_text("You Have Already Claimed Your Daily Reward.", reply_markup=support_group_markup())
             return
 
         await add_coins(user_id, 40)
@@ -128,10 +135,10 @@ async def daily_reward(client: Client, message: Message):
             {"id": user_id},
             {"$set": {"last_daily_claimed": datetime.now()}},
         )
-        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.")
+        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.", reply_markup=support_group_markup())
     else:
         await user_collection.insert_one({"id": user_id, "coins": 40, "last_daily_claimed": datetime.now()})
-        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.")
+        await message.reply_text("You Have Claimed Your Daily Reward. You Earned 40 Coins.", reply_markup=support_group_markup())
  
 
 @app.on_message(filters.command("weekly"))
@@ -149,7 +156,7 @@ async def weekly_reward(client: Client, message: Message):
         last_claimed = user.get("last_weekly_claimed")
         start_of_week = datetime.now().date() - timedelta(days=datetime.now().weekday())
         if last_claimed and last_claimed.date() >= start_of_week:
-            await message.reply_text("You Have Already Claimed Your Weekly Reward.")
+            await message.reply_text("You Have Already Claimed Your Weekly Reward.", reply_markup=support_group_markup())
             return
 
         await add_coins(user_id, 500)
@@ -157,10 +164,10 @@ async def weekly_reward(client: Client, message: Message):
             {"id": user_id},
             {"$set": {"last_weekly_claimed": datetime.now()}},
         )
-        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.")
+        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.", reply_markup=support_group_markup())
     else:
         await user_collection.insert_one({"id": user_id, "coins": 250, "last_weekly_claimed": datetime.now()})
-        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.")
+        await message.reply_text("You Have Claimed Your Weekly Reward. You Earned 250 Coins.", reply_markup=support_group_markup())
 
 
 
@@ -252,7 +259,7 @@ async def bonus_coins(client: Client, message: Message):
     if user:
         last_claimed = user.get("last_bonus_claimed")
         if last_claimed and last_claimed.date() == datetime.now().date():
-            await message.reply_text("You have already claimed your bonus coins today.")
+            await message.reply_text("You have already claimed your bonus coins today.", reply_markup=support_group_markup())
             return
 
         await add_coins(user_id, 100)
@@ -260,10 +267,10 @@ async def bonus_coins(client: Client, message: Message):
             {"id": user_id},
             {"$set": {"last_bonus_claimed": datetime.now()}},
         )
-        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!")
+        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!", reply_markup=support_group_markup())
     else:
         await user_collection.insert_one({"id": user_id, "coins": 100, "last_bonus_claimed": datetime.now()})
-        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!")
+        await message.reply_text("You have claimed your daily bonus coins. You earned 100 coins!", reply_markup=support_group_markup())
 
             
 @app.on_message(filters.command("cointop"))

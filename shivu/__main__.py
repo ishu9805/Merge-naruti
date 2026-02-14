@@ -58,6 +58,9 @@ sent_message_info = {}  # {chat_id: {'character_id': str, 'message_count': int}}
 spawned_characters = {}  # {chat_id: {character: dict, message_id: int, task: asyncio.Task}}
 countdown_tasks = {}  
 
+SUPPORT_GROUP_LINK = "https://t.me/animechatiac"
+SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
+
 """server = Flask(__name__)
 @server.route("/")
 def home():
@@ -832,23 +835,28 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'This character is now in your harem!'
             )
             
-        keyboard = None
+        rows = []
         if character.get("img_url"):
             inline_query = f"collection.img.{user_id}"
-            keyboard = InlineKeyboardMarkup([[
+            rows.append([
                 InlineKeyboardButton(
                     "View Collection",
                     switch_inline_query_current_chat=inline_query
                 )
-            ]])
+            ])
         elif character.get("vid_url"):
             inline_query = f"collection.vid.{user_id}"
-            keyboard = InlineKeyboardMarkup([[
+            rows.append([
                 InlineKeyboardButton(
                     "View AMV",
                     switch_inline_query_current_chat=inline_query
                 )
-            ]])
+            ])
+
+        rows.append([
+            InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)
+        ])
+        keyboard = InlineKeyboardMarkup(rows)
 
         await update.message.reply_text(
             response_text,
