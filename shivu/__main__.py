@@ -50,8 +50,8 @@ amv_claim_limit = 1  #
 
 AMV_GROUP_ID = -1002783891820 # Your main group ID
 VALENTINE_SPECIAL_GROUP_ID = "-1002783891820"
-VALENTINE_THRESHOLD_SPECIAL = 500
-VALENTINE_THRESHOLD_DEFAULT = 1200
+VALENTINE_THRESHOLD_SPECIAL = 300
+VALENTINE_THRESHOLD_DEFAULT = 800
 MAX_AMV_OWNERS = 10  # Global ownership limit
 amv_spawn_counter = 0  # Track message count for AMV spawns
 amv_characters = []  # Stores preloaded AMV characters
