@@ -30,7 +30,8 @@ from shivu import (
     ban_collectionps as ban_collection,
     user_countps as user_count, 
     chat_dataps as chat_data,
-    force 
+    force,
+    userbot
 )
 # Assuming these are defined elsewhere in your code
 #from shivu import db, UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, collection, user_collection, required_group_id
@@ -57,6 +58,39 @@ SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
 
 def support_group_markup() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([[InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)]])
+
+
+def leaderboard_switch_markup() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🏆 Top", callback_data="switch_lb:top"),
+            InlineKeyboardButton("👥 TopGroups", callback_data="switch_lb:topgroups"),
+        ],
+        [
+            InlineKeyboardButton("💸 CoinTop", callback_data="switch_lb:cointop"),
+            InlineKeyboardButton("⚡ TokenTop", callback_data="switch_lb:tokentop"),
+        ],
+        [InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)],
+    ])
+
+
+async def resolve_user_for_lb(user: dict) -> tuple[str, str]:
+    user_id = user.get("id")
+    name = html.escape(str(user.get("first_name") or user.get("username") or f"User {user_id}"))[:30]
+    link = f"tg://user?id={user_id}"
+
+    if getattr(userbot, "is_connected", False) and user_id is not None:
+        try:
+            u = await userbot.get_users(user_id)
+            name = html.escape((u.first_name or name))[:30]
+            if u.username:
+                link = f"https://t.me/{u.username}"
+            else:
+                link = f"tg://user?id={u.id}"
+        except Exception:
+            pass
+
+    return name, link
 
 
 from pyrogram import Client, filters
@@ -278,65 +312,54 @@ async def bonus_coins(client: Client, message: Message):
 @command_lock
 async def top_users_by_coins(client: Client, message: Message):
     try:
-        # Fetch top 10 users by coins
         top_users = await user_collection.aggregate([
-            {"$project": {"id": 1, "coins": 1, "username": 1}},
+            {"$project": {"id": 1, "coins": 1, "username": 1, "first_name": 1}},
             {"$sort": {"coins": -1}},
             {"$limit": 10}
         ]).to_list(length=10)
 
         if not top_users:
-            await message.reply_text("No users found in the leaderboard.")
+            await message.reply_text("No users found in the leaderboard.", reply_markup=leaderboard_switch_markup())
             return
 
-        # Build the leaderboard message
         leaderboard_message = "<b>Top 10 Users by Coins:</b>\n\n"
         for i, user in enumerate(top_users, start=1):
-            user_id = user.get("id")
             coins = user.get("coins", 0)
-            username = user.get("username", "Unknown")
-            leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {coins} coins\n"
+            name, link = await resolve_user_for_lb(user)
+            leaderboard_message += f"{i}. <a href='{link}'>{name}</a>: {coins} coins\n"
 
-        # Send the leaderboard with a random photo
         photo_url = random.choice(PHOTO_URL)
-        await message.reply_video(video=photo_url, caption=leaderboard_message)
+        await message.reply_photo(photo=photo_url, caption=leaderboard_message, reply_markup=leaderboard_switch_markup())
 
     except Exception as e:
         LOGGER.error(f"Error in /cointop: {e}")
-        await message.reply_text("An error occurred while fetching the leaderboard.")
+        await message.reply_text("An error occurred while fetching the leaderboard.", reply_markup=leaderboard_switch_markup())
 
 
 @app.on_message(filters.command("tokentop"))
 @block_dec
 @command_lock
 async def top_users_by_tokens(client: Client, message: Message):
-    
-      
     try:
-        # Fetch top 10 users by tokens
         top_users = await user_collection.aggregate([
-            {"$project": {"id": 1, "tokens": 1, "username": 1}},
+            {"$project": {"id": 1, "tokens": 1, "username": 1, "first_name": 1}},
             {"$sort": {"tokens": -1}},
             {"$limit": 10}
         ]).to_list(length=10)
 
         if not top_users:
-            await message.reply_text("No users found in the leaderboard.")
+            await message.reply_text("No users found in the leaderboard.", reply_markup=leaderboard_switch_markup())
             return
 
-        # Build the leaderboard message
         leaderboard_message = "<b>Top 10 Users by Tokens:</b>\n\n"
         for i, user in enumerate(top_users, start=1):
-            user_id = user.get("id")
             tokens = user.get("tokens", 0)
-            username = user.get("username", "Unknown")
-            leaderboard_message += f"{i}. <a href='tg://user?id={user_id}'>{username}</a>: {tokens} tokens\n"
+            name, link = await resolve_user_for_lb(user)
+            leaderboard_message += f"{i}. <a href='{link}'>{name}</a>: {tokens} tokens\n"
 
-        # Send the leaderboard with a random photo
         photo_url = random.choice(PHOTO_URL)
-        await message.reply_video(video=photo_url, caption=leaderboard_message)
+        await message.reply_photo(photo=photo_url, caption=leaderboard_message, reply_markup=leaderboard_switch_markup())
 
     except Exception as e:
         LOGGER.error(f"Error in /tokentop: {e}")
-        await message.reply_text("An error occurred while fetching the leaderboard.")
-
+        await message.reply_text("An error occurred while fetching the leaderboard.", reply_markup=leaderboard_switch_markup())

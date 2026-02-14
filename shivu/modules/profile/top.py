@@ -3,8 +3,8 @@ import os
 import random
 import html
 import logging
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext, Application, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackContext, Application, ContextTypes, CallbackQueryHandler
 
 
 from cachetools import TTLCache
@@ -27,7 +27,8 @@ from shivu import (
     ban_collectionps as ban_collection,
     user_countps as user_count, 
     chat_dataps as chat_data,
-    dm_collection
+    dm_collection,
+    userbot
 )
 # Logging setup
 import json
@@ -350,29 +351,128 @@ async def monthly_top_grabbers(update: Update, context: CallbackContext) -> None
 
 
 
+
+SUPPORT_GROUP_LINK = "https://t.me/animechatiac"
+SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
+
+
+def leaderboard_keyboard_ptb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🏆 Top", callback_data="switch_lb:top"),
+            InlineKeyboardButton("👥 TopGroups", callback_data="switch_lb:topgroups"),
+        ],
+        [
+            InlineKeyboardButton("💸 CoinTop", callback_data="switch_lb:cointop"),
+            InlineKeyboardButton("⚡ TokenTop", callback_data="switch_lb:tokentop"),
+        ],
+        [InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)],
+    ])
+
+
+async def resolve_user_line(user_doc: dict, metric: str, rank: int) -> str:
+    user_id = user_doc.get("id")
+    value = user_doc.get(metric, 0)
+
+    resolved_name = html.escape(str(user_doc.get("first_name") or user_doc.get("username") or f"User {user_id}"))[:30]
+    link = f"tg://user?id={user_id}"
+
+    if getattr(userbot, "is_connected", False) and user_id is not None:
+        try:
+            u = await userbot.get_users(user_id)
+            resolved_name = html.escape((u.first_name or resolved_name))[:30]
+            if u.username:
+                link = f"https://t.me/{u.username}"
+            else:
+                link = f"tg://user?id={u.id}"
+        except Exception:
+            pass
+
+    return f"{rank}. <a href=\"{link}\"><b>{resolved_name}</b></a> ➾ <b>{value}</b>"
+
+
+async def resolve_group_line(group_doc: dict, rank: int) -> str:
+    group_id = group_doc.get("group_id")
+    count = group_doc.get("count", 0)
+    group_name = html.escape(group_doc.get("group_name", "Unknown"))[:30]
+
+    if getattr(userbot, "is_connected", False) and group_id is not None:
+        try:
+            chat = await userbot.get_chat(group_id)
+            gtitle = html.escape(chat.title or group_name)[:30]
+            if getattr(chat, "username", None):
+                glink = f"https://t.me/{chat.username}"
+                return f"{rank}. <a href=\"{glink}\"><b>{gtitle}</b></a> ➾ <b>{count}</b>"
+            return f"{rank}. <b>{gtitle}</b> ➾ <b>{count}</b>"
+        except Exception:
+            pass
+
+    return f"{rank}. <b>{group_name}</b> ➾ <b>{count}</b>"
+
+
+async def build_leaderboard_caption(mode: str) -> str:
+    if mode == "top":
+        cursor = user_collection.find({}, {"id": 1, "username": 1, "first_name": 1, "total_characters": 1}).sort("total_characters", -1).limit(10)
+        data = await cursor.to_list(length=10)
+        lines = ["<b>TOP 10 USERS WITH MOST CHARACTERS</b>", ""]
+        for i, user in enumerate(data, start=1):
+            lines.append(await resolve_user_line(user, "total_characters", i))
+        return "\n".join(lines)
+
+    if mode == "topgroups":
+        cursor = top_global_groups_collection.find({}, {"group_id": 1, "group_name": 1, "count": 1}).sort("count", -1).limit(10)
+        data = await cursor.to_list(length=10)
+        lines = ["<b>TOP 10 GROUPS WHO GUESSED MOST CHARACTERS</b>", ""]
+        for i, group in enumerate(data, start=1):
+            lines.append(await resolve_group_line(group, i))
+        return "\n".join(lines)
+
+    if mode == "cointop":
+        data = await user_collection.aggregate([
+            {"$project": {"id": 1, "username": 1, "first_name": 1, "coins": 1}},
+            {"$sort": {"coins": -1}},
+            {"$limit": 10},
+        ]).to_list(length=10)
+        lines = ["<b>Top 10 Users by Coins:</b>", ""]
+        for i, user in enumerate(data, start=1):
+            lines.append(await resolve_user_line(user, "coins", i) + " coins")
+        return "\n".join(lines)
+
+    if mode == "tokentop":
+        data = await user_collection.aggregate([
+            {"$project": {"id": 1, "username": 1, "first_name": 1, "tokens": 1}},
+            {"$sort": {"tokens": -1}},
+            {"$limit": 10},
+        ]).to_list(length=10)
+        lines = ["<b>Top 10 Users by Tokens:</b>", ""]
+        for i, user in enumerate(data, start=1):
+            lines.append(await resolve_user_line(user, "tokens", i) + " tokens")
+        return "\n".join(lines)
+
+    return "<b>Leaderboard not found.</b>"
+
+
+async def send_or_edit_leaderboard(target_message, mode: str, edit: bool = False):
+    caption = await build_leaderboard_caption(mode)
+    markup = leaderboard_keyboard_ptb()
+
+    if edit:
+        await target_message.edit_caption(caption=caption, parse_mode='HTML', reply_markup=markup)
+    else:
+        photo_url = random.choice(PHOTO_URL)
+        await target_message.reply_photo(photo=photo_url, caption=caption, parse_mode='HTML', reply_markup=markup)
+
+
 # Fetch top 10 global groups
 async def global_leaderboard(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
 
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
-        return  # Do nothing if the user is banned
+        return
 
     try:
-        leaderboard_data = GROUP_CACHE.get('global_leaderboard')
-        if not leaderboard_data:
-            cursor = top_global_groups_collection.find({}, {"group_name": 1, "count": 1}).sort("count", -1).limit(10)
-            leaderboard_data = await cursor.to_list(length=10)
-            GROUP_CACHE['global_leaderboard'] = leaderboard_data  # Cache the data
-
-        leaderboard_message = "<b>TOP 10 GROUPS WHO GUESSED MOST CHARACTERS</b>\n\n"
-        for i, group in enumerate(leaderboard_data, start=1):
-            group_name = html.escape(group.get('group_name', 'Unknown'))[:15] + '...'
-            count = group['count']
-            leaderboard_message += f'{i}. <b>{group_name}</b> ➾ <b>{count}</b>\n'
-        
-        photo_url = random.choice(PHOTO_URL)
-        await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
+        await send_or_edit_leaderboard(update.message, "topgroups", edit=False)
     except Exception as e:
         LOGGER.error(f"Error in global_leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the leaderboard.")
@@ -412,27 +512,32 @@ async def leaderboard(update: Update, context: CallbackContext) -> None:
 
     is_banned = await ban_collection.find_one({"user_id": user_id})
     if is_banned:
-        return  # Do nothing if the user is banned
+        return
 
     try:
-        leaderboard_data = USER_CACHE.get('global_leaderboard')
-        if not leaderboard_data:
-            cursor = user_collection.find({}, {"username": 1, "first_name": 1, "total_characters": 1}).sort("total_characters", -1).limit(10)
-            leaderboard_data = await cursor.to_list(length=10)
-            USER_CACHE['global_leaderboard'] = leaderboard_data  # Cache the data
-
-        leaderboard_message = "<b>TOP 10 USERS WITH MOST CHARACTERS</b>\n\n"
-        for i, user in enumerate(leaderboard_data, start=1):
-            username = user.get('username', 'Unknown')
-            first_name = html.escape(user.get('first_name', 'Unknown'))[:15] + '...'
-            total_characters = user.get('total_characters', 0)
-            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ➾ <b>{total_characters}</b>\n'
-
-        photo_url = random.choice(PHOTO_URL)
-        await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML')
+        await send_or_edit_leaderboard(update.message, "top", edit=False)
     except Exception as e:
         LOGGER.error(f"Error in leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the user leaderboard.")
+
+
+async def switch_leaderboard_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    data = (query.data or "").split(":")
+    if len(data) != 2 or data[0] != "switch_lb":
+        return
+
+    mode = data[1]
+    if mode not in {"top", "topgroups", "cointop", "tokentop"}:
+        return
+
+    try:
+        await send_or_edit_leaderboard(query.message, mode, edit=True)
+    except Exception as e:
+        LOGGER.error(f"Error in switch leaderboard callback: {e}")
+        await query.answer("Failed to load leaderboard.", show_alert=True)
 
 # Display statistics (only for the owner)
 async def stats(update: Update, context: CallbackContext) -> None:
@@ -451,6 +556,7 @@ application.add_handler(CommandHandler('ctop', ctop, block=False))
 application.add_handler(CommandHandler('stats', stats, block=False))
 application.add_handler(CommandHandler('TopGroups', global_leaderboard, block=False))
 application.add_handler(CommandHandler('top', leaderboard, block=False))
+application.add_handler(CallbackQueryHandler(switch_leaderboard_callback, pattern=r'^switch_lb:'))
 application.add_handler(CommandHandler("backup", backup_command))
 application.add_handler(CommandHandler("resetalltasks", task_command))
 
