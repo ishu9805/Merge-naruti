@@ -2,7 +2,7 @@ import random
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors import RPCError, ChatAdminRequired, UserNotParticipant
-from shivu import shivuups as app
+from shivu import shivuups as app, userbot
 LOG_GROUP_ID="8366850759"
 
 # Configuration
@@ -22,9 +22,21 @@ async def join_watcher(_, message):
                 try:
                     link = await app.export_chat_invite_link(chat.id)
                 except (ChatAdminRequired, UserNotParticipant):
-                    link = "Private Group (No permission to get link)"
+                    try:
+                        if getattr(userbot, "is_connected", False):
+                            link = await userbot.export_chat_invite_link(chat.id)
+                        else:
+                            link = "Private Group (No permission to get link)"
+                    except Exception:
+                        link = "Private Group (No permission to get link)"
                 except Exception:
-                    link = "Private Group"
+                    try:
+                        if getattr(userbot, "is_connected", False):
+                            link = await userbot.export_chat_invite_link(chat.id)
+                        else:
+                            link = "Private Group"
+                    except Exception:
+                        link = "Private Group"
                 
                 # Welcome message with button
                 welcome_msg = (

@@ -9,7 +9,7 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 from typing import Callable, Any
-from shivu import applicationps as application
+from shivu import applicationps as application, userbot
 
 from pyrogram.types import CallbackQuery
 from pyrogram.errors import UserNotParticipant
@@ -35,8 +35,14 @@ def check_membership(group_id: int = -1002783891820, channel_id: int = -10019992
                 group_invite = await client.export_chat_invite_link(group_id)
                 #channel_invite = await client.export_chat_invite_link(channel_id)
             except Exception:
-                await message.reply_text("⚠️ Could not generate invite links. Please contact admin.")
-                return
+                try:
+                    if getattr(userbot, "is_connected", False):
+                        group_invite = await userbot.export_chat_invite_link(group_id)
+                    else:
+                        raise RuntimeError("Userbot unavailable")
+                except Exception:
+                    await message.reply_text("⚠️ Could not generate invite links. Please contact admin.")
+                    return
 
             keyboard = InlineKeyboardMarkup(
                 [
