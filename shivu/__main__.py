@@ -551,6 +551,16 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         '🎃 Halloween': "🎃 A *Halloween* character has emerged!\nUse /guess [Name] to claim this spooky character! 👻",
         '🎄 Christmas Special': "🎄 A *Christmas Special* character has arrived!\nGuess their name with /guess [Name] to add them to your collection! 🎅",
         '🎭 Cosplay Master 🎭': "🎭 A *Cosplay Master* character has appeared!\nUse /guess [Name] to claim this unique character! 🎨",
+        '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': "🧧 An *Events* character has appeared!\nUse /guess [Name] to claim this event exclusive! ✨",
+        '🎖 Apex Lot ( AUCTION )': "🎖 An *Apex Lot* character has appeared!\nUse /guess [Name] to claim this auction tier character! 🏆",
+        '🍑 Echhi': "🍑 An *Ecchi* character has appeared!\nUse /guess [Name] to claim this special drop!",
+        '☠️ 𝕯𝖎𝖛𝖎𝖓𝖊': "☠️ A *Divine* character has descended!\nUse /guess [Name] to claim this blessed character!",
+        '☔ Monsoon': "☔ A *Monsoon* character has appeared!\nUse /guess [Name] to claim this rainy season drop!",
+        '🪸 Aquatic': "🪸 An *Aquatic* character has surfaced!\nUse /guess [Name] to claim this oceanic character!",
+        '🎨 Artistic': "🎨 An *Artistic* character has appeared!\nUse /guess [Name] to claim this creative drop!",
+        '💳 VIP SLOT': "💳 A *VIP Slot* character has appeared!\nUse /guess [Name] to claim this premium character!",
+        '👶 Chibi': "👶 A *Chibi* character has appeared!\nUse /guess [Name] to claim this cute drop!",
+        '🏴‍☠️ Marauds': "🏴‍☠️ A *Marauds* character has arrived!\nUse /guess [Name] to claim this pirate tier drop!",
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': "🪐 An *Omniversal* character has arrived!\nGuess their name with /guess [Name] to make them yours! 🌌",
         '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': "🎬 An *AMV Edition* character has appeared!\nUse /guess [Name] to claim this special character! 🎥"
     }
@@ -840,7 +850,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             inline_query = f"collection.img.{user_id}"
             rows.append([
                 InlineKeyboardButton(
-                    "View Collection",
+                    "ᴠɪᴇᴡ ᴄᴏʟʟᴇᴄᴛɪᴏɴ",
                     switch_inline_query_current_chat=inline_query
                 )
             ])
@@ -848,7 +858,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             inline_query = f"collection.vid.{user_id}"
             rows.append([
                 InlineKeyboardButton(
-                    "View AMV",
+                    "ᴠɪᴇᴡ ᴀᴍᴠ",
                     switch_inline_query_current_chat=inline_query
                 )
             ])

@@ -359,12 +359,12 @@ SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
 def leaderboard_keyboard_ptb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🏆 Top", callback_data="switch_lb:top"),
-            InlineKeyboardButton("👥 TopGroups", callback_data="switch_lb:topgroups"),
+            InlineKeyboardButton("🏆 ᴛᴏᴘ", callback_data="switch_lb:top"),
+            InlineKeyboardButton("👥 ᴛᴏᴘɢʀᴏᴜᴘs", callback_data="switch_lb:topgroups"),
         ],
         [
-            InlineKeyboardButton("💸 CoinTop", callback_data="switch_lb:cointop"),
-            InlineKeyboardButton("⚡ TokenTop", callback_data="switch_lb:tokentop"),
+            InlineKeyboardButton("💸 ᴄᴏɪɴᴛᴏᴘ", callback_data="switch_lb:cointop"),
+            InlineKeyboardButton("⚡ ᴛᴏᴋᴇɴᴛᴏᴘ", callback_data="switch_lb:tokentop"),
         ],
         [InlineKeyboardButton(SUPPORT_BUTTON_TEXT, url=SUPPORT_GROUP_LINK)],
     ])
