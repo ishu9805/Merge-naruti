@@ -4,15 +4,29 @@ from pyrogram import Client, filters, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuups as bot, userbot, user_collectionps as user_collection, collectionps as collection
 
-async def fetch_user(user_id):
-    
-    try:
-        # Fallback: Try with userbot
-        return await userbot.get_users(user_id)
-    except Exception:
-        pass
+def is_userbot_running() -> bool:
+    """Return True when the userbot session is connected."""
+    return bool(getattr(userbot, "is_connected", False))
 
-    return None
+
+async def fetch_user(user_id, use_userbot: bool = True):
+    """Resolve a Telegram user with userbot first, then fall back to bot."""
+    normalized_id = user_id
+    if isinstance(user_id, str) and user_id.isdigit():
+        normalized_id = int(user_id)
+
+    # Prefer userbot: it can resolve users even when they never interacted with the bot.
+    if use_userbot and is_userbot_running():
+        try:
+            return await userbot.get_users(normalized_id)
+        except Exception:
+            pass
+
+    # Secondary fallback for users already known by the bot session.
+    try:
+        return await bot.get_users(normalized_id)
+    except Exception:
+        return None
     
 def escape_md(text: str) -> str:
     """Escape Markdown special characters."""
@@ -44,13 +58,16 @@ async def get_top_collectors(waifu_id: str, limit: int = 10):
         logging.error(f"Database error fetching collectors for {waifu_id}: {e}")
         return []
 
-async def build_user_links(top_users, offset=0, limit=10):
+async def build_user_links(top_users, offset=0, limit=10, use_userbot=True):
     """Build formatted user links for display with pagination."""
     usernames = []
     for i, user_info in enumerate(top_users[offset:offset+limit], start=offset+1):
         user_id = user_info['_id']
         try:
-            user = await fetch_user(user_id)
+            user = await fetch_user(user_id, use_userbot=use_userbot)
+            if not user:
+                raise ValueError("User not resolvable")
+
             # Use username if available, otherwise fallback to silent mention
             if user.username:
                 user_link = f"https://t.me/{user.username}"
@@ -78,7 +95,9 @@ async def hfind(_, message: t.Message):
         offset = int(message.command[2])
     
     #await message.reply_chat_action("typing")
-    
+
+    userbot_online = is_userbot_running()
+
     waifu = await get_character_info(waifu_id)
     if not waifu:
         return await message.reply_text("🔍 No character found with that ID. Please check the ID and try again.")
@@ -86,7 +105,7 @@ async def hfind(_, message: t.Message):
     try:
         user_ownership_data = await get_top_collectors(waifu_id, limit=50)  # Get more users for pagination
         global_count = sum(user['count'] for user in user_ownership_data)
-        usernames = await build_user_links(user_ownership_data, offset, limit)
+        usernames = await build_user_links(user_ownership_data, offset, limit, use_userbot=userbot_online)
     except Exception as e:
         logging.error(f"Error getting collector data: {e}")
         return await message.reply_text("⚠️ An error occurred while fetching collector data. Please try again later.")
@@ -103,6 +122,9 @@ async def hfind(_, message: t.Message):
     
     if usernames:
         caption += "🏆 **Top Collectors**:\n" + "\n".join(usernames)
+
+    if not userbot_online:
+        caption += "\n\n⚠️ **Userbot Status**: Offline. Showing best effort results from bot cache only."
     
     # Create buttons for pagination
     buttons = []
