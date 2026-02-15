@@ -88,18 +88,44 @@ def parse_rarity_value(rarity_value):
 
 
 
-def build_user_id_query(user_id):
+def build_user_lookup_queries(user_id):
     query_values = [str(user_id)]
     try:
         query_values.append(int(user_id))
     except (TypeError, ValueError):
         pass
 
-    if len(query_values) == 1:
-        return {"user_id": query_values[0]}
+    return [
+        {"id": query_values[0]},
+        {"id": {"$in": query_values}},
+        {"user_id": query_values[0]},
+        {"user_id": {"$in": query_values}},
+    ]
 
-    return {"user_id": {"$in": query_values}}
 
+def find_user_doc(user_id, projection):
+    for query in build_user_lookup_queries(user_id):
+        user = user_collection.find_one(query, projection)
+        if user:
+            return user
+    return None
+
+
+
+
+def collect_name_suggestions(items, query, limit=8):
+    query_lower = query.lower()
+    matched = []
+    for item in items:
+        name = str(item.get("name", "")).strip()
+        if not name:
+            continue
+        name_lower = name.lower()
+        if query_lower in name_lower and name not in matched:
+            matched.append(name)
+
+    matched.sort(key=lambda value: (not value.lower().startswith(query_lower), value.lower()))
+    return matched[:limit]
 
 def normalize_user_character(character, user_id):
     media_id = character.get("id")
@@ -160,7 +186,7 @@ def search_media():
             return jsonify({"error": "user_id is required when source=user"}), 400
 
         try:
-            user = user_collection.find_one(build_user_id_query(user_id), {"_id": 0, "characters": 1})
+            user = find_user_doc(user_id, {"_id": 0, "characters": 1})
         except Exception:
             return jsonify({"results": []})
         if not user:
@@ -201,6 +227,32 @@ def search_media():
     return jsonify({"results": results})
 
 
+@app.route("/media/suggestions", methods=["GET"])
+def media_suggestions():
+    source = request.args.get("source", "bot")
+    query = request.args.get("query", "").strip()
+    user_id = request.args.get("user_id", "").strip()
+
+    if len(query) < 2:
+        return jsonify({"suggestions": []})
+
+    try:
+        if source == "user":
+            if not user_id:
+                return jsonify({"suggestions": []})
+            user = find_user_doc(user_id, {"_id": 0, "characters": 1})
+            if not user:
+                return jsonify({"suggestions": []})
+            suggestions = collect_name_suggestions(user.get("characters", []), query)
+            return jsonify({"suggestions": suggestions})
+
+        docs = list(media_collection.find({"name": {"$regex": query, "$options": "i"}}, {"_id": 0, "name": 1}).limit(50))
+        suggestions = collect_name_suggestions(docs, query)
+        return jsonify({"suggestions": suggestions})
+    except Exception:
+        return jsonify({"suggestions": []})
+
+
 @app.route("/profile", methods=["GET"])
 def get_profile():
     user_id = request.args.get("user_id", "")
@@ -208,7 +260,7 @@ def get_profile():
         return jsonify({"error": "user_id is required"}), 400
 
     try:
-        user = user_collection.find_one(build_user_id_query(user_id), {"_id": 0})
+        user = find_user_doc(user_id, {"_id": 0})
     except Exception:
         return jsonify({"error": "Database unavailable"}), 503
     if not user:
@@ -217,8 +269,10 @@ def get_profile():
     characters = user.get("characters", [])
     return jsonify(
         {
-            "user_id": str(user.get("user_id", user_id)),
-            "username": user.get("username") or user.get("first_name") or "Telegram User",
+            "user_id": str(user.get("id", user.get("user_id", user_id))),
+            "username": user.get("username") or "",
+            "first_name": user.get("first_name") or "Telegram User",
+            "photo_url": user.get("photo_url") or "",
             "total_characters": len(characters),
             "top_character_id": max((parse_media_id(c.get("id")) for c in characters), default=None),
         }

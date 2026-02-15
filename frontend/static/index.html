@@ -9,69 +9,127 @@
 <body>
 <div id="siteLoader" class="site-loader">
     <div class="loader-orb"></div>
-    <p>Syncing your collection...</p>
+    <p>Preparing Blade experience...</p>
 </div>
 
 <header class="app-header">
     <div class="brand-block">
         <h1>Blade Network</h1>
-        <p>Telegram mini app collection explorer</p>
+        <p>Modern Anime Collection Dashboard</p>
     </div>
 
-    <div class="telegram-profile" id="telegramProfile">
+    <div class="telegram-profile">
         <img id="telegramAvatar" src="" alt="Telegram profile picture">
         <div>
             <h3 id="telegramName">Guest User</h3>
+            <p id="telegramUsername">@guest</p>
             <p id="telegramId">ID: -</p>
         </div>
     </div>
 </header>
 
-<nav class="top-nav">
-    <button class="nav-btn active" data-page="homePage">Home</button>
-    <button class="nav-btn" data-page="collectionPage">Collection</button>
-</nav>
-
-<main>
+<main class="main-shell">
     <section id="homePage" class="page active">
         <div class="hero-card">
-            <h2>Premium Anime Collection, Smooth Experience</h2>
-            <p>
-                Explore the global bot collection or switch to your personal Telegram collection.
-                Fast filters, profile details, and polished visuals in one place.
-            </p>
-            <button class="primary-cta" id="openCollectionBtn">Open Collection</button>
+            <h2>Professional Collection Platform</h2>
+            <p>Pick a source below to continue with smooth search, modern animations, and a clean responsive layout.</p>
+            <div class="home-link-grid">
+                <button class="hero-link-btn" id="openBotDbBtn">Bot Database</button>
+                <button class="hero-link-btn" id="openUserDbBtn">User Database</button>
+            </div>
         </div>
     </section>
 
     <section id="collectionPage" class="page">
-        <section class="search-panel">
-            <div class="filters-grid">
-                <input type="text" id="searchName" placeholder="Search by character name">
-                <input type="text" id="searchAnime" placeholder="Search by anime">
-                <input type="text" id="userIdInput" placeholder="Telegram user id (for user collection)">
+        <div class="section-card">
+            <h2>Collection Page</h2>
+            <p>Choose where you want to search.</p>
+            <div class="collection-link-grid">
+                <button class="collection-link-btn" id="collectionBotBtn">Search Bot Collection</button>
+                <button class="collection-link-btn" id="collectionUserBtn">Search User Collection</button>
+            </div>
+        </div>
+    </section>
 
+    <section id="botPage" class="page">
+        <section class="search-panel">
+            <h2>Bot Database Search</h2>
+            <div class="filters-grid">
+                <div class="input-wrap">
+                    <input type="text" id="botSearchName" placeholder="Character name">
+                    <div class="suggestions" id="botSuggestions"></div>
+                </div>
+                <input type="text" id="botSearchAnime" placeholder="Anime name">
                 <div class="rarity-select">
-                    <button id="rarityBtn">🎖 All</button>
-                    <div class="rarity-dropdown" id="rarityDropdown"></div>
+                    <button id="botRarityBtn">🎖 All</button>
+                    <div class="rarity-dropdown" id="botRarityDropdown"></div>
                 </div>
             </div>
-
             <div class="action-row">
-                <button id="botSearchBtn" class="action-btn" onclick="searchFromBotCollection()">Search Bot Collection</button>
-                <button id="userSearchBtn" class="action-btn" onclick="searchFromUserCollection()">Search User Collection</button>
-                <button class="clear-btn" onclick="clearSearch()">Clear</button>
+                <button id="botSearchBtn" class="action-btn animated-search-btn">Search Bot Collection</button>
+                <button class="clear-btn" id="clearBotBtn">Clear</button>
+            </div>
+        </section>
+        <section class="profile-card">
+            <p id="botProfileMeta">Viewing bot collection.</p>
+        </section>
+        <section class="media-grid" id="botMediaGrid"></section>
+    </section>
+
+    <section id="userPage" class="page">
+        <section class="search-panel">
+            <h2>User Database Search</h2>
+            <div class="filters-grid user-filters-grid">
+                <input type="text" id="userIdInput" placeholder="User ID (required)">
+                <div class="input-wrap">
+                    <input type="text" id="userSearchName" placeholder="Character name">
+                    <div class="suggestions" id="userSuggestions"></div>
+                </div>
+                <input type="text" id="userSearchAnime" placeholder="Anime name">
+                <div class="rarity-select">
+                    <button id="userRarityBtn">🎖 All</button>
+                    <div class="rarity-dropdown" id="userRarityDropdown"></div>
+                </div>
+            </div>
+            <div class="action-row">
+                <button id="userSearchBtn" class="action-btn animated-search-btn">Search User Collection</button>
+                <button class="clear-btn" id="clearUserBtn">Clear</button>
             </div>
         </section>
 
-        <section class="profile-card">
-            <h2>User Profile</h2>
-            <p id="profileMeta">Load user collection to view profile details.</p>
+        <section class="profile-card profile-layout">
+            <img id="profileAvatar" src="" alt="User profile">
+            <div>
+                <h3 id="profileDisplayName">Telegram User</h3>
+                <p id="profileUsername">@username</p>
+                <p id="profileMeta">Enter user ID and search to load user collection.</p>
+            </div>
         </section>
 
-        <section class="media-grid" id="mediaGrid"></section>
+        <section class="media-grid" id="userMediaGrid"></section>
+    </section>
+
+    <section id="shopPage" class="page">
+        <div class="section-card">
+            <h2>Shop Page</h2>
+            <p>Coming soon. You can add your shop module here anytime.</p>
+        </div>
+    </section>
+
+    <section id="profilePage" class="page">
+        <div class="section-card">
+            <h2>Profile Page</h2>
+            <p>This tab is ready for your extended profile settings.</p>
+        </div>
     </section>
 </main>
+
+<nav class="bottom-nav" id="bottomNav">
+    <button class="bottom-nav-btn active" data-page="homePage">Home</button>
+    <button class="bottom-nav-btn" data-page="collectionPage">Collection</button>
+    <button class="bottom-nav-btn" data-page="shopPage">Shop</button>
+    <button class="bottom-nav-btn" data-page="profilePage">Profile</button>
+</nav>
 
 <script src="/js/scripts.js"></script>
 </body>
