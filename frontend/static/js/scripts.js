@@ -53,7 +53,6 @@ const profileAvatar = document.getElementById("profileAvatar");
 const telegramAvatar = document.getElementById("telegramAvatar");
 const telegramName = document.getElementById("telegramName");
 const telegramUsername = document.getElementById("telegramUsername");
-const telegramId = document.getElementById("telegramId");
 
 const searchHeading = document.getElementById("searchHeading");
 const mainSearchBtn = document.getElementById("mainSearchBtn");
@@ -68,9 +67,7 @@ function switchPage(pageId) {
     btn.classList.toggle("active", btn.dataset.page === pageId);
   });
 
-  if (pageId === "searchPage" && activeMode === "bot") {
-    loadBotMedia();
-  }
+  if (pageId === "searchPage" && activeMode === "bot") loadBotMedia();
 }
 
 function initNavigation() {
@@ -106,8 +103,8 @@ function getTelegramUser() {
   }
 
   const id = params.get("user_id") || tgUser.id || "";
-  const firstName = params.get("first_name") || tgUser.first_name || "Guest User";
-  const username = params.get("username") || tgUser.username || "guest";
+  const firstName = params.get("first_name") || tgUser.first_name || "Telegram User";
+  const username = params.get("username") || tgUser.username || "username";
   const photoUrl = params.get("photo_url") || tgUser.photo_url || "";
 
   return { id, firstName, username, photoUrl };
@@ -117,16 +114,13 @@ function initTelegramProfile() {
   const user = getTelegramUser();
   telegramName.textContent = user.firstName;
   telegramUsername.textContent = `@${user.username}`;
-  telegramId.textContent = `ID: ${user.id || "-"}`;
   telegramAvatar.src = buildAvatar(user.firstName, user.photoUrl);
 
   profileDisplayName.textContent = user.firstName;
   profileUsername.textContent = `@${user.username}`;
   profileAvatar.src = buildAvatar(user.firstName, user.photoUrl);
 
-  if (user.id) {
-    userIdInput.value = String(user.id);
-  }
+  if (user.id) userIdInput.value = String(user.id);
 }
 
 function showSiteLoader() { document.getElementById("siteLoader").classList.remove("hide"); }
@@ -175,13 +169,9 @@ function renderGrid(items) {
     const safeAnime = escapeHtml(m.anime || "Unknown");
     const safeRarity = escapeHtml(m.rarity || "Unknown");
 
-    const mediaHtml = m.type === "video"
-      ? `<video controls playsinline preload="metadata" src="${m.url}"></video>`
-      : `<img loading="lazy" src="${m.url}" alt="${safeName}">`;
-
     card.innerHTML = `
       <span class="rarity-pill">${safeRarity}</span>
-      ${mediaHtml}
+      ${m.type === "video" ? `<video controls playsinline preload="metadata" src="${m.url}"></video>` : `<img loading="lazy" src="${m.url}" alt="${safeName}">`}
       <div class="card-meta">
         <h3>${safeName}</h3>
         <p>ID: ${m.media_id || "N/A"}</p>
@@ -190,9 +180,19 @@ function renderGrid(items) {
     `;
 
     const mediaEl = card.querySelector("img, video");
-    if (mediaEl) {
-      attachMediaLoading(mediaEl, card);
-    }
+    if (mediaEl) attachMediaLoading(mediaEl, card);
+
+    card.addEventListener("mousemove", (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const rx = ((y / rect.height) - 0.5) * -8;
+      const ry = ((x / rect.width) - 0.5) * 10;
+      card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-8px)`;
+    });
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "";
+    });
 
     mediaGrid.appendChild(card);
   });
@@ -289,7 +289,6 @@ function setSearchMode(mode) {
   searchMeta.textContent = isUser ? "User mode active." : "Viewing bot collection.";
 
   searchSuggestions.innerHTML = "";
-
   if (!isUser) {
     profileMeta.textContent = "Bot mode active. Switch to user mode for profile details.";
     loadBotMedia();
@@ -335,7 +334,7 @@ function bindSuggestionInput() {
     timer = setTimeout(async () => {
       const suggestions = await fetchSuggestions(searchName.value.trim());
       renderSuggestions(suggestions, searchName);
-    }, 180);
+    }, 170);
   });
 
   searchName.addEventListener("blur", () => {
