@@ -1,4 +1,6 @@
 import os
+import hashlib
+import hmac
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -48,6 +50,12 @@ RARITY_MAP = {
     26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
 }
 
+
+
+
+def verify_telegram_data(init_data, bot_token):
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    return hmac.new(secret_key, init_data.encode(), hashlib.sha256).hexdigest()
 
 def parse_media_id(value):
     try:
@@ -277,6 +285,20 @@ def get_profile():
             "top_character_id": max((parse_media_id(c.get("id")) for c in characters), default=None),
         }
     )
+
+
+@app.route("/telegram/verify", methods=["POST"])
+def telegram_verify():
+    payload = request.json or {}
+    init_data = payload.get("init_data", "")
+    hash_value = payload.get("hash", "")
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+
+    if not init_data or not hash_value or not bot_token:
+        return jsonify({"verified": False}), 400
+
+    expected_hash = verify_telegram_data(init_data, bot_token)
+    return jsonify({"verified": hmac.compare_digest(expected_hash, hash_value)})
 
 
 @app.route("/media/like", methods=["POST"])

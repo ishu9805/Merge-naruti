@@ -53,6 +53,8 @@ const profileAvatar = document.getElementById("profileAvatar");
 const telegramAvatar = document.getElementById("telegramAvatar");
 const telegramName = document.getElementById("telegramName");
 const telegramUsername = document.getElementById("telegramUsername");
+const useridEl = document.getElementById("userid");
+const usernameEl = document.getElementById("username");
 
 const searchHeading = document.getElementById("searchHeading");
 const mainSearchBtn = document.getElementById("mainSearchBtn");
@@ -93,32 +95,52 @@ function buildAvatar(name, photoUrl) {
 function getTelegramUser() {
   const params = new URLSearchParams(window.location.search);
   const tg = window.Telegram?.WebApp;
-  const tgUser = tg?.initDataUnsafe?.user || {};
 
-  try {
-    tg?.ready?.();
-    tg?.expand?.();
-  } catch (_) {
-    // noop
+  let rawUser = {};
+  if (tg) {
+    try {
+      tg.expand();
+      tg.ready?.();
+      rawUser = tg.initDataUnsafe?.user || {};
+    } catch (_) {
+      rawUser = {};
+    }
   }
 
-  const id = params.get("user_id") || tgUser.id || "";
-  const firstName = params.get("first_name") || tgUser.first_name || "Telegram User";
-  const username = params.get("username") || tgUser.username || "username";
-  const photoUrl = params.get("photo_url") || tgUser.photo_url || "";
+  const id = params.get("user_id") || rawUser.id || "";
+  const username = params.get("username") || rawUser.username || "";
+  const firstName = params.get("first_name") || rawUser.first_name || "Telegram User";
+  const lastName = params.get("last_name") || rawUser.last_name || "";
+  const isPremium = rawUser.is_premium === true;
+  const photoUrl = params.get("photo_url") || rawUser.photo_url || "";
 
-  return { id, firstName, username, photoUrl };
+  if (rawUser?.id) {
+    console.log(rawUser.id);
+    console.log(rawUser.username || "No username");
+    console.log(rawUser.first_name || "");
+    console.log(rawUser.last_name || "");
+    console.log(Boolean(rawUser.is_premium));
+  }
+
+  return { id, username, firstName, lastName, isPremium, photoUrl };
 }
 
 function initTelegramProfile() {
   const user = getTelegramUser();
-  telegramName.textContent = user.firstName;
-  telegramUsername.textContent = `@${user.username}`;
-  telegramAvatar.src = buildAvatar(user.firstName, user.photoUrl);
+  const safeUsername = user.username || "No username";
+  const uiUsername = user.username ? `@${user.username}` : "@username";
+  const fullName = `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`.trim();
 
-  profileDisplayName.textContent = user.firstName;
-  profileUsername.textContent = `@${user.username}`;
-  profileAvatar.src = buildAvatar(user.firstName, user.photoUrl);
+  telegramName.textContent = fullName || "Telegram User";
+  telegramUsername.textContent = uiUsername;
+  telegramAvatar.src = buildAvatar(fullName || user.firstName || "Telegram User", user.photoUrl);
+
+  profileDisplayName.textContent = fullName || "Telegram User";
+  profileUsername.textContent = uiUsername;
+  profileAvatar.src = buildAvatar(fullName || user.firstName || "Telegram User", user.photoUrl);
+
+  if (useridEl) useridEl.innerText = user.id ? String(user.id) : "-";
+  if (usernameEl) usernameEl.innerText = safeUsername;
 
   if (user.id) userIdInput.value = String(user.id);
 }
