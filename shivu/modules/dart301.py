@@ -119,7 +119,9 @@ def _board(game: Dart301Game) -> str:
     else:
         lines.extend([
             "",
-            "Waiting for players. Use /join301 <game_id> then /start301 <game_id>",
+            "Waiting for players.",
+            f"Join: `/join301 {game.game_id}`",
+            f"Start: `/start301 {game.game_id}`",
         ])
 
     return "\n".join(lines)
@@ -146,7 +148,7 @@ async def create_301_game(_, message: Message):
         return await message.reply_text("❌ Cannot identify you.")
 
     if len(message.command) < 2:
-        return await message.reply_text(f"Usage: /dart301 <bet_coins> (minimum {MIN_BET})")
+        return await message.reply_text(f"Usage: `/dart301 <bet_coins>` (minimum {MIN_BET})")
 
     try:
         bet = int(message.command[1])
@@ -186,6 +188,7 @@ async def create_301_game(_, message: Message):
     await message.reply_text(
         "✅ New Dart 301 game created!\n"
         f"Game ID: `{game_id}`\n"
+        f"Join command: `/join301 {game_id}`\n"
         f"Bet locked: **{bet} coins**\n"
         f"Players allowed: 2 to {MAX_PLAYERS_PER_GAME}\n\n"
         + _board(game)
@@ -199,7 +202,7 @@ async def join_301_game(_, message: Message):
         return await message.reply_text("❌ Cannot identify you.")
 
     if len(message.command) < 2:
-        return await message.reply_text("Usage: /join301 <game_id>")
+        return await message.reply_text("Usage: `/join301 <game_id>`")
 
     chat_id = message.chat.id
     game_id = message.command[1]
@@ -235,7 +238,7 @@ async def join_301_game(_, message: Message):
 @app.on_message(filters.command("start301"))
 async def start_301_game(_, message: Message):
     if len(message.command) < 2:
-        return await message.reply_text("Usage: /start301 <game_id>")
+        return await message.reply_text("Usage: `/start301 <game_id>`")
 
     chat_id = message.chat.id
     game_id = message.command[1]
@@ -261,30 +264,34 @@ async def start_301_game(_, message: Message):
     await message.reply_text(
         "🚀 Game started!\n"
         "Turn system: each player gets **3 throws** per turn.\n"
-        "Bust rule: score below 0 means that throw gives no score.\n"
-        "Win rule: reach exactly **0**.\n\n"
+        "Win rule: if your score becomes **0 or below 0**, you win immediately.\n\n"
         + _board(game)
     )
 
 
 @app.on_message(filters.command(["dthrow", "dartthrow"]))
 async def throw_301(_, message: Message):
-    if len(message.command) < 2:
-        return await message.reply_text("Usage: /dthrow <game_id>")
-
     chat_id = message.chat.id
-    game_id = message.command[1]
-    game = _chat_games(chat_id).get(game_id)
+    user = message.from_user
+    if not user:
+        return await message.reply_text("❌ Cannot identify player.")
+
+    if len(message.command) >= 2:
+        game_id = message.command[1]
+        game = _chat_games(chat_id).get(game_id)
+    else:
+        game = _find_player_game(chat_id, user.id)
+        if not game:
+            return await message.reply_text(
+                "❌ You are not in any active game. Use `/dthrow <game_id>` to throw in a game."
+            )
+        game_id = game.game_id
 
     if not game:
         return await message.reply_text("❌ Game not found.")
 
     if not game.started:
         return await message.reply_text("⚠️ Game has not started yet.")
-
-    user = message.from_user
-    if not user:
-        return await message.reply_text("❌ Cannot identify player.")
 
     if user.id not in game.players:
         return await message.reply_text("⚠️ You are not a player in this game.")
@@ -302,10 +309,11 @@ async def throw_301(_, message: Message):
     before = game.scores[user.id]
     after = before - scored
 
-    if after < 0:
+    if after <= 0:
+        game.scores[user.id] = 0
         text = (
-            f"💥 Bust throw! {game.names[user.id]} hit **{scored}** points but overshot.\n"
-            f"Score stays: **{before}**"
+            f"🎯 {game.names[user.id]} rolled **{dart_val}** → **{scored}** points.\n"
+            f"Score: **{before} → 0**"
         )
     else:
         game.scores[user.id] = after
@@ -339,7 +347,7 @@ async def throw_301(_, message: Message):
 @app.on_message(filters.command("score301"))
 async def score_301(_, message: Message):
     if len(message.command) < 2:
-        return await message.reply_text("Usage: /score301 <game_id>")
+        return await message.reply_text("Usage: `/score301 <game_id>`")
 
     game = _chat_games(message.chat.id).get(message.command[1])
     if not game:
@@ -356,7 +364,7 @@ async def leave_301(_, message: Message):
         return await message.reply_text("❌ Cannot identify you.")
 
     if len(message.command) < 2:
-        return await message.reply_text("Usage: /leave301 <game_id>")
+        return await message.reply_text("Usage: `/leave301 <game_id>`")
 
     chat_id = message.chat.id
     game = _chat_games(chat_id).get(message.command[1])
@@ -394,7 +402,7 @@ async def end_301(_, message: Message):
     - Once started, game cannot be force-ended to avoid refund abuse/cheating.
     """
     if len(message.command) < 2:
-        return await message.reply_text("Usage: /end301 <game_id>")
+        return await message.reply_text("Usage: `/end301 <game_id>`")
 
     chat_id = message.chat.id
     game_id = message.command[1]
