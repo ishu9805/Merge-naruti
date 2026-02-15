@@ -15,7 +15,7 @@
 <header class="app-header">
     <div class="brand-block">
         <h1>Blade Network</h1>
-        <p>Modern Anime Collection Dashboard</p>
+        <p>Telegram Mini App Anime Dashboard</p>
     </div>
 
     <div class="telegram-profile">
@@ -32,7 +32,7 @@
     <section id="homePage" class="page active">
         <div class="hero-card">
             <h2>Professional Collection Platform</h2>
-            <p>Pick a source below to continue with smooth search, modern animations, and a clean responsive layout.</p>
+            <p>Choose your database source and start searching instantly.</p>
             <div class="home-link-grid">
                 <button class="hero-link-btn" id="openBotDbBtn">Bot Database</button>
                 <button class="hero-link-btn" id="openUserDbBtn">User Database</button>
@@ -40,95 +40,72 @@
         </div>
     </section>
 
-    <section id="collectionPage" class="page">
-        <div class="section-card">
-            <h2>Collection Page</h2>
-            <p>Choose where you want to search.</p>
-            <div class="collection-link-grid">
-                <button class="collection-link-btn" id="collectionBotBtn">Search Bot Collection</button>
-                <button class="collection-link-btn" id="collectionUserBtn">Search User Collection</button>
-            </div>
-        </div>
-    </section>
-
-    <section id="botPage" class="page">
+    <section id="searchPage" class="page">
         <section class="search-panel">
-            <h2>Bot Database Search</h2>
-            <div class="filters-grid">
-                <div class="input-wrap">
-                    <input type="text" id="botSearchName" placeholder="Character name">
-                    <div class="suggestions" id="botSuggestions"></div>
-                </div>
-                <input type="text" id="botSearchAnime" placeholder="Anime name">
-                <div class="rarity-select">
-                    <button id="botRarityBtn">🎖 All</button>
-                    <div class="rarity-dropdown" id="botRarityDropdown"></div>
-                </div>
+            <div class="mode-switch-row">
+                <button class="mode-btn active" id="botModeBtn">Bot Search</button>
+                <button class="mode-btn" id="userModeBtn">User Search</button>
             </div>
-            <div class="action-row">
-                <button id="botSearchBtn" class="action-btn animated-search-btn">Search Bot Collection</button>
-                <button class="clear-btn" id="clearBotBtn">Clear</button>
-            </div>
-        </section>
-        <section class="profile-card">
-            <p id="botProfileMeta">Viewing bot collection.</p>
-        </section>
-        <section class="media-grid" id="botMediaGrid"></section>
-    </section>
 
-    <section id="userPage" class="page">
-        <section class="search-panel">
-            <h2>User Database Search</h2>
-            <div class="filters-grid user-filters-grid">
-                <input type="text" id="userIdInput" placeholder="User ID (required)">
+            <h2 id="searchHeading">Bot Database Search</h2>
+            <div class="filters-grid user-filters-grid" id="searchFilters">
+                <input type="text" id="userIdInput" class="hidden-field" placeholder="User ID (required)">
+
                 <div class="input-wrap">
-                    <input type="text" id="userSearchName" placeholder="Character name">
-                    <div class="suggestions" id="userSuggestions"></div>
+                    <input type="text" id="searchName" placeholder="Character name">
+                    <div class="suggestions" id="searchSuggestions"></div>
                 </div>
-                <input type="text" id="userSearchAnime" placeholder="Anime name">
+
+                <input type="text" id="searchAnime" placeholder="Anime name">
+
                 <div class="rarity-select">
-                    <button id="userRarityBtn">🎖 All</button>
-                    <div class="rarity-dropdown" id="userRarityDropdown"></div>
+                    <button id="rarityBtn">🎖 All</button>
+                    <div class="rarity-dropdown" id="rarityDropdown"></div>
                 </div>
             </div>
+
             <div class="action-row">
-                <button id="userSearchBtn" class="action-btn animated-search-btn">Search User Collection</button>
-                <button class="clear-btn" id="clearUserBtn">Clear</button>
+                <button id="mainSearchBtn" class="action-btn animated-search-btn">Search Bot Collection</button>
+                <button class="clear-btn" id="clearBtn">Clear</button>
             </div>
         </section>
 
-        <section class="profile-card profile-layout">
+        <section class="profile-card profile-layout" id="userProfileCard">
             <img id="profileAvatar" src="" alt="User profile">
             <div>
                 <h3 id="profileDisplayName">Telegram User</h3>
                 <p id="profileUsername">@username</p>
-                <p id="profileMeta">Enter user ID and search to load user collection.</p>
+                <p id="profileMeta">Bot mode active. Switch to user mode for profile details.</p>
             </div>
         </section>
 
-        <section class="media-grid" id="userMediaGrid"></section>
+        <section class="profile-card">
+            <p id="searchMeta">Viewing bot collection.</p>
+        </section>
+
+        <section class="media-grid" id="mediaGrid"></section>
     </section>
 
     <section id="shopPage" class="page">
         <div class="section-card">
             <h2>Shop Page</h2>
-            <p>Coming soon. You can add your shop module here anytime.</p>
+            <p>Coming soon. Add your shop module here anytime.</p>
         </div>
     </section>
 
-    <section id="profilePage" class="page">
+    <section id="leaderboardPage" class="page">
         <div class="section-card">
-            <h2>Profile Page</h2>
-            <p>This tab is ready for your extended profile settings.</p>
+            <h2>Leaderboard</h2>
+            <p>Top users and rankings will appear here.</p>
         </div>
     </section>
 </main>
 
-<nav class="bottom-nav" id="bottomNav">
+<nav class="bottom-nav">
     <button class="bottom-nav-btn active" data-page="homePage">Home</button>
-    <button class="bottom-nav-btn" data-page="collectionPage">Collection</button>
+    <button class="bottom-nav-btn" data-page="searchPage">Search</button>
     <button class="bottom-nav-btn" data-page="shopPage">Shop</button>
-    <button class="bottom-nav-btn" data-page="profilePage">Profile</button>
+    <button class="bottom-nav-btn" data-page="leaderboardPage">Leaderboard</button>
 </nav>
 
 <script src="/js/scripts.js"></script>

@@ -1,6 +1,6 @@
 let isFirstLoad = true;
-let botSelectedRarity = "0";
-let userSelectedRarity = "0";
+let selectedRarity = "0";
+let activeMode = "bot";
 
 const RARITIES = {
   0: "All",
@@ -34,41 +34,33 @@ const RARITIES = {
 
 const pages = {
   homePage: document.getElementById("homePage"),
-  collectionPage: document.getElementById("collectionPage"),
-  botPage: document.getElementById("botPage"),
-  userPage: document.getElementById("userPage"),
+  searchPage: document.getElementById("searchPage"),
   shopPage: document.getElementById("shopPage"),
-  profilePage: document.getElementById("profilePage")
+  leaderboardPage: document.getElementById("leaderboardPage")
 };
 
-const botInputs = {
-  name: document.getElementById("botSearchName"),
-  anime: document.getElementById("botSearchAnime"),
-  rarityBtn: document.getElementById("botRarityBtn"),
-  rarityDropdown: document.getElementById("botRarityDropdown"),
-  suggestions: document.getElementById("botSuggestions"),
-  grid: document.getElementById("botMediaGrid"),
-  meta: document.getElementById("botProfileMeta")
-};
-
-const userInputs = {
-  userId: document.getElementById("userIdInput"),
-  name: document.getElementById("userSearchName"),
-  anime: document.getElementById("userSearchAnime"),
-  rarityBtn: document.getElementById("userRarityBtn"),
-  rarityDropdown: document.getElementById("userRarityDropdown"),
-  suggestions: document.getElementById("userSuggestions"),
-  grid: document.getElementById("userMediaGrid"),
-  profileMeta: document.getElementById("profileMeta")
-};
-
+const searchName = document.getElementById("searchName");
+const searchAnime = document.getElementById("searchAnime");
+const userIdInput = document.getElementById("userIdInput");
+const searchSuggestions = document.getElementById("searchSuggestions");
+const mediaGrid = document.getElementById("mediaGrid");
+const searchMeta = document.getElementById("searchMeta");
+const profileMeta = document.getElementById("profileMeta");
 const profileDisplayName = document.getElementById("profileDisplayName");
 const profileUsername = document.getElementById("profileUsername");
 const profileAvatar = document.getElementById("profileAvatar");
+
 const telegramAvatar = document.getElementById("telegramAvatar");
 const telegramName = document.getElementById("telegramName");
 const telegramUsername = document.getElementById("telegramUsername");
 const telegramId = document.getElementById("telegramId");
+
+const searchHeading = document.getElementById("searchHeading");
+const mainSearchBtn = document.getElementById("mainSearchBtn");
+const botModeBtn = document.getElementById("botModeBtn");
+const userModeBtn = document.getElementById("userModeBtn");
+const rarityBtn = document.getElementById("rarityBtn");
+const rarityDropdown = document.getElementById("rarityDropdown");
 
 function switchPage(pageId) {
   Object.values(pages).forEach((page) => page.classList.toggle("active", page.id === pageId));
@@ -76,7 +68,9 @@ function switchPage(pageId) {
     btn.classList.toggle("active", btn.dataset.page === pageId);
   });
 
-  if (pageId === "botPage") loadBotMedia();
+  if (pageId === "searchPage" && activeMode === "bot") {
+    loadBotMedia();
+  }
 }
 
 function initNavigation() {
@@ -84,50 +78,67 @@ function initNavigation() {
     btn.addEventListener("click", () => switchPage(btn.dataset.page));
   });
 
-  document.getElementById("openBotDbBtn").addEventListener("click", () => switchPage("botPage"));
-  document.getElementById("openUserDbBtn").addEventListener("click", () => switchPage("userPage"));
-  document.getElementById("collectionBotBtn").addEventListener("click", () => switchPage("botPage"));
-  document.getElementById("collectionUserBtn").addEventListener("click", () => switchPage("userPage"));
+  document.getElementById("openBotDbBtn").addEventListener("click", () => {
+    setSearchMode("bot");
+    switchPage("searchPage");
+  });
+
+  document.getElementById("openUserDbBtn").addEventListener("click", () => {
+    setSearchMode("user");
+    switchPage("searchPage");
+  });
 }
 
 function buildAvatar(name, photoUrl) {
   return photoUrl || `https://ui-avatars.com/api/?background=2b4eff&color=fff&name=${encodeURIComponent(name)}`;
 }
 
-function initTelegramProfile() {
+function getTelegramUser() {
   const params = new URLSearchParams(window.location.search);
-  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const tg = window.Telegram?.WebApp;
+  const tgUser = tg?.initDataUnsafe?.user || {};
 
-  const userId = params.get("user_id") || tgUser?.id || "";
-  const firstName = params.get("first_name") || tgUser?.first_name || "Guest User";
-  const username = params.get("username") || tgUser?.username || "guest";
-  const photoUrl = params.get("photo_url") || tgUser?.photo_url || "";
+  try {
+    tg?.ready?.();
+    tg?.expand?.();
+  } catch (_) {
+    // noop
+  }
 
-  telegramName.textContent = firstName;
-  telegramUsername.textContent = `@${username}`;
-  telegramId.textContent = `ID: ${userId || "-"}`;
-  telegramAvatar.src = buildAvatar(firstName, photoUrl);
+  const id = params.get("user_id") || tgUser.id || "";
+  const firstName = params.get("first_name") || tgUser.first_name || "Guest User";
+  const username = params.get("username") || tgUser.username || "guest";
+  const photoUrl = params.get("photo_url") || tgUser.photo_url || "";
 
-  profileDisplayName.textContent = firstName;
-  profileUsername.textContent = `@${username}`;
-  profileAvatar.src = buildAvatar(firstName, photoUrl);
+  return { id, firstName, username, photoUrl };
+}
 
-  if (userId) {
-    userInputs.userId.value = String(userId);
-    userInputs.profileMeta.textContent = `Telegram ID ${userId} ready.`;
+function initTelegramProfile() {
+  const user = getTelegramUser();
+  telegramName.textContent = user.firstName;
+  telegramUsername.textContent = `@${user.username}`;
+  telegramId.textContent = `ID: ${user.id || "-"}`;
+  telegramAvatar.src = buildAvatar(user.firstName, user.photoUrl);
+
+  profileDisplayName.textContent = user.firstName;
+  profileUsername.textContent = `@${user.username}`;
+  profileAvatar.src = buildAvatar(user.firstName, user.photoUrl);
+
+  if (user.id) {
+    userIdInput.value = String(user.id);
   }
 }
 
 function showSiteLoader() { document.getElementById("siteLoader").classList.remove("hide"); }
 function hideSiteLoader() { document.getElementById("siteLoader").classList.add("hide"); }
 
-function renderSkeletonCards(gridEl, count = 8) {
-  gridEl.innerHTML = "";
+function renderSkeletonCards(count = 8) {
+  mediaGrid.innerHTML = "";
   for (let i = 0; i < count; i += 1) {
     const card = document.createElement("div");
     card.className = "glass-card skeleton-card";
     card.innerHTML = `<div class="skeleton-media"></div><div class="skeleton-meta"><div class="skeleton-line w-70"></div><div class="skeleton-line w-45"></div><div class="skeleton-line w-55"></div></div>`;
-    gridEl.appendChild(card);
+    mediaGrid.appendChild(card);
   }
 }
 
@@ -137,42 +148,66 @@ function escapeHtml(value) {
   return span.innerHTML;
 }
 
-function renderGrid(gridEl, items) {
-  gridEl.innerHTML = "";
+function attachMediaLoading(mediaElement, card) {
+  const loader = document.createElement("div");
+  loader.className = "media-loader";
+  loader.innerHTML = "<div class='media-loader-spinner'></div>";
+  card.appendChild(loader);
+
+  const done = () => loader.remove();
+  mediaElement.addEventListener("loadeddata", done, { once: true });
+  mediaElement.addEventListener("load", done, { once: true });
+  mediaElement.addEventListener("error", done, { once: true });
+}
+
+function renderGrid(items) {
+  mediaGrid.innerHTML = "";
   if (!items.length) {
-    gridEl.innerHTML = `<div class="empty-state">No media found. Try a different query.</div>`;
+    mediaGrid.innerHTML = `<div class="empty-state">No media found. Try a different query.</div>`;
     return;
   }
 
   items.forEach((m) => {
     const card = document.createElement("div");
-    card.className = "glass-card";
+    card.className = "glass-card auto-shine";
+
     const safeName = escapeHtml(m.name || "Unknown");
     const safeAnime = escapeHtml(m.anime || "Unknown");
     const safeRarity = escapeHtml(m.rarity || "Unknown");
+
+    const mediaHtml = m.type === "video"
+      ? `<video controls playsinline preload="metadata" src="${m.url}"></video>`
+      : `<img loading="lazy" src="${m.url}" alt="${safeName}">`;
+
     card.innerHTML = `
       <span class="rarity-pill">${safeRarity}</span>
-      ${m.type === "video" ? `<video controls playsinline preload="none" src="${m.url}"></video>` : `<img loading="lazy" src="${m.url}" alt="${safeName}">`}
+      ${mediaHtml}
       <div class="card-meta">
         <h3>${safeName}</h3>
         <p>ID: ${m.media_id || "N/A"}</p>
         <p>${safeAnime}</p>
       </div>
     `;
-    gridEl.appendChild(card);
+
+    const mediaEl = card.querySelector("img, video");
+    if (mediaEl) {
+      attachMediaLoading(mediaEl, card);
+    }
+
+    mediaGrid.appendChild(card);
   });
 }
 
 async function loadBotMedia() {
-  renderSkeletonCards(botInputs.grid);
+  renderSkeletonCards();
   try {
     const res = await fetch("/media?size=16");
     const data = await res.json();
-    renderGrid(botInputs.grid, data.results || []);
-    botInputs.meta.textContent = "Viewing bot collection.";
+    renderGrid(data.results || []);
+    searchMeta.textContent = "Viewing bot collection.";
   } catch {
-    renderGrid(botInputs.grid, []);
-    botInputs.meta.textContent = "Unable to load bot collection.";
+    renderGrid([]);
+    searchMeta.textContent = "Unable to load bot collection.";
   }
 
   if (isFirstLoad) {
@@ -181,17 +216,42 @@ async function loadBotMedia() {
   }
 }
 
-async function searchBotCollection() {
-  renderSkeletonCards(botInputs.grid, 6);
-  const endpoint = `/media/search?source=bot&name=${encodeURIComponent(botInputs.name.value.trim())}&anime=${encodeURIComponent(botInputs.anime.value.trim())}&rarity=${botSelectedRarity}`;
+async function searchCollections() {
+  renderSkeletonCards(6);
+  const name = searchName.value.trim();
+  const anime = searchAnime.value.trim();
+
+  if (activeMode === "user") {
+    const userId = userIdInput.value.trim();
+    if (!userId) {
+      profileMeta.textContent = "User ID is required for user search.";
+      renderGrid([]);
+      return;
+    }
+
+    await loadProfile(userId);
+    const endpoint = `/media/search?source=user&user_id=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}&anime=${encodeURIComponent(anime)}&rarity=${selectedRarity}`;
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      renderGrid(data.results || []);
+      searchMeta.textContent = "Viewing user collection results.";
+    } catch {
+      renderGrid([]);
+      searchMeta.textContent = "User search failed.";
+    }
+    return;
+  }
+
+  const endpoint = `/media/search?source=bot&name=${encodeURIComponent(name)}&anime=${encodeURIComponent(anime)}&rarity=${selectedRarity}`;
   try {
     const res = await fetch(endpoint);
     const data = await res.json();
-    renderGrid(botInputs.grid, data.results || []);
-    botInputs.meta.textContent = "Bot results loaded.";
+    renderGrid(data.results || []);
+    searchMeta.textContent = "Viewing bot collection results.";
   } catch {
-    renderGrid(botInputs.grid, []);
-    botInputs.meta.textContent = "Search failed.";
+    renderGrid([]);
+    searchMeta.textContent = "Bot search failed.";
   }
 }
 
@@ -199,45 +259,47 @@ async function loadProfile(userId) {
   try {
     const res = await fetch(`/profile?user_id=${encodeURIComponent(userId)}`);
     if (!res.ok) {
-      userInputs.profileMeta.textContent = "User not found.";
+      profileMeta.textContent = "User not found.";
       return;
     }
+
     const profile = await res.json();
     const showName = profile.first_name || profile.username || "Telegram User";
     profileDisplayName.textContent = showName;
     profileUsername.textContent = profile.username ? `@${String(profile.username).replace(/^@/, "")}` : "@unknown";
     if (profile.photo_url) profileAvatar.src = profile.photo_url;
-    userInputs.profileMeta.textContent = `User ID: ${profile.user_id} • Total: ${profile.total_characters} • Highest ID: ${profile.top_character_id ?? "N/A"}`;
+    profileMeta.textContent = `User ID: ${profile.user_id} • Total: ${profile.total_characters} • Highest ID: ${profile.top_character_id ?? "N/A"}`;
   } catch {
-    userInputs.profileMeta.textContent = "Profile unavailable.";
+    profileMeta.textContent = "Profile unavailable.";
   }
 }
 
-async function searchUserCollection() {
-  renderSkeletonCards(userInputs.grid, 6);
-  const userId = userInputs.userId.value.trim();
-  if (!userId) {
-    userInputs.profileMeta.textContent = "User ID is required.";
-    renderGrid(userInputs.grid, []);
-    return;
-  }
+function setSearchMode(mode) {
+  activeMode = mode;
+  const isUser = mode === "user";
 
-  await loadProfile(userId);
-  const endpoint = `/media/search?source=user&user_id=${encodeURIComponent(userId)}&name=${encodeURIComponent(userInputs.name.value.trim())}&anime=${encodeURIComponent(userInputs.anime.value.trim())}&rarity=${userSelectedRarity}`;
+  botModeBtn.classList.toggle("active", !isUser);
+  userModeBtn.classList.toggle("active", isUser);
 
-  try {
-    const res = await fetch(endpoint);
-    const data = await res.json();
-    renderGrid(userInputs.grid, data.results || []);
-  } catch {
-    renderGrid(userInputs.grid, []);
-    userInputs.profileMeta.textContent = "Search failed.";
+  userIdInput.classList.toggle("hidden-field", !isUser);
+  document.getElementById("userProfileCard").classList.toggle("hidden-card", !isUser);
+
+  searchHeading.textContent = isUser ? "User Database Search" : "Bot Database Search";
+  mainSearchBtn.textContent = isUser ? "Search User Collection" : "Search Bot Collection";
+  searchMeta.textContent = isUser ? "User mode active." : "Viewing bot collection.";
+
+  searchSuggestions.innerHTML = "";
+
+  if (!isUser) {
+    profileMeta.textContent = "Bot mode active. Switch to user mode for profile details.";
+    loadBotMedia();
   }
 }
 
-function renderSuggestions(targetEl, suggestions, inputEl) {
-  targetEl.innerHTML = "";
+function renderSuggestions(suggestions, inputEl) {
+  searchSuggestions.innerHTML = "";
   if (!suggestions.length) return;
+
   suggestions.forEach((item) => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -245,106 +307,94 @@ function renderSuggestions(targetEl, suggestions, inputEl) {
     btn.textContent = item;
     btn.addEventListener("click", () => {
       inputEl.value = item;
-      targetEl.innerHTML = "";
+      searchSuggestions.innerHTML = "";
     });
-    targetEl.appendChild(btn);
+    searchSuggestions.appendChild(btn);
   });
 }
 
-async function fetchSuggestions(source, query, userId = "") {
+async function fetchSuggestions(query) {
   if (!query || query.length < 2) return [];
-  let endpoint = `/media/suggestions?source=${source}&query=${encodeURIComponent(query)}`;
-  if (source === "user" && userId) endpoint += `&user_id=${encodeURIComponent(userId)}`;
+  let endpoint = `/media/suggestions?source=${activeMode}&query=${encodeURIComponent(query)}`;
+  if (activeMode === "user") {
+    const userId = userIdInput.value.trim();
+    if (!userId) return [];
+    endpoint += `&user_id=${encodeURIComponent(userId)}`;
+  }
+
   const res = await fetch(endpoint);
   if (!res.ok) return [];
   const data = await res.json();
   return data.suggestions || [];
 }
 
-function setupSuggestionInput(inputEl, targetEl, source, getUserId) {
+function bindSuggestionInput() {
   let timer = null;
-  inputEl.addEventListener("input", () => {
+  searchName.addEventListener("input", () => {
     clearTimeout(timer);
     timer = setTimeout(async () => {
-      const suggestions = await fetchSuggestions(source, inputEl.value.trim(), getUserId ? getUserId() : "");
-      renderSuggestions(targetEl, suggestions, inputEl);
+      const suggestions = await fetchSuggestions(searchName.value.trim());
+      renderSuggestions(suggestions, searchName);
     }, 180);
   });
 
-  inputEl.addEventListener("blur", () => {
-    setTimeout(() => { targetEl.innerHTML = ""; }, 120);
+  searchName.addEventListener("blur", () => {
+    setTimeout(() => { searchSuggestions.innerHTML = ""; }, 120);
   });
 }
 
-function buildRarityDropdown(dropdown, onSelect) {
-  dropdown.innerHTML = "";
+function buildRarityDropdown() {
+  rarityDropdown.innerHTML = "";
   Object.entries(RARITIES).forEach(([key, value]) => {
-    const div = document.createElement("div");
-    div.innerText = value;
-    div.onclick = () => onSelect(key, value);
-    dropdown.appendChild(div);
+    const row = document.createElement("div");
+    row.innerText = value;
+    row.onclick = () => {
+      selectedRarity = key;
+      rarityBtn.innerText = `🎖 ${value}`;
+      rarityDropdown.style.display = "none";
+    };
+    rarityDropdown.appendChild(row);
   });
 }
 
-function initRarityControls() {
-  buildRarityDropdown(botInputs.rarityDropdown, (k, v) => {
-    botSelectedRarity = k;
-    botInputs.rarityBtn.innerText = `🎖 ${v}`;
-    botInputs.rarityDropdown.style.display = "none";
-  });
+function clearSearch() {
+  searchName.value = "";
+  searchAnime.value = "";
+  selectedRarity = "0";
+  rarityBtn.innerText = "🎖 All";
+  searchSuggestions.innerHTML = "";
 
-  buildRarityDropdown(userInputs.rarityDropdown, (k, v) => {
-    userSelectedRarity = k;
-    userInputs.rarityBtn.innerText = `🎖 ${v}`;
-    userInputs.rarityDropdown.style.display = "none";
-  });
-
-  botInputs.rarityBtn.onclick = () => {
-    botInputs.rarityDropdown.style.display = botInputs.rarityDropdown.style.display === "block" ? "none" : "block";
-  };
-  userInputs.rarityBtn.onclick = () => {
-    userInputs.rarityDropdown.style.display = userInputs.rarityDropdown.style.display === "block" ? "none" : "block";
-  };
-}
-
-function clearBotSearch() {
-  botInputs.name.value = "";
-  botInputs.anime.value = "";
-  botSelectedRarity = "0";
-  botInputs.rarityBtn.innerText = "🎖 All";
-  botInputs.suggestions.innerHTML = "";
-  loadBotMedia();
-}
-
-function clearUserSearch() {
-  userInputs.name.value = "";
-  userInputs.anime.value = "";
-  userSelectedRarity = "0";
-  userInputs.rarityBtn.innerText = "🎖 All";
-  userInputs.suggestions.innerHTML = "";
-  userInputs.grid.innerHTML = "";
+  if (activeMode === "bot") {
+    loadBotMedia();
+  } else {
+    mediaGrid.innerHTML = "";
+    searchMeta.textContent = "User mode active.";
+  }
 }
 
 function bindActions() {
-  document.getElementById("botSearchBtn").addEventListener("click", searchBotCollection);
-  document.getElementById("userSearchBtn").addEventListener("click", searchUserCollection);
-  document.getElementById("clearBotBtn").addEventListener("click", clearBotSearch);
-  document.getElementById("clearUserBtn").addEventListener("click", clearUserSearch);
+  document.getElementById("mainSearchBtn").addEventListener("click", searchCollections);
+  document.getElementById("clearBtn").addEventListener("click", clearSearch);
 
-  [botInputs.name, botInputs.anime].forEach((input) => {
-    input.addEventListener("keydown", (event) => event.key === "Enter" && searchBotCollection());
-  });
-  [userInputs.userId, userInputs.name, userInputs.anime].forEach((input) => {
-    input.addEventListener("keydown", (event) => event.key === "Enter" && searchUserCollection());
+  [searchName, searchAnime, userIdInput].forEach((input) => {
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") searchCollections();
+    });
   });
 
-  setupSuggestionInput(botInputs.name, botInputs.suggestions, "bot");
-  setupSuggestionInput(userInputs.name, userInputs.suggestions, "user", () => userInputs.userId.value.trim());
+  botModeBtn.addEventListener("click", () => setSearchMode("bot"));
+  userModeBtn.addEventListener("click", () => setSearchMode("user"));
+
+  rarityBtn.onclick = () => {
+    rarityDropdown.style.display = rarityDropdown.style.display === "block" ? "none" : "block";
+  };
 }
 
 showSiteLoader();
 initNavigation();
 initTelegramProfile();
-initRarityControls();
+bindSuggestionInput();
 bindActions();
+buildRarityDropdown();
+setSearchMode("bot");
 loadBotMedia();
