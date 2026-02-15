@@ -7,41 +7,70 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div id="siteLoader" class="site-loader">
     <div class="loader-orb"></div>
-    <p>Loading cosmic gallery...</p>
+    <p>Syncing your collection...</p>
 </div>
 
-<header class="top-bar">
-    <h1>Blade Network</h1>
-    <p class="subtitle">Discover premium anime visuals in a sleek, immersive showcase built for collectors.</p>
+<header class="app-header">
+    <div class="brand-block">
+        <h1>Blade Network</h1>
+        <p>Telegram mini app collection explorer</p>
+    </div>
+
+    <div class="telegram-profile" id="telegramProfile">
+        <img id="telegramAvatar" src="" alt="Telegram profile picture">
+        <div>
+            <h3 id="telegramName">Guest User</h3>
+            <p id="telegramId">ID: -</p>
+        </div>
+    </div>
 </header>
 
-<section class="search-bar">
-    <input type="text" id="searchName" placeholder="🔍 Name">
-    <input type="text" id="searchAnime" placeholder="🎬 Anime">
-    <input type="text" id="userIdInput" placeholder="👤 Telegram user id (for user collection)">
-
-    <div class="rarity-select">
-        <button id="rarityBtn">🎖 All</button>
-        <div class="rarity-dropdown" id="rarityDropdown"></div>
-    </div>
-
-    <div class="source-buttons">
-        <button id="botSearchBtn" onclick="searchFromBotCollection()">Search Bot Collection</button>
-        <button id="userSearchBtn" onclick="searchFromUserCollection()">Search User Collection</button>
-    </div>
-    <button onclick="clearSearch()" class="clear-btn">Clear</button>
-</section>
-
-<section class="profile-card" id="profileCard">
-    <h2>Profile</h2>
-    <p id="profileMeta">Load user collection to view profile details.</p>
-</section>
+<nav class="top-nav">
+    <button class="nav-btn active" data-page="homePage">Home</button>
+    <button class="nav-btn" data-page="collectionPage">Collection</button>
+</nav>
 
 <main>
-    <section class="media-grid" id="mediaGrid"></section>
+    <section id="homePage" class="page active">
+        <div class="hero-card">
+            <h2>Premium Anime Collection, Smooth Experience</h2>
+            <p>
+                Explore the global bot collection or switch to your personal Telegram collection.
+                Fast filters, profile details, and polished visuals in one place.
+            </p>
+            <button class="primary-cta" id="openCollectionBtn">Open Collection</button>
+        </div>
+    </section>
+
+    <section id="collectionPage" class="page">
+        <section class="search-panel">
+            <div class="filters-grid">
+                <input type="text" id="searchName" placeholder="Search by character name">
+                <input type="text" id="searchAnime" placeholder="Search by anime">
+                <input type="text" id="userIdInput" placeholder="Telegram user id (for user collection)">
+
+                <div class="rarity-select">
+                    <button id="rarityBtn">🎖 All</button>
+                    <div class="rarity-dropdown" id="rarityDropdown"></div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button id="botSearchBtn" class="action-btn" onclick="searchFromBotCollection()">Search Bot Collection</button>
+                <button id="userSearchBtn" class="action-btn" onclick="searchFromUserCollection()">Search User Collection</button>
+                <button class="clear-btn" onclick="clearSearch()">Clear</button>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <h2>User Profile</h2>
+            <p id="profileMeta">Load user collection to view profile details.</p>
+        </section>
+
+        <section class="media-grid" id="mediaGrid"></section>
+    </section>
 </main>
 
 <script src="/js/scripts.js"></script>

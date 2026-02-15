@@ -86,6 +86,21 @@ def parse_rarity_value(rarity_value):
     return RARITY_MAP.get(rarity_int)
 
 
+
+
+def build_user_id_query(user_id):
+    query_values = [str(user_id)]
+    try:
+        query_values.append(int(user_id))
+    except (TypeError, ValueError):
+        pass
+
+    if len(query_values) == 1:
+        return {"user_id": query_values[0]}
+
+    return {"user_id": {"$in": query_values}}
+
+
 def normalize_user_character(character, user_id):
     media_id = character.get("id")
     vid_url = character.get("vid_url")
@@ -145,7 +160,7 @@ def search_media():
             return jsonify({"error": "user_id is required when source=user"}), 400
 
         try:
-            user = user_collection.find_one({"user_id": str(user_id)}, {"_id": 0, "characters": 1})
+            user = user_collection.find_one(build_user_id_query(user_id), {"_id": 0, "characters": 1})
         except Exception:
             return jsonify({"results": []})
         if not user:
@@ -193,7 +208,7 @@ def get_profile():
         return jsonify({"error": "user_id is required"}), 400
 
     try:
-        user = user_collection.find_one({"user_id": str(user_id)}, {"_id": 0})
+        user = user_collection.find_one(build_user_id_query(user_id), {"_id": 0})
     except Exception:
         return jsonify({"error": "Database unavailable"}), 503
     if not user:

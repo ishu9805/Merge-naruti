@@ -39,16 +39,49 @@ const userIdInput = document.getElementById("userIdInput");
 const profileMeta = document.getElementById("profileMeta");
 const rarityBtn = document.getElementById("rarityBtn");
 const rarityDropdown = document.getElementById("rarityDropdown");
+const telegramAvatar = document.getElementById("telegramAvatar");
+const telegramName = document.getElementById("telegramName");
+const telegramId = document.getElementById("telegramId");
 
-function initTelegramUserId() {
+function switchPage(pageId) {
+  document.querySelectorAll(".page").forEach((page) => {
+    page.classList.toggle("active", page.id === pageId);
+  });
+
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === pageId);
+  });
+}
+
+function initNavigation() {
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => switchPage(btn.dataset.page));
+  });
+
+  document.getElementById("openCollectionBtn").addEventListener("click", () => {
+    switchPage("collectionPage");
+  });
+}
+
+function initTelegramProfile() {
   const params = new URLSearchParams(window.location.search);
-  const urlUserId = params.get("user_id");
-  const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  if (urlUserId) {
-    userIdInput.value = urlUserId;
-  } else if (tgUserId) {
-    userIdInput.value = String(tgUserId);
+  const userId = params.get("user_id") || tgUser?.id || "";
+  const firstName = params.get("first_name") || tgUser?.first_name || "Guest User";
+  const photoUrl = params.get("photo_url") || tgUser?.photo_url || "";
+
+  if (userId) {
+    userIdInput.value = String(userId);
+    telegramId.textContent = `ID: ${userId}`;
+  }
+
+  telegramName.textContent = firstName;
+
+  if (photoUrl) {
+    telegramAvatar.src = photoUrl;
+  } else {
+    telegramAvatar.src = "https://ui-avatars.com/api/?background=2b4eff&color=fff&name=" + encodeURIComponent(firstName);
   }
 }
 
@@ -79,20 +112,10 @@ function renderSkeletonCards(count = 8) {
   }
 }
 
-async function loadMedia() {
-  activeSource = "bot";
-  renderSkeletonCards();
-
-  const res = await fetch("/media?size=16");
-  const data = await res.json();
-  currentMedia = data.results;
-  renderGrid(currentMedia);
-  profileMeta.textContent = "Viewing bot collection.";
-
-  if (isFirstLoad) {
-    hideSiteLoader();
-    isFirstLoad = false;
-  }
+function escapeHtml(value) {
+  const span = document.createElement("span");
+  span.innerText = value ?? "";
+  return span.innerHTML;
 }
 
 function renderGrid(items) {
@@ -108,30 +131,70 @@ function renderGrid(items) {
     const card = document.createElement("div");
     card.className = "glass-card";
 
+    const safeName = escapeHtml(m.name || "Unknown character");
+    const safeAnime = escapeHtml(m.anime || "Unknown anime");
+    const safeRarity = escapeHtml(m.rarity || "Unknown rarity");
+
     card.innerHTML = `
-      <span class="rarity-pill">${m.rarity || "Unknown rarity"}</span>
+      <span class="rarity-pill">${safeRarity}</span>
       ${m.type === "video"
-        ? `<video controls playsinline preload="none" poster="" src="${m.url}"></video>`
-        : `<img loading="lazy" src="${m.url}" alt="${m.name || "Anime card"}">`}
+        ? `<video controls playsinline preload="none" src="${m.url}"></video>`
+        : `<img loading="lazy" src="${m.url}" alt="${safeName}">`}
       <div class="card-meta">
-        <h3>${m.name || "Unknown character"}</h3>
+        <h3>${safeName}</h3>
         <p class="media-id">ID: ${m.media_id || "N/A"}</p>
-        <p>${m.anime || "Unknown anime"}</p>
+        <p>${safeAnime}</p>
       </div>
-      <div class="shine"></div>
     `;
     grid.appendChild(card);
   });
 }
 
+async function loadMedia() {
+  activeSource = "bot";
+  renderSkeletonCards();
+
+  try {
+    const res = await fetch("/media?size=16");
+    const data = await res.json();
+    currentMedia = data.results || [];
+    renderGrid(currentMedia);
+    profileMeta.textContent = "Viewing bot collection.";
+  } catch (error) {
+    profileMeta.textContent = "Unable to load bot collection.";
+    renderGrid([]);
+  }
+
+  if (isFirstLoad) {
+    hideSiteLoader();
+    isFirstLoad = false;
+  }
+}
+
+async function loadProfile(userId) {
+  try {
+    const res = await fetch(`/profile?user_id=${encodeURIComponent(userId)}`);
+    if (!res.ok) {
+      profileMeta.textContent = "Profile not found for this user.";
+      return;
+    }
+
+    const profile = await res.json();
+    profileMeta.textContent = `User: ${profile.username} (ID: ${profile.user_id}) • Total: ${profile.total_characters} • Highest ID: ${profile.top_character_id ?? "N/A"}`;
+  } catch (error) {
+    profileMeta.textContent = "Unable to load profile right now.";
+  }
+}
+
 async function searchMedia(source) {
   renderSkeletonCards(6);
 
-  const name = searchName.value;
-  const anime = searchAnime.value;
+  const name = searchName.value.trim();
+  const anime = searchAnime.value.trim();
   const userId = userIdInput.value.trim();
 
   let endpoint = `/media/search?source=${source}&name=${encodeURIComponent(name)}&anime=${encodeURIComponent(anime)}&rarity=${selectedRarity}`;
+
   if (source === "user") {
     if (!userId) {
       profileMeta.textContent = "Please enter Telegram user id for user collection search.";
@@ -144,21 +207,15 @@ async function searchMedia(source) {
     profileMeta.textContent = "Viewing bot collection.";
   }
 
-  const res = await fetch(endpoint);
-  const data = await res.json();
-  currentMedia = data.results || [];
-  renderGrid(currentMedia);
-}
-
-async function loadProfile(userId) {
-  const res = await fetch(`/profile?user_id=${encodeURIComponent(userId)}`);
-  if (!res.ok) {
-    profileMeta.textContent = "Profile not found for this user.";
-    return;
+  try {
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    currentMedia = data.results || [];
+    renderGrid(currentMedia);
+  } catch (error) {
+    renderGrid([]);
+    profileMeta.textContent = "Search failed. Please try again.";
   }
-
-  const profile = await res.json();
-  profileMeta.textContent = `User: ${profile.username} (ID: ${profile.user_id}) • Total: ${profile.total_characters} • Highest ID: ${profile.top_character_id ?? "N/A"}`;
 }
 
 function searchFromBotCollection() {
@@ -176,11 +233,26 @@ function clearSearch() {
   searchAnime.value = "";
   selectedRarity = "0";
   rarityBtn.innerText = "🎖 All";
+
   if (activeSource === "user") {
     searchFromUserCollection();
   } else {
     loadMedia();
   }
+}
+
+function bindKeyboardSearch() {
+  [searchName, searchAnime, userIdInput].forEach((input) => {
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        if (activeSource === "user") {
+          searchFromUserCollection();
+        } else {
+          searchFromBotCollection();
+        }
+      }
+    });
+  });
 }
 
 Object.entries(RARITIES).forEach(([k, v]) => {
@@ -199,5 +271,7 @@ rarityBtn.onclick = () => {
 };
 
 showSiteLoader();
-initTelegramUserId();
+initNavigation();
+initTelegramProfile();
+bindKeyboardSearch();
 loadMedia();
