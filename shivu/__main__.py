@@ -43,7 +43,6 @@ from shivu.modules.lock import ptbcommand_lock as ptbcmd
 all_characters = []
 valentine_spawn_thresholds = {} 
 amv_spawn_thresholds = {} # Store random thresholds for Valentine spawn
-summer_spawn_thresholds = {}
 celestial_spawn_thresholds = {}
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 current_amv_character = {}  # Tracks AMV characters per chat
@@ -263,7 +262,6 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             else:
                 valentine_spawn_thresholds[chat_id] = VALENTINE_THRESHOLD_DEFAULT
                 celestial_spawn_thresholds[chat_id] = CELESTIAL_THRESHOLD_DEFAULT
-            summer_spawn_thresholds[chat_id] = random.randint(500, 1200)
             
             # Special AMV counter for the designated group
             if chat_id == "-1002783891820":  # AMV_GROUP_ID as string
@@ -297,7 +295,6 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Check for special spawns using relative threshold approach (PRIORITY over regular spawn)
         current_count = total_message_counts[chat_id]
         valentine_spawn_thresholds[chat_id]
-        summer_spawn_thresholds[chat_id]
         if chat_id not in celestial_spawn_thresholds:
             celestial_spawn_thresholds[chat_id] = (
                 CELESTIAL_THRESHOLD_SPECIAL if chat_id == VALENTINE_SPECIAL_GROUP_ID else CELESTIAL_THRESHOLD_DEFAULT
@@ -320,13 +317,6 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             spawn_cooldowns[chat_id] = current_time
             return
 
-        # Summer/Event spawn check
-        if total_message_counts[chat_id] >= summer_spawn_thresholds[chat_id]:
-            await spawn_diwali_character(update, context)
-            summer_spawn_thresholds[chat_id] = current_count + random.randint(500, 1300)
-            spawn_cooldowns[chat_id] = current_time
-            return
-
         # Initialize and increment regular message counter
         if chat_id not in message_counts:
             message_counts[chat_id] = 0
@@ -346,73 +336,6 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         return
 
 
-
-async def spawn_diwali_character(update: Update, context: CallbackContext) -> None:
-    chat_id = update.effective_chat.id
-    datetime.datetime.now().strftime("%Y-%m-%d")
-
-    """if str(chat_id) != "-1002783891820":
-        #await message.reply_text("you can only use this command here @hclaim_support")
-        return"""
-            
-    if chat_id not in sent_characters:
-        sent_characters[chat_id] = []
-
-    # Filter for winter event characters
-    diwali_characters = [c for c in all_characters if c.get('rarity') == '❄️ Winter']
-
-    if not diwali_characters:
-        print("No Winter rarity characters found in the database.")
-        return
-
-    # Select a random Winter character
-    character = random.choice(diwali_characters)
-    
-    # Check global ownership count
-    waifu_id = character['id']
-    user_ownership_data = await user_collection.aggregate([
-        {'$match': {'characters.id': waifu_id}},
-        {'$unwind': '$characters'},
-        {'$match': {'characters.id': waifu_id}},
-        {'$group': {'_id': '$id', 'count': {'$sum': 1}}},
-        {'$sort': {'count': -1}}
-    ]).to_list(length=10)
-
-    global_count = sum(user['count'] for user in user_ownership_data)
-
-    if global_count >= 5:
-        print(f"Winter character {waifu_id} has been claimed by too many collectors.")
-        return
-
-    sent_characters[chat_id].append(character.get('id'))
-    last_characters[chat_id] = character
-
-    if chat_id in first_correct_guesses:
-        del first_correct_guesses[chat_id]
-
-    caption = (
-        "❄️ *A Winter Wonderland Appears!* 🏔️\n\n"
-        "The snow is glistening... can you **guess their name**?\n"
-        "/guess [name] to claim this frosty friend! 🌟\n\n"
-    )
-    
-    if character.get('img_url'):
-        await context.bot.send_photo(
-            chat_id=chat_id,
-            photo=character['img_url'],
-            caption=caption,
-            parse_mode='Markdown'
-        )
-    elif character.get('vid_url'):
-        await context.bot.send_video(
-            chat_id=chat_id,
-            video=character['vid_url'],
-            caption=caption,
-            parse_mode='Markdown',
-            supports_streaming=True
-        )
-
-    await send_spawn_log(character, chat_id, context)
 
 async def spawn_amv_character(update: Update, context: CallbackContext):
     """Spawn a limited edition AMV character"""
@@ -1069,14 +992,13 @@ async def check_counters(update: Update, context: CallbackContext):
     if chat_id in total_message_counts:
         next_valentine = max(0, valentine_spawn_thresholds.get(chat_id, 0) - total_message_counts[chat_id])
         next_celestial = max(0, celestial_spawn_thresholds.get(chat_id, 0) - total_message_counts[chat_id])
-        next_summer = max(0, summer_spawn_thresholds.get(chat_id, 0) - total_message_counts[chat_id])
 
         msg = (
             f"📊 Counters for {chat_id}:\n"
             f"• Total messages: {total_message_counts[chat_id]}\n"
             f"• Next Valentine: {next_valentine}\n"
             f"• Next Celestial: {next_celestial}\n"
-            f"• Next Summer/Event: {next_summer}\n\n"
+            "\n"
             f"🎯 Spawn details:\n"
             f"• Valentine interval: {VALENTINE_THRESHOLD_SPECIAL if chat_id == VALENTINE_SPECIAL_GROUP_ID else VALENTINE_THRESHOLD_DEFAULT}\n"
             f"• Celestial interval: {CELESTIAL_THRESHOLD_SPECIAL if chat_id == VALENTINE_SPECIAL_GROUP_ID else CELESTIAL_THRESHOLD_DEFAULT}\n"
