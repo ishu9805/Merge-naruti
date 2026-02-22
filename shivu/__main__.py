@@ -95,6 +95,13 @@ LOG_RARITIES = {
     "🏴‍☠️ Marauds",
 }
 
+SPECIAL_SPAWN_RARITIES = {
+    "👶 Chibi",
+    "🪸 Aquatic",
+    "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊",
+    "🧧 𝙀𝙫𝙚𝙣𝙩𝙨",
+}
+
 async def send_spawn_log(character: dict, chat_id: int, context: CallbackContext):
     """
     Sends spawn log to LOG_CHANNEL with photo/video and formatted caption
@@ -296,13 +303,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                 CELESTIAL_THRESHOLD_SPECIAL if chat_id == VALENTINE_SPECIAL_GROUP_ID else CELESTIAL_THRESHOLD_DEFAULT
             )
 
-        # Valentine spawn check: every 300 msgs in special group, every 1000 msgs in others
-        if total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
+        # Special rarity spawn only in the configured special group
+        if chat_id == VALENTINE_SPECIAL_GROUP_ID and total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
             await spawn_valentine_character(update, context)
-            if chat_id == VALENTINE_SPECIAL_GROUP_ID:
-                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
-            else:
-                valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_DEFAULT
+            valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
             spawn_cooldowns[chat_id] = current_time
             return
 
@@ -354,14 +358,14 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    # Filter for Diwali characters - Event rarity and name contains 🪔
-    diwali_characters = [c for c in all_characters if c.get('rarity') == '❄️ Winter'] # and '🪔' in c.get('name', '')]
+    # Filter for winter event characters
+    diwali_characters = [c for c in all_characters if c.get('rarity') == '❄️ Winter']
 
     if not diwali_characters:
-        print("No Diwali characters found in the database.")
+        print("No Winter rarity characters found in the database.")
         return
 
-    # Select a random Diwali character
+    # Select a random Winter character
     character = random.choice(diwali_characters)
     
     # Check global ownership count
@@ -376,8 +380,8 @@ async def spawn_diwali_character(update: Update, context: CallbackContext) -> No
 
     global_count = sum(user['count'] for user in user_ownership_data)
 
-    if global_count >= 5:  # Limit for Diwali characters
-        print(f"Diwali character {waifu_id} has been claimed by too many collectors.")
+    if global_count >= 5:
+        print(f"Winter character {waifu_id} has been claimed by too many collectors.")
         return
 
     sent_characters[chat_id].append(character.get('id'))
@@ -614,6 +618,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 async def spawn_valentine_character(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     datetime.datetime.now().strftime("%Y-%m-%d")
+
+    if str(chat_id) != VALENTINE_SPECIAL_GROUP_ID:
+        return
     
     
     if chat_id not in sent_characters:
@@ -626,10 +633,10 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         await update.effective_chat.send_message("No characters available to spawn right now.")
         return
 
-    valentine_characters = [c for c in alls_characters if c.get('rarity') == '💝 Valentine']
+    valentine_characters = [c for c in alls_characters if c.get('rarity') in SPECIAL_SPAWN_RARITIES]
 
     if not valentine_characters:
-        print("No Valentine rarity characters found in the database.")
+        print("No configured special rarity characters found in the database.")
         return
 
     # Select a random Valentine character
@@ -650,7 +657,7 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     global_count = sum(user['count'] for user in user_ownership_data)
 
     if global_count >= 10:
-        print(f"Valentine character {waifu_id} has reached the global ownership limit.")
+        print(f"Special rarity character {waifu_id} has reached the global ownership limit.")
         return
 
     sent_characters[chat_id].append(character.get('id'))
@@ -661,7 +668,14 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
-    caption = ("💝 A Valentine character has appeared!\n\nGuess their name with /guess [name] to claim this lovely drop! 💌")
+    rarity = character.get('rarity', 'Special')
+    captions = {
+        "👶 Chibi": "👶 A Chibi character has appeared!\n\nGuess their name with /guess [name] to claim this cute drop!",
+        "🪸 Aquatic": "🪸 An Aquatic character has surfaced!\n\nGuess their name with /guess [name] to claim this oceanic drop!",
+        "☠️ 𝕯𝖎𝖛𝖎𝖓𝖊": "☠️ A Divine character has descended!\n\nGuess their name with /guess [name] to claim this blessed drop!",
+        "🧧 𝙀𝙫𝙚𝙣𝙩𝙨": "🧧 An Events character has appeared!\n\nGuess their name with /guess [name] to claim this event-exclusive drop!",
+    }
+    caption = captions.get(rarity, "✨ A Special rarity character has appeared!\n\nGuess their name with /guess [name] to claim this drop!")
     if character.get('img_url'):
         await context.bot.send_photo(
             chat_id=chat_id,
