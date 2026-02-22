@@ -70,7 +70,7 @@ async def join_watcher(_, message):
                         f"👤 Added By: {message.from_user.mention if message.from_user else 'Unknown'}\n"
                         f"👥 Members: {count}\n"
                         f"🔗 Chat Link: {link}\n"
-                        f"#NewGroup @naruto_dev"
+                        f"#NewGroup @animechatiac"
                     )
                     
                     await app.send_photo(

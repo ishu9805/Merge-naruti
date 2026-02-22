@@ -68,7 +68,7 @@ async def hclaim(_, message: t.Message):
 
 
     if str(message.chat.id) != "-1002783891820":
-        await message.reply_text("you can only use this command here @anime_x_blade")
+        await message.reply_text("you can only use this command here @animechatiac")
         return
         
     if message.forward_date:

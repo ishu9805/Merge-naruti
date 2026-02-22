@@ -80,7 +80,7 @@ async def set_profile_media(client: Client, message: Message):
         caption = "**📸 New Profile Media Request!**\n\n"
         caption += f"👤 **User ID:** `{user_id}`\n"
         caption += f"📎 **Media URL:** {img_url}\n"
-        caption += " @sashta_dev"
+        caption += " @animechatiac"
 
         buttons = InlineKeyboardMarkup(
             [

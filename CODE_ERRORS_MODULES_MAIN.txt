@@ -959,7 +959,7 @@ F541 [*] f-string without any placeholders
    |
 80 |         caption += f"👤 **User ID:** `{user_id}`\n"
 81 |         caption += f"📎 **Media URL:** {img_url}\n"
-82 |         caption += f" @sashta_dev"
+82 |         caption += f" @animechatiac"
    |                    ^^^^^^^^^^^^^^^
 83 |
 84 |         buttons = InlineKeyboardMarkup(
@@ -1194,9 +1194,9 @@ F541 [*] f-string without any placeholders
   --> shivu/modules/Start.py:74:32
    |
 73 | support_buttons = [
-74 |     [IKB("💬 Support Chat", url=f"https://t.me/anime_x_blade"),
+74 |     [IKB("💬 Support Chat", url=f"https://t.me/animechatiac"),
    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-75 |      IKB("📢 Updates", url=f"https://t.me/NARUTOO_UPDATE")],
+75 |      IKB("📢 Updates", url=f"https://t.me/hidden_naruto")],
 76 |     [IKB("➕ Add to Group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
    |
 help: Remove extraneous `f` prefix
@@ -1205,8 +1205,8 @@ F541 [*] f-string without any placeholders
   --> shivu/modules/Start.py:75:27
    |
 73 | support_buttons = [
-74 |     [IKB("💬 Support Chat", url=f"https://t.me/anime_x_blade"),
-75 |      IKB("📢 Updates", url=f"https://t.me/NARUTOO_UPDATE")],
+74 |     [IKB("💬 Support Chat", url=f"https://t.me/animechatiac"),
+75 |      IKB("📢 Updates", url=f"https://t.me/hidden_naruto")],
    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 76 |     [IKB("➕ Add to Group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
 77 |     [IKB("❓ Help", callback_data="help"),

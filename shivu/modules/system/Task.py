@@ -145,7 +145,7 @@ async def task_command(client, message):
     
     response = [
         "📊 **Your Task Progress**",
-        f"💬 Messages: {total} [GROUP](https://t.me/+CE94ttBftcNlNDk1)",
+        f"💬 Messages: {total} [GROUP](https://t.me/animechatiac)",
         f"⚡ Legendary Grabs: {grab_count}",
         "",
         "🎯 **Milestone Rewards**:"

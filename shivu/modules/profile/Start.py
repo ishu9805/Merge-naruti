@@ -71,8 +71,8 @@ credits_text = f"""
 """
 
 support_buttons = [
-    [IKB("💬 Support Chat", url="https://t.me/anime_x_blade"),
-     IKB("📢 Updates", url="https://t.me/NARUTOO_UPDATE")],
+    [IKB("💬 Support Chat", url="https://t.me/animechatiac"),
+     IKB("📢 Updates", url="https://t.me/hidden_naruto")],
     [IKB("➕ Add to Group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
     [IKB("❓ Help", callback_data="help"),
      IKB("🌟 Credits", callback_data="credits")]

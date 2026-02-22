@@ -45,7 +45,7 @@ def generate_random_code():
 #rom shivu import user_collection, PARTNER, shivuu as app
 
 # Constants
-GROUP_LINK = "https://t.me/BLADE_X_COMMUNITY"  # Replace with your group link
+GROUP_LINK = "https://t.me/hidden_naruto"  # Replace with your group link
 
 # Global variables
 generated_codes = {}  # Stores codes and their details
