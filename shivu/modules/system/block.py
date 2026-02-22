@@ -181,8 +181,83 @@ async def blocklist_command(client: Client, message: Message):
 
 block_dic = {}
 
+
+async def _build_dm_start_url_pyro(client: Client) -> str:
+    try:
+        me = await client.get_me()
+        if getattr(me, "username", None):
+            return f"https://t.me/{me.username}?start=start"
+    except Exception:
+        pass
+    return "https://t.me/animechatiac"
+
+
+async def _build_dm_start_url_ptb(context: CallbackContext) -> str:
+    try:
+        username = getattr(context.bot, "username", None)
+        if not username:
+            me = await context.bot.get_me()
+            username = getattr(me, "username", None)
+        if username:
+            return f"https://t.me/{username}?start=start"
+    except Exception:
+        pass
+    return "https://t.me/animechatiac"
+
+
+async def _ensure_started_in_dm_pyro(client: Client, message: Message) -> bool:
+    if not message.from_user:
+        return False
+
+    if getattr(message.chat, "type", None) == "private":
+        return True
+
+    user_id = message.from_user.id
+    user_doc = await pmusers.find_one({"user_id": user_id})
+
+    if user_doc and not user_doc.get("blocked", False):
+        return True
+
+    start_link = await _build_dm_start_url_pyro(client)
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("✨ Start Bot In DM", url=start_link)]]
+    )
+    await message.reply_text(
+        "⚠️ Please start the bot in DM first (and make sure you haven't blocked it).",
+        reply_markup=keyboard,
+    )
+    return False
+
+
+async def _ensure_started_in_dm_ptb(update: Update, context: CallbackContext) -> bool:
+    user = update.effective_user
+    chat = update.effective_chat
+    if not user or not chat:
+        return False
+
+    if chat.type == "private":
+        return True
+
+    user_doc = await pmusers.find_one({"user_id": user.id})
+    if user_doc and not user_doc.get("blocked", False):
+        return True
+
+    start_link = await _build_dm_start_url_ptb(context)
+    keyboard = TgInlineKeyboardMarkup(
+        [[TgInlineKeyboardButton("✨ Start Bot In DM", url=start_link)]]
+    )
+    if update.effective_message:
+        await update.effective_message.reply_text(
+            "⚠️ Please start the bot in DM first (and make sure you haven't blocked it).",
+            reply_markup=keyboard,
+        )
+    return False
+
 def block_dec(func):
     async def wrapper(client, message: Message):
+        if not message.from_user:
+            return
+
         user_id = message.from_user.id
         if await is_blocked(user_id) or user_id in block_dic:
             reason = await get_block_reason(user_id)
@@ -190,9 +265,12 @@ def block_dec(func):
                 return await message.reply(f"You are blocked from using this bot.\nReason: {reason}")
             else:
                 return await message.reply("You are blocked from using this bot. The reason was not specified.")
+
+        if not await _ensure_started_in_dm_pyro(client, message):
+            return
+
         return await func(client, message)
     return wrapper
-
 def block_cbq(func):
     async def wrapper(client, callback_query: CallbackQuery):
         user_id = callback_query.from_user.id
@@ -224,7 +302,7 @@ async def close_callback(client: Client, callback_query: CallbackQuery):
     await callback_query.message.delete()
     await callback_query.answer("Closed", show_alert=False)
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton as TgInlineKeyboardButton, InlineKeyboardMarkup as TgInlineKeyboardMarkup
 from telegram.ext import CallbackContext
 
 def block_dec_ptb(func):
@@ -232,6 +310,10 @@ def block_dec_ptb(func):
         user_id = update.effective_user.id if update.effective_user else None
         if user_id and (await is_blocked(user_id) or user_id in block_dic):
             return
+
+        if not await _ensure_started_in_dm_ptb(update, context):
+            return
+
         return await func(update, context)
     return wrapper
 
