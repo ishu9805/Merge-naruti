@@ -1,6 +1,8 @@
 from shivu.modules import sudo_filter
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from pyrogram import Client, filters
+from telegram import Update, InlineKeyboardButton as TgInlineKeyboardButton, InlineKeyboardMarkup as TgInlineKeyboardMarkup
+from telegram.ext import CallbackContext
 import time
 
 from shivu.modules.watchers import block_watcher
@@ -266,9 +268,6 @@ def block_dec(func):
             else:
                 return await message.reply("You are blocked from using this bot. The reason was not specified.")
 
-        if not await _ensure_started_in_dm_pyro(client, message):
-            return
-
         return await func(client, message)
     return wrapper
 def block_cbq(func):
@@ -302,16 +301,10 @@ async def close_callback(client: Client, callback_query: CallbackQuery):
     await callback_query.message.delete()
     await callback_query.answer("Closed", show_alert=False)
 
-from telegram import Update, InlineKeyboardButton as TgInlineKeyboardButton, InlineKeyboardMarkup as TgInlineKeyboardMarkup
-from telegram.ext import CallbackContext
-
 def block_dec_ptb(func):
     async def wrapper(update: Update, context: CallbackContext):
         user_id = update.effective_user.id if update.effective_user else None
         if user_id and (await is_blocked(user_id) or user_id in block_dic):
-            return
-
-        if not await _ensure_started_in_dm_ptb(update, context):
             return
 
         return await func(update, context)

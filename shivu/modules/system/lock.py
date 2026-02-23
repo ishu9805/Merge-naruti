@@ -1,47 +1,97 @@
 from functools import wraps
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from datetime import datetime, timedelta
-from pymongo import MongoClient
+from pyrogram import StopPropagation
 import logging
 
-
-from telegram import Update
+from telegram import Update, InlineKeyboardButton as TgInlineKeyboardButton, InlineKeyboardMarkup as TgInlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from typing import Callable, Any
-from shivu import dm_collection
-
-
-
+from shivu import shivuups as app
 
 
 # Global command lock dictionary
 command_locksp = {}
 
 
-# Decorator to enforce DM start
+async def is_started(context: CallbackContext, user_id: int) -> bool:
+    try:
+        await context.bot.get_chat(user_id)
+        return True
+    except Exception:
+        return False
+
+
+async def is_started_pyro(client: Client, user_id: int) -> bool:
+    try:
+        await client.get_chat(user_id)
+        return True
+    except Exception:
+        return False
+
+
+async def _build_dm_start_url_pyro(client: Client) -> str:
+    try:
+        me = await client.get_me()
+        if getattr(me, "username", None):
+            return f"https://t.me/{me.username}?start=start"
+    except Exception:
+        pass
+    return "https://t.me/animechatiac"
+
+
+# Decorator to enforce DM start (PTB)
 def must_dm(func):
     @wraps(func)
     async def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
-        # Ensure weekly reset
+        if not update.effective_user or not update.effective_chat:
+            return
 
         user_id = update.effective_user.id
         chat_type = update.effective_chat.type
 
-        # Check if user started the bot in DM
-        if chat_type != "private":
-            user_data = dm_collection.find_one({"user_id": user_id})
-            if not user_data:
-                await update.message.reply_text(
-                    "⚠️ You must **start me in DM first** before using me in groups!\n"
-                    "Click here to start: [NARUTO](https://t.me/fancy_waifu_husbando_bot?start=start)"
-                )
-                return
+        if chat_type != "private" and not await is_started(context, user_id):
+            username = getattr(context.bot, "username", None)
+            if not username:
+                try:
+                    me = await context.bot.get_me()
+                    username = getattr(me, "username", None)
+                except Exception:
+                    username = None
 
-        # Execute the command if allowed
+            start_link = f"https://t.me/{username}?start=start" if username else "https://t.me/animechatiac"
+            keyboard = TgInlineKeyboardMarkup(
+                [[TgInlineKeyboardButton("✨ Start Bot In DM", url=start_link)]]
+            )
+            if update.effective_message:
+                await update.effective_message.reply_text(
+                    "⚠️ Please start the bot in DM first (and make sure you haven't blocked it).",
+                    reply_markup=keyboard,
+                )
+            return
+
         await func(update, context, *args, **kwargs)
 
     return wrapper
+
+
+@app.on_message(filters.group & filters.regex(r"^/"), group=-100)
+async def require_dm_start_for_all_commands(client: Client, message: Message):
+    if not message.from_user:
+        return
+
+    if await is_started_pyro(client, message.from_user.id):
+        return
+
+    start_link = await _build_dm_start_url_pyro(client)
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("✨ Start Bot In DM", url=start_link)]]
+    )
+    await message.reply_text(
+        "⚠️ Please start the bot in DM first (and make sure you haven't blocked it).",
+        reply_markup=keyboard,
+    )
+    raise StopPropagation
 
 
 def ptbcommand_lock(func: Callable) -> Callable:
