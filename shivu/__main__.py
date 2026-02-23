@@ -300,12 +300,7 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                 CELESTIAL_THRESHOLD_SPECIAL if chat_id == VALENTINE_SPECIAL_GROUP_ID else CELESTIAL_THRESHOLD_DEFAULT
             )
 
-        # Special rarity spawn only in the configured special group
-        if chat_id == VALENTINE_SPECIAL_GROUP_ID and total_message_counts[chat_id] >= valentine_spawn_thresholds[chat_id]:
-            await spawn_valentine_character(update, context)
-            valentine_spawn_thresholds[chat_id] = current_count + VALENTINE_THRESHOLD_SPECIAL
-            spawn_cooldowns[chat_id] = current_time
-            return
+        # Valentine/special-rarity auto spawns are disabled.
 
         # Celestial spawn check (separate from Valentine)
         if total_message_counts[chat_id] >= celestial_spawn_thresholds[chat_id]:
@@ -556,7 +551,8 @@ async def spawn_valentine_character(update: Update, context: CallbackContext) ->
         await update.effective_chat.send_message("No characters available to spawn right now.")
         return
 
-    valentine_characters = [c for c in alls_characters if c.get('rarity') in SPECIAL_SPAWN_RARITIES]
+    # Special spawn rarities are disabled from spawning.
+    valentine_characters = []
 
     if not valentine_characters:
         print("No configured special rarity characters found in the database.")
