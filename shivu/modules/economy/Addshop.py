@@ -80,6 +80,11 @@ def gen_code():
 def gen_session_id():
     return uuid.uuid4().hex[:6]
 
+
+def build_dm_confirm_link(bot_username: str, code: str, owner_id: int, session: str):
+    payload = f"shopconfirm_{code}_{owner_id}_{session}"
+    return f"https://t.me/{bot_username}?start={payload}"
+
 def shop_expires_at():
     return now() + timedelta(hours=SHOP_TTL_HOURS)
 
@@ -355,6 +360,95 @@ async def buy_step1(client, cq):
     # Build confirm/cancel buttons — include owner & session to keep chain validated
     cb_confirm = f"confirmbuy_{code}_{owner_str}_{session}"
     cb_cancel = f"cancelbuy_{code}_{owner_str}_{session}"
+    confirm_kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Confirm", callback_data=cb_confirm),
+         InlineKeyboardButton("❌ Cancel", callback_data=cb_cancel)]
+    ])
+
+    caption = (
+        f"🛒 **Purchase Confirmation**\n\n"
+        f"**{char.get('name')}**\n"
+        f"📺 {char.get('anime')}\n"
+        f"✨ {char.get('rarity')}\n\n"
+        f"💰 Price: `{price}` {currency_field}\n"
+        f"💵 Your balance: `{bal}` {currency_field}\n\n"
+        "Proceed with purchase?"
+    )
+
+    bot_username = (await client.get_me()).username
+    dm_link = build_dm_confirm_link(bot_username, code, requester, session)
+
+    try:
+        await client.send_photo(chat_id=requester, photo=char.get("img_url"), caption=caption, reply_markup=confirm_kb)
+
+        inline_kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📩 Open DM to Confirm", url=dm_link)]
+        ])
+        await cq.message.edit_caption(
+            caption=(
+                f"✅ **Confirmation sent in DM**\n\n"
+                f"Character: **{char.get('name')}**\n"
+                f"💰 Price: `{price}` {currency_field}\n\n"
+                "Tap the button below and confirm purchase in bot PM."
+            ),
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=inline_kb,
+        )
+        await cq.answer("Check DM for confirmation.")
+    except Exception:
+        logging.exception("Failed to send confirmation photo")
+        try:
+            await cq.message.edit_caption(
+                caption=(
+                    "⚠️ **Unable to auto-send confirmation in DM.**\n\n"
+                    "Open bot PM and tap below to continue purchase."
+                ),
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📩 Open DM", url=dm_link)]
+                ]),
+            )
+        except Exception:
+            pass
+        await cq.answer("❌ Failed to show confirmation. Open bot PM.", show_alert=True)
+
+
+@app.on_message(filters.command("start") & filters.private)
+async def shop_start_confirm(client: Client, message):
+    if len(message.command) < 2:
+        return
+
+    payload = message.command[1]
+    if not payload.startswith("shopconfirm_"):
+        return
+
+    parts = payload.split("_", 3)
+    if len(parts) < 4:
+        return await message.reply_text("❌ Invalid confirmation link.")
+
+    _, code, owner_str, session = parts
+    try:
+        owner_id = int(owner_str)
+    except Exception:
+        return await message.reply_text("❌ Invalid confirmation owner.")
+
+    if message.from_user.id != owner_id:
+        return await message.reply_text("❌ This confirmation link belongs to another user.")
+
+    item = await daily_shop_collection.find_one({"code": code})
+    if not item:
+        return await message.reply_text("❌ Item not found or expired.")
+
+    char = item["character"]
+    price = item["price"]
+    currency = item.get("currency", "tokens")
+    currency_field = normalize_currency_field(currency) or "tokens"
+
+    user = await user_collection.find_one({"id": owner_id}) or {}
+    bal = user.get(currency_field, 0)
+
+    cb_confirm = f"confirmbuy_{code}_{owner_str}_{session}"
+    cb_cancel = f"cancelbuy_{code}_{owner_str}_{session}"
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("✅ Confirm", callback_data=cb_confirm),
          InlineKeyboardButton("❌ Cancel", callback_data=cb_cancel)]
@@ -371,11 +465,9 @@ async def buy_step1(client, cq):
     )
 
     try:
-        await client.send_photo(chat_id=requester, photo=char.get("img_url"), caption=caption, reply_markup=kb)
-        await cq.answer()
+        await message.reply_photo(photo=char.get("img_url"), caption=caption, reply_markup=kb)
     except Exception:
-        logging.exception("Failed to send confirmation photo")
-        await cq.answer("❌ Failed to show confirmation. Try in PM.", show_alert=True)
+        await message.reply_text(caption, reply_markup=kb, parse_mode=ParseMode.MARKDOWN)
 
 # -------------------------
 # BUY STEP 2 (Confirm handler) - semi-strict owner check
