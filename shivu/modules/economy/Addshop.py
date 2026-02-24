@@ -15,6 +15,8 @@ from pyrogram.enums import ParseMode
 from datetime import datetime, timedelta
 from bson import ObjectId
 from pymongo import ReturnDocument
+from contextlib import suppress
+from pyrogram.errors import MessageNotModified
 import uuid
 import math
 import random
@@ -153,6 +155,11 @@ def sort_items_list(items, sort_key):
     if sort_key == "rarity":
         return sorted(items, key=lambda x: x["character"].get("rarity",""))
     return items
+
+
+async def safe_callback_answer(cq, text=None, show_alert=False):
+    with suppress(Exception):
+        await cq.answer(text=text, show_alert=show_alert)
 
 # -------------------------
 # SHOP GENERATION (2-day)
@@ -314,71 +321,77 @@ async def handle_shop_inline(client: Client, inline_query: InlineQuery):
 # -------------------------
 @app.on_callback_query(filters.regex(r"^buyshop_"))
 async def buy_step1(client, cq):
-    data = cq.data  # e.g. buyshop_CODE_owner_session
-    parts = data.split("_", 3)
-    if len(parts) < 4:
-        return await cq.answer("Invalid request.", show_alert=True)
-    _, code, owner_str, session = parts
     try:
-        owner_id = int(owner_str)
-    except Exception:
-        owner_id = None
+        data = cq.data  # e.g. buyshop_CODE_owner_session
+        parts = data.split("_", 3)
+        if len(parts) < 4:
+            await safe_callback_answer(cq, "Invalid request.", show_alert=True)
+            return
+        _, code, owner_str, session = parts
+        try:
+            owner_id = int(owner_str)
+        except Exception:
+            owner_id = None
 
-    requester = cq.from_user.id
+        requester = cq.from_user.id
 
-    # Semi-strict: allow viewing but only owner can proceed to buy
-    if requester != owner_id:
-        return await cq.answer("❌ You cannot buy from someone else's shop.", show_alert=True)
+        # Semi-strict: allow viewing but only owner can proceed to buy
+        if requester != owner_id:
+            await safe_callback_answer(cq, "❌ You cannot buy from someone else's shop.", show_alert=True)
+            return
 
-    item = await daily_shop_collection.find_one({"code": code})
-    if not item:
-        return await cq.answer("❌ Item not found or expired.", show_alert=True)
+        item = await daily_shop_collection.find_one({"code": code})
+        if not item:
+            await safe_callback_answer(cq, "❌ Item not found or expired.", show_alert=True)
+            return
 
-    char = item["character"]
-    price = item["price"]
-    currency = item.get("currency", "tokens")
-    currency_field = normalize_currency_field(currency) or "tokens"
+        char = item["character"]
+        price = item["price"]
+        currency = item.get("currency", "tokens")
+        currency_field = normalize_currency_field(currency) or "tokens"
 
-    # check ownership
-    already = await user_collection.find_one({"id": requester, "characters.id": char.get("id")})
-    if already:
-        return await cq.answer("❌ You already own this character.", show_alert=True)
+        # check ownership
+        already = await user_collection.find_one({"id": requester, "characters.id": char.get("id")})
+        if already:
+            await safe_callback_answer(cq, "❌ You already own this character.", show_alert=True)
+            return
 
-    # global limit quick check
-    pool = item.get("pool")
-    if pool in GLOBAL_LIMITS:
-        count = await daily_shop_collection.count_documents({"character.id": char.get("id"), "sold_to.0": {"$exists": True}})
-        if count >= GLOBAL_LIMITS[pool]:
-            return await cq.answer("❌ This character already reached its global limit.", show_alert=True)
+        # global limit quick check
+        pool = item.get("pool")
+        if pool in GLOBAL_LIMITS:
+            count = await daily_shop_collection.count_documents({"character.id": char.get("id"), "sold_to.0": {"$exists": True}})
+            if count >= GLOBAL_LIMITS[pool]:
+                await safe_callback_answer(cq, "❌ This character already reached its global limit.", show_alert=True)
+                return
 
-    # balance check
-    user = await user_collection.find_one({"id": requester}) or {}
-    bal = user.get(currency_field, 0)
-    if bal < price:
-        return await cq.answer(f"❌ Not enough {currency_field}.\nYou have: {bal}\nNeed: {price}", show_alert=True)
+        # balance check
+        user = await user_collection.find_one({"id": requester}) or {}
+        bal = user.get(currency_field, 0)
+        if bal < price:
+            await safe_callback_answer(cq, f"❌ Not enough {currency_field}.\nYou have: {bal}\nNeed: {price}", show_alert=True)
+            return
 
-    # Build confirm/cancel buttons — include owner & session to keep chain validated
-    cb_confirm = f"confirmbuy_{code}_{owner_str}_{session}"
-    cb_cancel = f"cancelbuy_{code}_{owner_str}_{session}"
-    confirm_kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Confirm", callback_data=cb_confirm),
-         InlineKeyboardButton("❌ Cancel", callback_data=cb_cancel)]
-    ])
+        # Build confirm/cancel buttons — include owner & session to keep chain validated
+        cb_confirm = f"confirmbuy_{code}_{owner_str}_{session}"
+        cb_cancel = f"cancelbuy_{code}_{owner_str}_{session}"
+        confirm_kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Confirm", callback_data=cb_confirm),
+             InlineKeyboardButton("❌ Cancel", callback_data=cb_cancel)]
+        ])
 
-    caption = (
-        f"🛒 **Purchase Confirmation**\n\n"
-        f"**{char.get('name')}**\n"
-        f"📺 {char.get('anime')}\n"
-        f"✨ {char.get('rarity')}\n\n"
-        f"💰 Price: `{price}` {currency_field}\n"
-        f"💵 Your balance: `{bal}` {currency_field}\n\n"
-        "Proceed with purchase?"
-    )
+        caption = (
+            f"🛒 **Purchase Confirmation**\n\n"
+            f"**{char.get('name')}**\n"
+            f"📺 {char.get('anime')}\n"
+            f"✨ {char.get('rarity')}\n\n"
+            f"💰 Price: `{price}` {currency_field}\n"
+            f"💵 Your balance: `{bal}` {currency_field}\n\n"
+            "Proceed with purchase?"
+        )
 
-    bot_username = (await client.get_me()).username
-    dm_link = build_dm_confirm_link(bot_username, code, requester, session)
+        bot_username = (await client.get_me()).username
+        dm_link = build_dm_confirm_link(bot_username, code, requester, session)
 
-    try:
         await client.send_photo(chat_id=requester, photo=char.get("img_url"), caption=caption, reply_markup=confirm_kb)
 
         inline_kb = InlineKeyboardMarkup([
@@ -394,23 +407,12 @@ async def buy_step1(client, cq):
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=inline_kb,
         )
-        await cq.answer("Check DM for confirmation.")
+        await safe_callback_answer(cq, "Check DM for confirmation.")
+    except MessageNotModified:
+        await safe_callback_answer(cq, "Already updated.")
     except Exception:
         logging.exception("Failed to send confirmation photo")
-        try:
-            await cq.message.edit_caption(
-                caption=(
-                    "⚠️ **Unable to auto-send confirmation in DM.**\n\n"
-                    "Open bot PM and tap below to continue purchase."
-                ),
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📩 Open DM", url=dm_link)]
-                ]),
-            )
-        except Exception:
-            pass
-        await cq.answer("❌ Failed to show confirmation. Open bot PM.", show_alert=True)
+        await safe_callback_answer(cq, "❌ Failed to show confirmation. Open bot PM.", show_alert=True)
 
 
 @app.on_message(filters.command("start") & filters.private)
@@ -474,75 +476,81 @@ async def shop_start_confirm(client: Client, message):
 # -------------------------
 @app.on_callback_query(filters.regex(r"^confirmbuy_"))
 async def buy_confirm(client, cq):
-    data = cq.data
-    parts = data.split("_", 3)
-    if len(parts) < 4:
-        return await cq.answer("Invalid request.", show_alert=True)
-    _, code, owner_str, session = parts
     try:
-        owner_id = int(owner_str)
-    except Exception:
-        owner_id = None
+        data = cq.data
+        parts = data.split("_", 3)
+        if len(parts) < 4:
+            await safe_callback_answer(cq, "Invalid request.", show_alert=True)
+            return
+        _, code, owner_str, session = parts
+        try:
+            owner_id = int(owner_str)
+        except Exception:
+            owner_id = None
 
-    requester = cq.from_user.id
-    if requester != owner_id:
-        return await cq.answer("❌ This confirmation belongs to another user.", show_alert=True)
+        requester = cq.from_user.id
+        if requester != owner_id:
+            await safe_callback_answer(cq, "❌ This confirmation belongs to another user.", show_alert=True)
+            return
 
-    item = await daily_shop_collection.find_one({"code": code})
-    if not item:
-        return await cq.answer("❌ Item expired.", show_alert=True)
+        item = await daily_shop_collection.find_one({"code": code})
+        if not item:
+            await safe_callback_answer(cq, "❌ Item expired.", show_alert=True)
+            return
 
-    char = item["character"]
-    char_id = char.get("id")
-    pool = item.get("pool")
-    price = item.get("price")
-    currency = item.get("currency", "tokens")
-    currency_field = normalize_currency_field(currency) or "tokens"
+        char = item["character"]
+        char_id = char.get("id")
+        pool = item.get("pool")
+        price = item.get("price")
+        currency = item.get("currency", "tokens")
+        currency_field = normalize_currency_field(currency) or "tokens"
 
-    # ownership check
-    already = await user_collection.find_one({"id": requester, "characters.id": char_id})
-    if already:
-        return await cq.answer("❌ You already own this character.", show_alert=True)
+        # ownership check
+        already = await user_collection.find_one({"id": requester, "characters.id": char_id})
+        if already:
+            await safe_callback_answer(cq, "❌ You already own this character.", show_alert=True)
+            return
 
-    # global limit check
-    if pool in GLOBAL_LIMITS:
-        count = await daily_shop_collection.count_documents({"character.id": char_id, "sold_to.0": {"$exists": True}})
-        if count >= GLOBAL_LIMITS[pool]:
-            return await cq.answer("❌ Global purchase limit reached for this character.", show_alert=True)
+        # global limit check
+        if pool in GLOBAL_LIMITS:
+            count = await daily_shop_collection.count_documents({"character.id": char_id, "sold_to.0": {"$exists": True}})
+            if count >= GLOBAL_LIMITS[pool]:
+                await safe_callback_answer(cq, "❌ Global purchase limit reached for this character.", show_alert=True)
+                return
 
-    # deduct funds atomically
-    user_filter = {"id": requester, currency_field: {"$gte": price}}
-    updated_user = await user_collection.find_one_and_update(
-        user_filter,
-        {"$inc": {currency_field: -price}},
-        return_document=ReturnDocument.AFTER
-    )
+        # deduct funds atomically
+        user_filter = {"id": requester, currency_field: {"$gte": price}}
+        updated_user = await user_collection.find_one_and_update(
+            user_filter,
+            {"$inc": {currency_field: -price}},
+            return_document=ReturnDocument.AFTER
+        )
 
-    if not updated_user:
-        return await cq.answer(f"❌ Insufficient {currency_field} to complete purchase.", show_alert=True)
+        if not updated_user:
+            await safe_callback_answer(cq, f"❌ Insufficient {currency_field} to complete purchase.", show_alert=True)
+            return
 
-    # add character to user's characters array
-    await user_collection.update_one(
-        {"id": requester},
-        {"$push": {"characters": {
-            "_id": ObjectId(),
-            "id": char_id,
-            "name": char.get("name"),
-            "anime": char.get("anime"),
-            "rarity": char.get("rarity"),
-            "img_url": char.get("img_url"),
-            "acquired_at": now()
-        }}}
-    )
+        # add character to user's characters array
+        await user_collection.update_one(
+            {"id": requester},
+            {"$push": {"characters": {
+                "_id": ObjectId(),
+                "id": char_id,
+                "name": char.get("name"),
+                "anime": char.get("anime"),
+                "rarity": char.get("rarity"),
+                "img_url": char.get("img_url"),
+                "acquired_at": now()
+            }}}
+        )
 
-    # append sold_to only if not already present
-    await daily_shop_collection.update_one(
-        {"code": code, "sold_to": {"$ne": requester}},
-        {"$push": {"sold_to": requester}}
-    )
+        # append sold_to only if not already present
+        await daily_shop_collection.update_one(
+            {"code": code, "sold_to": {"$ne": requester}},
+            {"$push": {"sold_to": requester}}
+        )
 
-    # Send success message to owner
-    try:
+        # Send success message to owner
         await client.send_photo(
             chat_id=requester,
             photo=char.get("img_url"),
@@ -552,34 +560,36 @@ async def buy_confirm(client, cq):
                 f"✨ Added to your collection."
             )
         )
-        await cq.answer()
+        await safe_callback_answer(cq, "✅ Purchase completed.")
     except Exception:
-        await cq.answer("✅ Purchase completed. Check your messages.", show_alert=True)
+        await safe_callback_answer(cq, "✅ Purchase completed. Check your messages.", show_alert=True)
 
 # -------------------------
 # CANCEL (semi-strict)
 # -------------------------
 @app.on_callback_query(filters.regex(r"^cancelbuy_"))
 async def buy_cancel(client, cq):
-    data = cq.data
-    parts = data.split("_", 3)
-    if len(parts) < 4:
-        return await cq.answer("Invalid request.", show_alert=True)
-    _, code, owner_str, session = parts
     try:
-        owner_id = int(owner_str)
-    except Exception:
-        owner_id = None
+        data = cq.data
+        parts = data.split("_", 3)
+        if len(parts) < 4:
+            await safe_callback_answer(cq, "Invalid request.", show_alert=True)
+            return
+        _, code, owner_str, session = parts
+        try:
+            owner_id = int(owner_str)
+        except Exception:
+            owner_id = None
 
-    requester = cq.from_user.id
-    if requester != owner_id:
-        return await cq.answer("❌ You cannot cancel someone else's purchase.", show_alert=True)
+        requester = cq.from_user.id
+        if requester != owner_id:
+            await safe_callback_answer(cq, "❌ You cannot cancel someone else's purchase.", show_alert=True)
+            return
 
-    try:
         await client.send_message(chat_id=requester, text="❌ Purchase cancelled.")
-        await cq.answer()
+        await safe_callback_answer(cq, "Purchase cancelled.")
     except Exception:
-        await cq.answer("❌ Purchase cancelled.", show_alert=True)
+        await safe_callback_answer(cq, "❌ Purchase cancelled.", show_alert=True)
 
 # -------------------------
 # OPTIONAL: force regenerate shop (owner only if you choose to restrict)

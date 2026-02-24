@@ -2,9 +2,12 @@ import asyncio
 #from telethon import events, Button
 #from telethon.sync import TelegramClient and 
 from pymongo import MongoClient
-from pyrogram import Client, filters
+from contextlib import suppress
+from pyrogram import Client, StopPropagation, filters
+from pyrogram.errors import MessageNotModified
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu.modules.gift import on_gift_callback_query, on_trade_callback_query
+from shivu.modules.economy.Addshop import buy_step1, buy_confirm, buy_cancel
 from shivu.modules.fav import button
 from shivu.modules.Animelist import anime_letter_callback, anime_selection_callback, back_to_az_callback
 from shivu.modules.Task import confirm_claim, cancel_claim # confirm_reset, cancel_reset
@@ -30,6 +33,10 @@ from shivu import (
 # Handler for callback queries
 @app.on_callback_query()
 async def callback_query_handler(client, callback_query):
+    async def safe_answer(text=None, show_alert=False):
+        with suppress(Exception):
+            await callback_query.answer(text=text, show_alert=show_alert)
+
     try:
         data = callback_query.data
         """if data.startwith("tttconfirm_"):
@@ -49,13 +56,25 @@ async def callback_query_handler(client, callback_query):
         
         if data.startswith("approve_pfp"):
             await approve_profile_media(client, callback_query)
+            await safe_answer()
         elif data.startswith("reject_pfp"):
             await reject_profile_media(client, callback_query)
+            await safe_answer()
                                 
         elif data.startswith("sgift") or data.startswith("cgift"):
             await on_gift_callback_query(client, callback_query)
         elif data.startswith("confirm_trade_receiver:") or data.startswith("cancel_trade:"):
             await on_trade_callback_query(client, callback_query)
+
+        elif data.startswith("buyshop_"):
+            await buy_step1(client, callback_query)
+            raise StopPropagation
+        elif data.startswith("confirmbuy_"):
+            await buy_confirm(client, callback_query)
+            raise StopPropagation
+        elif data.startswith("cancelbuy_"):
+            await buy_cancel(client, callback_query)
+            raise StopPropagation
 
         elif data == "rarity_mode:see_by_rarities":
             # Create buttons for rarities (only emojis)
@@ -111,6 +130,7 @@ async def callback_query_handler(client, callback_query):
                 caption="Select a rarity:",
                 reply_markup=InlineKeyboardMarkup(rarities_buttons)
             )
+            await safe_answer("Choose your rarity mode.")
 
         elif data.startswith("rarity:"):
             # Update the user's rarity mode in the database
@@ -121,6 +141,7 @@ async def callback_query_handler(client, callback_query):
                 upsert=True
             )
             await callback_query.edit_message_caption(f"Your rarity mode is now set to {rarity_mode}.")
+            await safe_answer("Rarity mode updated.")
 
         elif data == "rarity_mode:All":
             # Set the rarity mode to "All"
@@ -130,6 +151,7 @@ async def callback_query_handler(client, callback_query):
                 upsert=True
             )
             await callback_query.edit_message_caption("Your rarity mode is now set to All.")
+            await safe_answer("Rarity mode set to All.")
 
         elif data.startswith("fconfirm") or data.startswith("fcancel"):
             await button(client, callback_query)
@@ -138,7 +160,11 @@ async def callback_query_handler(client, callback_query):
             return
 
     except Exception as e:
-        await callback_query.answer("An error occurred. Please try again.", show_alert=True)
+        if isinstance(e, MessageNotModified):
+            await safe_answer("Nothing changed.")
+            return
+
+        await safe_answer("An error occurred. Please try again.", show_alert=True)
         print(f"Error handling callback query: {e}")
 
 # Start the bot
