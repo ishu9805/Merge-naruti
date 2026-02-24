@@ -397,7 +397,7 @@ async def buy_step1(client, cq):
         inline_kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("📩 Open DM to Confirm", url=dm_link)]
         ])
-        await cq.message.edit_caption(
+        await cq.edit_message_caption(
             caption=(
                 f"✅ **Confirmation sent in DM**\n\n"
                 f"Character: **{char.get('name')}**\n"
@@ -412,6 +412,19 @@ async def buy_step1(client, cq):
         await safe_callback_answer(cq, "Already updated.")
     except Exception:
         logging.exception("Failed to send confirmation photo")
+        try:
+            await cq.edit_message_caption(
+                caption=(
+                    "⚠️ **Unable to auto-send confirmation in DM.**\n\n"
+                    "Open bot PM and tap below to continue purchase."
+                ),
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📩 Open DM", url=dm_link)]
+                ]),
+            )
+        except Exception:
+            pass
         await safe_callback_answer(cq, "❌ Failed to show confirmation. Open bot PM.", show_alert=True)
 
 
