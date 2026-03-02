@@ -434,6 +434,15 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         21: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'
     }
 
+    def normalize_spawn_rarity(raw_rarity: str) -> str:
+        if raw_rarity == "1🧧 𝙀𝙫𝙚𝙣𝙩𝙨":
+            return "🧧 𝙀𝙫𝙚𝙣𝙩𝙨"
+        return raw_rarity
+
+    def is_holi_character(char_doc: dict) -> bool:
+        return "🎨" in (char_doc.get("name") or "")
+
+
     spawn_counts = {
         '⚪️ Common': 5,
         '🟣 Rare': 7,
@@ -455,6 +464,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         #'⚪️ Common': 5,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 1,
+        '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': 1,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
         '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0
     }
@@ -464,7 +474,23 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     
     characters_to_spawn = []
     for rarity, count in spawn_counts.items():
-        characters_to_spawn.extend([c for c in alls_characters if c.get('id') not in sent_characters[chat_id] and c.get('rarity') == rarity] * count)
+        if count <= 0:
+            continue
+
+        def match_spawn_rarity(char_doc: dict) -> bool:
+            if char_doc.get('id') in sent_characters[chat_id]:
+                return False
+
+            char_rarity = normalize_spawn_rarity(char_doc.get('rarity', ''))
+            if char_rarity == rarity:
+                return True
+
+            if rarity == '🎨 Artistic' and is_holi_character(char_doc):
+                return True
+
+            return False
+
+        characters_to_spawn.extend([c for c in alls_characters if match_spawn_rarity(c)] * count)
 
     if not characters_to_spawn:
         characters_to_spawn = alls_characters
@@ -474,7 +500,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     
    
 
-    rarity_name = rarities.get(character['rarity'], f'{character["rarity"]}')
+    normalized_rarity = normalize_spawn_rarity(character.get('rarity', ''))
+    rarity_name = rarities.get(normalized_rarity, normalized_rarity)
 
     sent_characters[chat_id].append(character.get('id'))
     last_characters[chat_id] = character
