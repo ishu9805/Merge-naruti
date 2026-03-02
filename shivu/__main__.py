@@ -44,11 +44,13 @@ all_characters = []
 valentine_spawn_thresholds = {} 
 amv_spawn_thresholds = {} # Store random thresholds for Valentine spawn
 celestial_spawn_thresholds = {}
+holi_spawn_thresholds = {}
 reaction_list = [ReactionEmoji.THUMBS_UP, ReactionEmoji.EYES, ReactionEmoji.CLAPPING_HANDS, ReactionEmoji.BOTTLE_WITH_POPPING_CORK, ReactionEmoji.DOVE_OF_PEACE, ReactionEmoji.GRINNING_FACE_WITH_STAR_EYES, ReactionEmoji.HEART_ON_FIRE, ReactionEmoji.PARTY_POPPER]
 current_amv_character = {}  # Tracks AMV characters per chat
 amv_claim_limit = 1  #
 
 AMV_GROUP_ID = -1002783891820 # Your main group ID
+HOLI_SPECIAL_GROUP_ID = "-1002783891820"
 VALENTINE_SPECIAL_GROUP_ID = "-1002783891820"
 VALENTINE_THRESHOLD_SPECIAL = 300
 VALENTINE_THRESHOLD_DEFAULT = 1000
@@ -262,6 +264,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             else:
                 valentine_spawn_thresholds[chat_id] = VALENTINE_THRESHOLD_DEFAULT
                 celestial_spawn_thresholds[chat_id] = CELESTIAL_THRESHOLD_DEFAULT
+
+            if chat_id == HOLI_SPECIAL_GROUP_ID:
+                holi_spawn_thresholds[chat_id] = random.randint(180, 320)
             
             # Special AMV counter for the designated group
             if chat_id == "-1002783891820":  # AMV_GROUP_ID as string
@@ -301,6 +306,16 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
             )
 
         # Valentine/special-rarity auto spawns are disabled.
+
+        # Holi spawn check for configured group
+        if chat_id == HOLI_SPECIAL_GROUP_ID:
+            if chat_id not in holi_spawn_thresholds:
+                holi_spawn_thresholds[chat_id] = current_count + random.randint(180, 320)
+            if total_message_counts[chat_id] >= holi_spawn_thresholds[chat_id]:
+                await spawn_holi_character(update, context)
+                holi_spawn_thresholds[chat_id] = current_count + random.randint(180, 320)
+                spawn_cooldowns[chat_id] = current_time
+                return
 
         # Celestial spawn check (separate from Valentine)
         if total_message_counts[chat_id] >= celestial_spawn_thresholds[chat_id]:
@@ -796,6 +811,51 @@ async def slock(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f"❌ Character {character_id} not found.")
 
 
+async def spawn_holi_character(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+
+    if str(chat_id) != HOLI_SPECIAL_GROUP_ID:
+        return
+
+    if chat_id not in sent_characters:
+        sent_characters[chat_id] = []
+
+    def normalize_spawn_rarity(raw_rarity: str) -> str:
+        return "🧧 𝙀𝙫𝙚𝙣𝙩𝙨" if raw_rarity == "1🧧 𝙀𝙫𝙚𝙣𝙩𝙨" else raw_rarity
+
+    holi_characters = [
+        c for c in all_characters
+        if not c.get('slock', False)
+        and c.get('id') not in sent_characters[chat_id]
+        and (
+            "🎨" in (c.get('name') or "")
+            or normalize_spawn_rarity(c.get('rarity', '')) == "🧧 𝙀𝙫𝙚𝙣𝙩𝙨"
+        )
+    ]
+
+    if not holi_characters:
+        return
+
+    character = random.choice(holi_characters)
+    sent_characters[chat_id].append(character.get('id'))
+    last_characters[chat_id] = character
+
+    if chat_id in first_correct_guesses:
+        del first_correct_guesses[chat_id]
+
+    caption = (
+        "🎨 *Holi Special Character Appeared!*\n\n"
+        "Guess their name with `/guess [name]` to claim this colorful drop! 🧧"
+    )
+
+    if character.get('img_url'):
+        await context.bot.send_photo(chat_id=chat_id, photo=character['img_url'], caption=caption, parse_mode='Markdown')
+    elif character.get('vid_url'):
+        await context.bot.send_video(chat_id=chat_id, video=character['vid_url'], caption=caption, parse_mode='Markdown', supports_streaming=True)
+
+    await send_spawn_log(character, chat_id, context)
+
+
 async def spawn_monsoon_character(update: Update, context: CallbackContext) -> None:
     # Temporary alias until dedicated monsoon spawn logic is added
     await spawn_summer_character(update, context)
@@ -806,7 +866,7 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         return
     
     if not context.args or len(context.args) < 1:
-        await update.message.reply_text("Usage: /spawn {char|amv|summer|celestial|valentine|monsoon}")
+        await update.message.reply_text("Usage: /spawn {char|amv|summer|celestial|valentine|monsoon|holi}")
         return
     
     game_type = context.args[0].lower()
@@ -823,6 +883,8 @@ async def now_command(update: Update, context: CallbackContext) -> None:
         await spawn_valentine_character(update, context)
     elif game_type == 'monsoon':
         await spawn_monsoon_character(update, context)
+    elif game_type == 'holi':
+        await spawn_holi_character(update, context)
         
 
 @block_dec_ptb
