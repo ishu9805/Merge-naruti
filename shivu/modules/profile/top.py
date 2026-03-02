@@ -410,13 +410,28 @@ async def resolve_group_line(group_doc: dict, rank: int) -> str:
     return f"{rank}. <b>{group_name}</b> ➾ <b>{count}</b>"
 
 
-async def build_leaderboard_caption(mode: str) -> str:
+async def get_user_rank_by_metric(user_id: int, metric: str):
+    user_doc = await user_collection.find_one({"id": user_id}, {metric: 1, "id": 1})
+    if not user_doc:
+        return None
+
+    value = user_doc.get(metric, 0)
+    higher_count = await user_collection.count_documents({metric: {"$gt": value}})
+    return higher_count + 1
+
+
+async def build_leaderboard_caption(mode: str, requester_id=None) -> str:
     if mode == "top":
         cursor = user_collection.find({}, {"id": 1, "username": 1, "first_name": 1, "total_characters": 1}).sort("total_characters", -1).limit(10)
         data = await cursor.to_list(length=10)
         lines = ["<b>TOP 10 USERS WITH MOST CHARACTERS</b>", ""]
         for i, user in enumerate(data, start=1):
             lines.append(await resolve_user_line(user, "total_characters", i))
+
+        if requester_id is not None:
+            my_rank = await get_user_rank_by_metric(requester_id, "total_characters")
+            lines.append("")
+            lines.append(f"<b>My Rank:</b> <b>{my_rank if my_rank is not None else 'Not ranked yet'}</b>")
         return "\n".join(lines)
 
     if mode == "topgroups":
@@ -436,6 +451,11 @@ async def build_leaderboard_caption(mode: str) -> str:
         lines = ["<b>Top 10 Users by Coins:</b>", ""]
         for i, user in enumerate(data, start=1):
             lines.append(await resolve_user_line(user, "coins", i) + " coins")
+
+        if requester_id is not None:
+            my_rank = await get_user_rank_by_metric(requester_id, "coins")
+            lines.append("")
+            lines.append(f"<b>My Rank:</b> <b>{my_rank if my_rank is not None else 'Not ranked yet'}</b>")
         return "\n".join(lines)
 
     if mode == "tokentop":
@@ -447,13 +467,18 @@ async def build_leaderboard_caption(mode: str) -> str:
         lines = ["<b>Top 10 Users by Tokens:</b>", ""]
         for i, user in enumerate(data, start=1):
             lines.append(await resolve_user_line(user, "tokens", i) + " tokens")
+
+        if requester_id is not None:
+            my_rank = await get_user_rank_by_metric(requester_id, "tokens")
+            lines.append("")
+            lines.append(f"<b>My Rank:</b> <b>{my_rank if my_rank is not None else 'Not ranked yet'}</b>")
         return "\n".join(lines)
 
     return "<b>Leaderboard not found.</b>"
 
 
-async def send_or_edit_leaderboard(target_message, mode: str, edit: bool = False):
-    caption = await build_leaderboard_caption(mode)
+async def send_or_edit_leaderboard(target_message, mode: str, requester_id=None, edit: bool = False):
+    caption = await build_leaderboard_caption(mode, requester_id=requester_id)
     markup = leaderboard_keyboard_ptb()
 
     if edit:
@@ -472,7 +497,7 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
         return
 
     try:
-        await send_or_edit_leaderboard(update.message, "topgroups", edit=False)
+        await send_or_edit_leaderboard(update.message, "topgroups", requester_id=user_id, edit=False)
     except Exception as e:
         LOGGER.error(f"Error in global_leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the leaderboard.")
@@ -515,7 +540,7 @@ async def leaderboard(update: Update, context: CallbackContext) -> None:
         return
 
     try:
-        await send_or_edit_leaderboard(update.message, "top", edit=False)
+        await send_or_edit_leaderboard(update.message, "top", requester_id=user_id, edit=False)
     except Exception as e:
         LOGGER.error(f"Error in leaderboard: {e}")
         await update.message.reply_text("An error occurred while generating the user leaderboard.")
@@ -534,7 +559,7 @@ async def switch_leaderboard_callback(update: Update, context: CallbackContext) 
         return
 
     try:
-        await send_or_edit_leaderboard(query.message, mode, edit=True)
+        await send_or_edit_leaderboard(query.message, mode, requester_id=query.from_user.id, edit=True)
     except Exception as e:
         LOGGER.error(f"Error in switch leaderboard callback: {e}")
         await query.answer("Failed to load leaderboard.", show_alert=True)
