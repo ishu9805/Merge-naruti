@@ -310,10 +310,10 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
         # Holi spawn check for configured group
         if chat_id == HOLI_SPECIAL_GROUP_ID:
             if chat_id not in holi_spawn_thresholds:
-                holi_spawn_thresholds[chat_id] = current_count + random.randint(180, 320)
+                holi_spawn_thresholds[chat_id] = current_count + random.randint(500, 800)
             if total_message_counts[chat_id] >= holi_spawn_thresholds[chat_id]:
                 await spawn_holi_character(update, context)
-                holi_spawn_thresholds[chat_id] = current_count + random.randint(180, 320)
+                holi_spawn_thresholds[chat_id] = current_count + random.randint(500, 800)
                 spawn_cooldowns[chat_id] = current_time
                 return
 
@@ -479,7 +479,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         #'⚪️ Common': 5,
         '🎄 Christmas Special': 0,
         '🎭 Cosplay Master 🎭': 1,
-        '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': 1,
+        '🧧 𝙀𝙫𝙚𝙣𝙩𝙨': 0,
         '🪐 𝙊𝙢𝙣𝙞𝙫𝙚𝙧𝙨𝙖𝙡 🪐': 0,
         '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣': 0
     }
