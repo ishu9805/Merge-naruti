@@ -110,6 +110,42 @@ async def build_user_links(top_users, offset=0, limit=10, use_userbot=True):
                 usernames.append(f"{i}. [User {user_id}](tg://user?id={user_id}) ×{user_info['count']}")
     return usernames
 
+
+async def build_check_caption_and_keyboard(waifu_id: str, offset: int = 0, limit: int = 10):
+    userbot_online = is_userbot_running()
+
+    waifu = await get_character_info(waifu_id)
+    if not waifu:
+        return None, None, None
+
+    user_ownership_data = await get_top_collectors(waifu_id, limit=50)
+    global_count = sum(user['count'] for user in user_ownership_data)
+    usernames = await build_user_links(user_ownership_data, offset, limit, use_userbot=userbot_online)
+
+    caption = (
+        f"📜 **Character Info**\n"
+        f"🧩 **Name**: {escape_md(waifu.get('name', 'N/A'))}\n"
+        f"🧬 **Rarity**: {escape_md(waifu.get('rarity', 'N/A'))}\n"
+        f"📺 **Anime**: {escape_md(waifu.get('anime', 'N/A'))}\n"
+        f"🆔 **ID**: {waifu_id}\n\n"
+        f"🌍 **Global Count**: {global_count} users own this character.\n\n"
+    )
+
+    if usernames:
+        caption += "🏆 **Top Collectors**:\n" + "\n".join(usernames)
+
+    if not userbot_online:
+        caption += "\n\n⚠️ **Userbot Status**: Offline. Showing best effort results from bot cache only."
+
+    buttons = []
+    if offset > 0:
+        buttons.append(InlineKeyboardButton("⬅️ Previous", callback_data=f"check_prev_{waifu_id}_{offset}"))
+    if offset + limit < len(user_ownership_data):
+        buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"check_next_{waifu_id}_{offset}"))
+    buttons.append(InlineKeyboardButton("❌ Close", callback_data="close_message"))
+
+    return waifu, caption, InlineKeyboardMarkup([buttons]) if buttons else None
+
 @bot.on_message(filters.command(["check"]))
 async def hfind(_, message: t.Message):
     if len(message.command) < 2:
@@ -125,47 +161,14 @@ async def hfind(_, message: t.Message):
     
     #await message.reply_chat_action("typing")
 
-    userbot_online = is_userbot_running()
-
-    waifu = await get_character_info(waifu_id)
-    if not waifu:
-        return await message.reply_text("🔍 No character found with that ID. Please check the ID and try again.")
-    
     try:
-        user_ownership_data = await get_top_collectors(waifu_id, limit=50)  # Get more users for pagination
-        global_count = sum(user['count'] for user in user_ownership_data)
-        usernames = await build_user_links(user_ownership_data, offset, limit, use_userbot=userbot_online)
+        waifu, caption, reply_markup = await build_check_caption_and_keyboard(waifu_id, offset, limit)
     except Exception as e:
         logging.error(f"Error getting collector data: {e}")
         return await message.reply_text("⚠️ An error occurred while fetching collector data. Please try again later.")
 
-    # Prepare caption
-    caption = (
-        f"📜 **Character Info**\n"
-        f"🧩 **Name**: {escape_md(waifu.get('name', 'N/A'))}\n"
-        f"🧬 **Rarity**: {escape_md(waifu.get('rarity', 'N/A'))}\n"
-        f"📺 **Anime**: {escape_md(waifu.get('anime', 'N/A'))}\n"
-        f"🆔 **ID**: {waifu_id}\n\n"
-        f"🌍 **Global Count**: {global_count} users own this character.\n\n"
-    )
-    
-    if usernames:
-        caption += "🏆 **Top Collectors**:\n" + "\n".join(usernames)
-
-    if not userbot_online:
-        caption += "\n\n⚠️ **Userbot Status**: Offline. Showing best effort results from bot cache only."
-    
-    # Create buttons for pagination
-    buttons = []
-    if offset > 0:
-        buttons.append(InlineKeyboardButton("⬅️ Previous", callback_data=f"check_prev_{waifu_id}_{offset}"))
-    if offset + limit < len(user_ownership_data):
-        buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"check_next_{waifu_id}_{offset}"))
-    
-    # Add close button
-    buttons.append(InlineKeyboardButton("❌ Close", callback_data="close_message"))
-    
-    reply_markup = InlineKeyboardMarkup([buttons]) if buttons else None
+    if not waifu:
+        return await message.reply_text("🔍 No character found with that ID. Please check the ID and try again.")
 
     try:
         media_url = waifu.get('img_url') or waifu.get('vid_url')
@@ -201,21 +204,21 @@ async def hfind(_, message: t.Message):
 async def paginate_collectors(_, query: t.CallbackQuery):
     action, waifu_id, offset = query.data.split('_')[1:]
     offset = int(offset)
-    limit = 5
+    limit = 10
     
     if action == "prev":
         new_offset = max(0, offset - limit)
     else:
         new_offset = offset + limit
     
-    # Edit the message with new offset
-    await query.message.edit_reply_markup(
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("⬅️ Previous", callback_data=f"check_prev_{waifu_id}_{new_offset}"),
-            InlineKeyboardButton("Next ➡️", callback_data=f"check_next_{waifu_id}_{new_offset}"),
-            InlineKeyboardButton("❌ Close", callback_data="close_message")
-        ]])
-    )
+    try:
+        _, caption, reply_markup = await build_check_caption_and_keyboard(waifu_id, new_offset, limit)
+        await query.edit_message_caption(caption=caption, reply_markup=reply_markup)
+    except Exception as e:
+        logging.error(f"Error paginating collectors for {waifu_id}: {e}")
+        await query.answer("Failed to load the next owner list page.", show_alert=True)
+        return
+
     await query.answer()
 
 @bot.on_callback_query(filters.regex("^close_message$"))

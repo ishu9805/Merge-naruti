@@ -4,7 +4,7 @@ from html import escape
 from cachetools import TTLCache
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pyrogram import Client, filters
-from pyrogram.types import InlineQueryResultPhoto, InlineQueryResultVideo
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultPhoto, InlineQueryResultVideo
 from shivu.modules.Addshop import handle_shop_inline
 from shivu import UPDATE_CHAT, SUPPORT_CHAT, CHARA_CHANNEL_ID, required_group_id, PHOTO_URL, OWNER_ID, PARTNER
 from shivu import (
@@ -93,6 +93,11 @@ async def handle_general_inline(client, update):
     offset = int(update.offset) if update.offset else 0
     limit = 30
     results = []
+
+    def owner_list_keyboard(character_id):
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("👥 Owner List", switch_inline_query_current_chat=f"/check {character_id}")]
+        ])
 
     # Pre-compiled regex patterns for faster matching
     FILTER_PATTERN = re.compile(r'\.(rarity|name|anime|id)\.([^\.]+)')
@@ -193,7 +198,8 @@ async def handle_general_inline(client, update):
                                 photo_url=char['img_url'],
                                 thumb_url=char['img_url'],
                                 id=f"{char['id']}_img_{time.time()}",
-                                caption=caption
+                                caption=caption,
+                                reply_markup=owner_list_keyboard(char['id'])
                             )
                         )
                     else:
@@ -204,7 +210,8 @@ async def handle_general_inline(client, update):
                                 thumb_url=char['vid_url'],
                                 id=f"{char['id']}_vid_{time.time()}",
                                 title=f"{char['name']} ({char['anime']})",
-                                caption=caption
+                                caption=caption,
+                                reply_markup=owner_list_keyboard(char['id'])
                             )
                         )
 
@@ -279,14 +286,16 @@ async def handle_general_inline(client, update):
                     thumb_url=character['vid_url'],
                     id=f"{character['id']}_vid_{time.time()}",
                     title=f"{character['name']} ({character['anime']})",
-                    caption=caption
+                    caption=caption,
+                    reply_markup=owner_list_keyboard(character['id'])
                 ))
             else:
                 results.append(InlineQueryResultPhoto(
                     photo_url=character['img_url'],
                     thumb_url=character['img_url'],
                     id=f"{character['id']}_img_{time.time()}",
-                    caption=caption
+                    caption=caption,
+                    reply_markup=owner_list_keyboard(character['id'])
                 ))
 
     # Pagination
@@ -361,5 +370,4 @@ async def find_missing_media(client, message):
             
     except Exception as e:
         await message.reply_text(f"Error: {str(e)}")
-
 
