@@ -522,33 +522,42 @@ application.add_handler(CHECK_HANDLER)
 
 @shivuu.on_message(filters.command("vadd") & uploader_filter)
 async def upload_video_character(client, message):
-    args = message.text.split(maxsplit=3)
-    if len(args) != 4:
-        await message.reply_text("Wrong format. Use: /vadd character-name anime-name video-url")
+    reply = message.reply_to_message
+    if not reply or not (reply.video or reply.document):
+        await message.reply_text("Please reply to a video or video document.")
+        return
+
+    args = message.text.split()
+    if len(args) != 3:
+        await message.reply_text("Wrong format. Use: /vadd (reply to video) character-name anime-name")
         return
 
     character_name = args[1].replace('-', ' ').title()
     anime = args[2].replace('-', ' ').title()
-    vid_url = args[3]
 
-    # Generate the next available ID
-    available_id = await find_available_id()
-
-    character = {
-        'name': character_name,
-        'anime': anime,
-        'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
-        'id': available_id,
-        'vid_url': vid_url,
-        'slock': "false",
-        'added': message.from_user.id
-    }
-
+    available_id = None
     try:
-        # Send the video to the character channel
+        available_id = await find_available_id()
+        media_payload = await archive_media_and_get_payload(client, reply)
+
+        if media_payload['media_type'] != 'video':
+            await message.reply_text("❌ Please reply to a valid video file.")
+            return
+
+        character = {
+            'name': character_name,
+            'anime': anime,
+            'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
+            'id': available_id,
+            'vid_url': media_payload['file_id'],
+            'message_link': media_payload['message_link'],
+            'slock': "false",
+            'added': message.from_user.id
+        }
+
         await client.send_video(
             chat_id=CHARA_CHANNEL_ID,
-            video=vid_url,
+            video=media_payload['file_id'],
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
                 f"Character Name: {character_name}\n"
@@ -559,12 +568,14 @@ async def upload_video_character(client, message):
             ),
         )
 
-        # Insert the character data into MongoDB
         await collection.insert_one(character)
-
         await message.reply_text("✅ Video character added successfully.")
     except Exception as e:
         await message.reply_text(f"❌ Failed to upload character. Error: {e}")
+    finally:
+        if available_id:
+            async with id_lock:
+                active_ids.discard(available_id)
 
 
 
