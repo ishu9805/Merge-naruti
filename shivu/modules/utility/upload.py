@@ -225,7 +225,6 @@ async def archive_media_and_get_payload(client: Client, source_message: Message)
             )
             payload = {
                 "media_type": "video",
-                "file_id": archived_msg.video.file_id,
                 "message_link": build_channel_message_link(archived_msg.id),
             }
         else:
@@ -235,7 +234,6 @@ async def archive_media_and_get_payload(client: Client, source_message: Message)
             )
             payload = {
                 "media_type": "photo",
-                "file_id": archived_msg.photo.file_id,
                 "message_link": build_channel_message_link(archived_msg.id),
             }
         return payload
@@ -549,7 +547,7 @@ async def upload_video_character(client, message):
             'anime': anime,
             'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
             'id': available_id,
-            'vid_url': media_payload['file_id'],
+            'vid_url': media_payload['message_link'],
             'message_link': media_payload['message_link'],
             'slock': "false",
             'added': message.from_user.id
@@ -557,7 +555,7 @@ async def upload_video_character(client, message):
 
         await client.send_video(
             chat_id=CHARA_CHANNEL_ID,
-            video=media_payload['file_id'],
+            video=media_payload['message_link'],
             caption=(
                 f"🎥 **New Character Added** 🎥\n\n"
                 f"Character Name: {character_name}\n"
@@ -607,15 +605,15 @@ async def update_image(client, message):
         processing_message = await message.reply("<ᴜᴘᴅᴀᴛɪɴɢ ɪᴍᴀɢᴇ...>")
         
         media_payload = await archive_media_and_get_payload(client, reply)
-        media_file_id = media_payload['file_id']
+        media_reference = media_payload['message_link']
         media_type = media_payload['media_type']
 
         update_fields = {'message_link': media_payload['message_link']}
         if media_type == 'video':
-            update_fields['vid_url'] = media_file_id
+            update_fields['vid_url'] = media_reference
             update_fields['img_url'] = character.get('img_url', '')
         else:
-            update_fields['img_url'] = media_file_id
+            update_fields['img_url'] = media_reference
             update_fields['vid_url'] = character.get('vid_url', '')
 
         # Update character in the database
@@ -656,13 +654,13 @@ async def update_image(client, message):
         if media_type == 'video':
             await client.send_video(
                 chat_id=CHARA_CHANNEL_ID,
-                video=media_file_id,
+                video=media_reference,
                 caption=caption,
             )
         else:
             await client.send_photo(
                 chat_id=CHARA_CHANNEL_ID,
-                photo=media_file_id,
+                photo=media_reference,
                 caption=caption,
             )
 
@@ -746,9 +744,9 @@ async def auto_upload_from_group(client, message):
             }
 
             if media_payload['media_type'] == 'video':
-                character['vid_url'] = media_payload['file_id']
+                character['vid_url'] = media_payload['message_link']
             else:
-                character['img_url'] = media_payload['file_id']
+                character['img_url'] = media_payload['message_link']
             
             # Insert character into the database
             await collection.insert_one(character)
@@ -827,9 +825,9 @@ async def ul(client, message):
         }
 
         if media_payload['media_type'] == 'video':
-            character['vid_url'] = media_payload['file_id']
+            character['vid_url'] = media_payload['message_link']
         else:
-            character['img_url'] = media_payload['file_id']
+            character['img_url'] = media_payload['message_link']
         
         # Insert character into the database
         await collection.insert_one(character)
