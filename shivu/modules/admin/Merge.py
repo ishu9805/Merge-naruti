@@ -2,9 +2,9 @@ from pyrogram import filters
 from shivu import shivuups as app
 from shivu import collectionps
 from shivu import user_collectionps as users
+from shivu.modules import sudo_filter, uploader_filter
 
-
-@app.on_message(filters.command("merge"))
+@app.on_message(filters.command("merge") & uploader_filter)
 async def merge_characters(client, message):
 
     if len(message.command) < 3:
