@@ -44,6 +44,7 @@ from shivu.modules.Sendall import generate_caption, _send_media_to_channel
 # Channel ID for posting character information
 CHARA_CHANNEL_ID = -1003295207951
 UPLOAD_MEDIA_CHANNEL_ID = -1003724861652
+UPLOAD_MEDIA_CHANNEL_USERNAME = "abcdefgh_naruto"
 
 # Your imgBB API Key
 IMGBB_API_KEY = "6d52008ec9026912f9f50c8ca96a09c3"
@@ -204,10 +205,9 @@ async def upload_image_with_fallback(file_path):
     raise Exception(f"All image hosting services failed. Last error: {str(last_error)}")
 
 
-def build_channel_message_link(chat_id: int, message_id: int) -> str:
-    """Build a public t.me/c link for private supergroups/channels."""
-    clean_chat_id = str(chat_id).replace("-100", "")
-    return f"https://t.me/c/{clean_chat_id}/{message_id}"
+def build_channel_message_link(message_id: int) -> str:
+    """Build a public t.me link for the archive channel message."""
+    return f"https://t.me/{UPLOAD_MEDIA_CHANNEL_USERNAME}/{message_id}"
 
 
 async def archive_media_and_get_payload(client: Client, source_message: Message):
@@ -226,7 +226,7 @@ async def archive_media_and_get_payload(client: Client, source_message: Message)
             payload = {
                 "media_type": "video",
                 "file_id": archived_msg.video.file_id,
-                "message_link": build_channel_message_link(UPLOAD_MEDIA_CHANNEL_ID, archived_msg.id),
+                "message_link": build_channel_message_link(archived_msg.id),
             }
         else:
             archived_msg = await client.send_photo(
@@ -236,7 +236,7 @@ async def archive_media_and_get_payload(client: Client, source_message: Message)
             payload = {
                 "media_type": "photo",
                 "file_id": archived_msg.photo.file_id,
-                "message_link": build_channel_message_link(UPLOAD_MEDIA_CHANNEL_ID, archived_msg.id),
+                "message_link": build_channel_message_link(archived_msg.id),
             }
         return payload
     finally:
