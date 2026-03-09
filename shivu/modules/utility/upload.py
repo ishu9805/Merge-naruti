@@ -537,37 +537,74 @@ async def upload_video_character(client, message):
     try:
         available_id = await find_available_id()
         media_payload = await archive_media_and_get_payload(client, reply)
+        media_reference = media_payload['message_link']
+        media_type = media_payload['media_type']
 
-        if media_payload['media_type'] != 'video':
-            await message.reply_text("❌ Please reply to a valid video file.")
-            return
+        if media_type == 'video':
+            update_set = {
+                'message_link': media_payload['message_link'],
+                'vid_url': media_reference,
+            }
+            update_unset = {'img_url': ''}
+        else:
+            update_set = {
+                'message_link': media_payload['message_link'],
+                'img_url': media_reference,
+            }
+            update_unset = {'vid_url': ''}
 
-        character = {
-            'name': character_name,
-            'anime': anime,
-            'rarity': "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
-            'id': available_id,
-            'vid_url': media_payload['message_link'],
-            'message_link': media_payload['message_link'],
-            'slock': "false",
-            'added': message.from_user.id
-        }
-
-        await client.send_video(
-            chat_id=CHARA_CHANNEL_ID,
-            video=media_payload['message_link'],
-            caption=(
-                f"🎥 **New Character Added** 🎥\n\n"
-                f"Character Name: {character_name}\n"
-                f"Anime Name: {anime}\n"
-                f"Rarity: '🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣'\n"
-                f"ID: {available_id}\n"
-                f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})"
-            ),
+        # Update character in the database (keep only one media field)
+        await collection.update_one(
+            {'id': character_id},
+            {'$set': update_set, '$unset': update_unset}
         )
 
-        await collection.insert_one(character)
-        await message.reply_text("✅ Video character added successfully.")
+        # Update all user collections that have this character
+        bulk_operations = []
+        async for user in user_collection.find():
+            if 'characters' in user:
+                for char in user['characters']:
+                    if char['id'] == character_id:
+                        char.update(update_set)
+                        if media_type == 'video':
+                            char.pop('img_url', None)
+                        else:
+                            char.pop('vid_url', None)
+                bulk_operations.append(
+                    UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
+                )
+
+        if bulk_operations:
+            await user_collection.bulk_write(bulk_operations)
+
+        # Send confirmation message
+        await message.reply_text(f"✅ Media updated successfully for character ID: {character_id}")
+
+        # Send updated character info to channel (old caption style)
+        caption = (
+            f"🔄 **Character Image Updated** 🔄\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+            f"🔹 **Name:** {character['name']}\n"
+            f"🔸 **Anime:** {character['anime']}\n"
+            f"🔹 **ID:** {character_id}\n"
+            f"🔸 **Rarity:** {character['rarity']}\n"
+            f"Image updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"\n━━━━━━━━━━━━━━━━━━\n"
+        )
+
+        if media_type == 'video':
+            await client.send_video(
+                chat_id=CHARA_CHANNEL_ID,
+                video=media_reference,
+                caption=caption,
+            )
+        else:
+            await client.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=media_reference,
+                caption=caption,
+            )
+
     except Exception as e:
         await message.reply_text(f"❌ Failed to upload character. Error: {e}")
     finally:
@@ -608,18 +645,23 @@ async def update_image(client, message):
         media_reference = media_payload['message_link']
         media_type = media_payload['media_type']
 
-        update_fields = {'message_link': media_payload['message_link']}
         if media_type == 'video':
-            update_fields['vid_url'] = media_reference
-            update_fields['img_url'] = character.get('img_url', '')
+            update_set = {
+                'message_link': media_payload['message_link'],
+                'vid_url': media_reference,
+            }
+            update_unset = {'img_url': ''}
         else:
-            update_fields['img_url'] = media_reference
-            update_fields['vid_url'] = character.get('vid_url', '')
+            update_set = {
+                'message_link': media_payload['message_link'],
+                'img_url': media_reference,
+            }
+            update_unset = {'vid_url': ''}
 
-        # Update character in the database
+        # Update character in the database (keep only one media field)
         await collection.update_one(
             {'id': character_id},
-            {'$set': update_fields}
+            {'$set': update_set, '$unset': update_unset}
         )
 
         # Update all user collections that have this character
@@ -628,7 +670,11 @@ async def update_image(client, message):
             if 'characters' in user:
                 for char in user['characters']:
                     if char['id'] == character_id:
-                        char.update(update_fields)
+                        char.update(update_set)
+                        if media_type == 'video':
+                            char.pop('img_url', None)
+                        else:
+                            char.pop('vid_url', None)
                 bulk_operations.append(
                     UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
                 )
@@ -639,15 +685,15 @@ async def update_image(client, message):
         # Send confirmation message
         await message.reply_text(f"✅ Media updated successfully for character ID: {character_id}")
 
-        # Send updated character info to channel
+        # Send updated character info to channel (old caption style)
         caption = (
-            f"🔄 **Character Media Updated** 🔄\n"
+            f"🔄 **Character Image Updated** 🔄\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
             f"🔹 **Name:** {character['name']}\n"
             f"🔸 **Anime:** {character['anime']}\n"
             f"🔹 **ID:** {character_id}\n"
             f"🔸 **Rarity:** {character['rarity']}\n"
-            f"Updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"Image updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
         )
 
