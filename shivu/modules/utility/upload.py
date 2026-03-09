@@ -12,6 +12,7 @@ from pymongo import UpdateOne
 import random
 import aiohttp
 import asyncio
+from pathlib import Path
 
 try:
     from telegraph import upload_file
@@ -42,6 +43,7 @@ from shivu import (
 from shivu.modules.Sendall import generate_caption, _send_media_to_channel
 # Channel ID for posting character information
 CHARA_CHANNEL_ID = -1003295207951
+UPLOAD_MEDIA_CHANNEL_ID = -1003724861652
 
 # Your imgBB API Key
 IMGBB_API_KEY = "6d52008ec9026912f9f50c8ca96a09c3"
@@ -200,6 +202,46 @@ async def upload_image_with_fallback(file_path):
             continue
     
     raise Exception(f"All image hosting services failed. Last error: {str(last_error)}")
+
+
+def build_channel_message_link(chat_id: int, message_id: int) -> str:
+    """Build a public t.me/c link for private supergroups/channels."""
+    clean_chat_id = str(chat_id).replace("-100", "")
+    return f"https://t.me/c/{clean_chat_id}/{message_id}"
+
+
+async def archive_media_and_get_payload(client: Client, source_message: Message):
+    """
+    Send replied photo/video to the upload media channel and return storage payload.
+    """
+    downloaded_path = await source_message.download()
+    suffix = Path(downloaded_path).suffix.lower()
+
+    try:
+        if source_message.video or suffix in {".mp4", ".mov", ".mkv", ".avi", ".webm"}:
+            archived_msg = await client.send_video(
+                chat_id=UPLOAD_MEDIA_CHANNEL_ID,
+                video=downloaded_path,
+            )
+            payload = {
+                "media_type": "video",
+                "file_id": archived_msg.video.file_id,
+                "message_link": build_channel_message_link(UPLOAD_MEDIA_CHANNEL_ID, archived_msg.id),
+            }
+        else:
+            archived_msg = await client.send_photo(
+                chat_id=UPLOAD_MEDIA_CHANNEL_ID,
+                photo=downloaded_path,
+            )
+            payload = {
+                "media_type": "photo",
+                "file_id": archived_msg.photo.file_id,
+                "message_link": build_channel_message_link(UPLOAD_MEDIA_CHANNEL_ID, archived_msg.id),
+            }
+        return payload
+    finally:
+        if downloaded_path and os.path.exists(downloaded_path):
+            os.remove(downloaded_path)
 
 
 
@@ -553,89 +595,72 @@ async def update_image(client, message):
     try:
         processing_message = await message.reply("<ᴜᴘᴅᴀᴛɪɴɢ ɪᴍᴀɢᴇ...>")
         
-        # Download the new image
-        path = await reply.download()
-        
-        # Check file size
-        check_file_size(path)
-        
-        # Upload image with fallback (imgBB as primary)
-        image_url = await upload_image_with_fallback(path)
-        
+        media_payload = await archive_media_and_get_payload(client, reply)
+        media_file_id = media_payload['file_id']
+        media_type = media_payload['media_type']
+
+        update_fields = {'message_link': media_payload['message_link']}
+        if media_type == 'video':
+            update_fields['vid_url'] = media_file_id
+            update_fields['img_url'] = character.get('img_url', '')
+        else:
+            update_fields['img_url'] = media_file_id
+            update_fields['vid_url'] = character.get('vid_url', '')
+
         # Update character in the database
         await collection.update_one(
-            {'id': character_id}, 
-            {'$set': {'img_url': image_url}}
+            {'id': character_id},
+            {'$set': update_fields}
         )
-        
+
         # Update all user collections that have this character
         bulk_operations = []
         async for user in user_collection.find():
             if 'characters' in user:
                 for char in user['characters']:
                     if char['id'] == character_id:
-                        char['img_url'] = image_url
+                        char.update(update_fields)
                 bulk_operations.append(
                     UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
                 )
 
         if bulk_operations:
             await user_collection.bulk_write(bulk_operations)
-        
+
         # Send confirmation message
-        await message.reply_text(f'✅ Image updated successfully for character ID: {character_id}')
-        
+        await message.reply_text(f"✅ Media updated successfully for character ID: {character_id}")
+
         # Send updated character info to channel
         caption = (
-            f"🔄 **Character Image Updated** 🔄\n"
+            f"🔄 **Character Media Updated** 🔄\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
             f"🔹 **Name:** {character['name']}\n"
             f"🔸 **Anime:** {character['anime']}\n"
             f"🔹 **ID:** {character_id}\n"
             f"🔸 **Rarity:** {character['rarity']}\n"
-            f"Image updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"🔗 **Archive Link:** {media_payload['message_link']}\n"
+            f"Updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
         )
-        
-        # Try to send with the uploaded URL
-        try:
-            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
-                await client.send_video(
-                    chat_id=-1003295207951,
-                    video=image_url,
-                    caption=caption,
-                )
-            else:
-                await client.send_photo(
-                    chat_id=-1003295207951,
-                    photo=image_url,
-                    caption=caption,
-                )
-        except Exception:
-            # Fallback to sending the local file if URL doesn't work
-            if path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.gif')):
-                await client.send_video(
-                    chat_id=CHARA_CHANNEL_ID,
-                    video=path,
-                    caption=caption,
-                )
-            else:
-                await client.send_photo(
-                    chat_id=CHARA_CHANNEL_ID,
-                    photo=path,
-                    caption=caption,
-                )
-                
+
+        if media_type == 'video':
+            await client.send_video(
+                chat_id=CHARA_CHANNEL_ID,
+                video=media_file_id,
+                caption=caption,
+            )
+        else:
+            await client.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=media_file_id,
+                caption=caption,
+            )
+
     except Exception as e:
         error_msg = f"❌ Image update failed. Error: {str(e)}"
         await message.reply_text(error_msg)
         print(error_msg)  # Log the error for debugging
     
-    finally:
-        # Clean up
-        if 'path' in locals() and os.path.exists(path):
-            os.remove(path)
-
 SUPPORT_ID = -1003159072405
 @app.on_message(filters.group & filters.chat(SUPPORT_ID))
 async def auto_upload_from_group(client, message):
@@ -696,12 +721,9 @@ async def auto_upload_from_group(client, message):
         try:
             available_id = await find_available_id()
             
-            # Download the file
-            path = await message.download()
-            
-            # Check file size
-            check_file_size(path)
-            
+            # Archive media to upload channel and store file/link metadata
+            media_payload = await archive_media_and_get_payload(client, message)
+
             # Prepare character data
             character = {
                 'name': character_name,
@@ -709,12 +731,14 @@ async def auto_upload_from_group(client, message):
                 'rarity': rarity_text,
                 'id': available_id,
                 'slock': "false",
-                'uploader': uploader
+                'uploader': uploader,
+                'message_link': media_payload['message_link'],
             }
 
-            # Upload image with fallback (imgBB as primary)
-            image_url = await upload_image_with_fallback(path)
-            character['img_url'] = image_url
+            if media_payload['media_type'] == 'video':
+                character['vid_url'] = media_payload['file_id']
+            else:
+                character['img_url'] = media_payload['file_id']
             
             # Insert character into the database
             await collection.insert_one(character)
@@ -731,9 +755,6 @@ async def auto_upload_from_group(client, message):
             print(error_msg)  # Log the error for debugging
         
         finally:
-            # Clean up
-            if 'path' in locals() and os.path.exists(path):
-                os.remove(path)
             if available_id:
                 async with id_lock:
                     active_ids.discard(available_id)
@@ -781,11 +802,8 @@ async def ul(client, message):
         available_id = await find_available_id()
         processing_message = await message.reply("<ᴘʀᴏᴄᴇꜱꜱɪɴɢ>....")
         
-        # Download the file
-        path = await reply.download()
-        
-        # Check file size
-        check_file_size(path)
+        # Archive media to upload channel and store file/link metadata
+        media_payload = await archive_media_and_get_payload(client, reply)
         
         # Prepare character data
         character = {
@@ -794,12 +812,14 @@ async def ul(client, message):
             'rarity': rarity_text,
             'id': available_id,
             'slock': "false",
-            'added': message.from_user.id
+            'added': message.from_user.id,
+            'message_link': media_payload['message_link']
         }
 
-        # Upload image with fallback (imgBB as primary)
-        image_url = await upload_image_with_fallback(path)
-        character['img_url'] = image_url
+        if media_payload['media_type'] == 'video':
+            character['vid_url'] = media_payload['file_id']
+        else:
+            character['img_url'] = media_payload['file_id']
         
         # Insert character into the database
         await collection.insert_one(character)
@@ -818,9 +838,6 @@ async def ul(client, message):
         print(error_msg)  # Log the error for debugging
     
     finally:
-        # Clean up
-        if 'path' in locals() and os.path.exists(path):
-            os.remove(path)
         if available_id:
             async with id_lock:
                 active_ids.discard(available_id)
