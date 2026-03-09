@@ -638,7 +638,6 @@ async def update_image(client, message):
             f"🔸 **Anime:** {character['anime']}\n"
             f"🔹 **ID:** {character_id}\n"
             f"🔸 **Rarity:** {character['rarity']}\n"
-            f"🔗 **Archive Link:** {media_payload['message_link']}\n"
             f"Updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
         )
