@@ -1,4 +1,5 @@
 import logging  #
+from functools import wraps
 
 import os
 
@@ -7,6 +8,7 @@ from telegram.ext import Application
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from resolve_peer import ResolvePeer
+from shivu.utils.logging_utils import log_pyrogram_command, log_pyrogram_exception
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -29,6 +31,23 @@ class Client(PyrogramClient):
     async def resolve_peer(self, id):
         obj = ResolvePeer(self)
         return await obj.resolve_peer(id)
+
+    def on_message(self, *args, **kwargs):
+        decorator = super().on_message(*args, **kwargs)
+
+        def register(func):
+            @wraps(func)
+            async def wrapped(client, message):
+                await log_pyrogram_command(client, message, func.__name__)
+                try:
+                    return await func(client, message)
+                except Exception as exc:
+                    await log_pyrogram_exception(client, message, func.__name__, exc)
+                    raise
+
+            return decorator(wrapped)
+
+        return register
 
 userbot = Client(
     name="userbot",
