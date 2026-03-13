@@ -8,7 +8,7 @@ from telegram.ext import Application
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from resolve_peer import ResolvePeer
-from shivu.logging_utils import log_pyrogram_command, log_pyrogram_exception
+from shivu.logging_utils import log_pyrogram_exception
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -38,7 +38,6 @@ class Client(PyrogramClient):
         def register(func):
             @wraps(func)
             async def wrapped(client, message):
-                await log_pyrogram_command(client, message, func.__name__)
                 try:
                     return await func(client, message)
                 except Exception as exc:

@@ -33,7 +33,7 @@ from shivu.modules.coin import add_coins
 from shivu.modules.top import create_indexes
 from shivu.modules.Hprofile import upgrade_chat_data
 from shivu.modules.block import block_dec, temp_block, block_dec_ptb, block_cbq_ptb
-from shivu.logging_utils import log_ptb_command, log_ptb_exception
+from shivu.logging_utils import log_ptb_exception
 import os
 from threading import Thread
 from flask import Flask
@@ -1125,7 +1125,6 @@ async def error_handler(update: Update, context: CallbackContext):
 def main() -> None:
     """Run bot."""
     application.job_queue.run_once(preload_characters, when=0)
-    application.add_handler(MessageHandler(filters.COMMAND, log_ptb_command, block=False), group=-200)
     application.add_handler(CommandHandler(["guess"], guess, block=False))
     application.add_handler(CommandHandler(["cqmsg"], check_counters))
     application.add_handler(CommandHandler(["spawn"], now_command))
