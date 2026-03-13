@@ -4,7 +4,7 @@ from functools import wraps
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from shivu.utils.logging_utils import send_ptb_log
+from shivu.logging_utils import send_ptb_log
 
 LOGGER = logging.getLogger(__name__)
 
