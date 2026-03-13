@@ -51,6 +51,15 @@ async def get_bot_username(client):
     return BOT_USERNAME
 
 
+
+
+def escape_markdown_text(value):
+    if not value:
+        return "Ninja"
+    escape_chars = "_*[]()~`>#+-=|{}.!"
+    return "".join(f"\\{ch}" if ch in escape_chars else ch for ch in str(value))
+
+
 async def play_start_animation(message, user_first_name):
     frames = [
         "⚡ Initializing shinobi network",
@@ -62,7 +71,7 @@ async def play_start_animation(message, user_first_name):
     for idx, frame in enumerate(frames, start=1):
         dots = "." * ((idx % 3) + 1)
         await loading.edit_text(
-            f"{frame}{dots}\n\n👋 Welcome, **{user_first_name}**!"
+            f"{frame}{dots}\n\n👋 Welcome, {user_first_name}!"
         )
         await asyncio.sleep(0.45)
     return loading
@@ -194,16 +203,21 @@ async def start_private(_, message):
          IKB("🌟 Credits", callback_data="credits")]
     ]
 
-    loader = await play_start_animation(message, user.first_name)
+    safe_first_name = escape_markdown_text(user.first_name)
+    loader = await play_start_animation(message, safe_first_name)
 
     caption = f"""
-{Font.TITLE.format(f"Welcome {user.first_name}!")}
+{Font.TITLE.format(f"Welcome {safe_first_name}!")}
 
 {Font.HIGHLIGHT.format("Ready to start your collection?")}
 
 {Font.ITALIC}Use the buttons below to navigate:{Font.ITALIC}
     """
-    await loader.delete()
+    try:
+        await loader.delete()
+    except Exception:
+        pass
+
     await send_start_media(_, user.id, caption, dynamic_buttons)
 
 # ──────────────────────────────────────────────
