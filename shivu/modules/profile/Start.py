@@ -2,6 +2,7 @@
 # SHIVU MODULE : START MENU (Pure Pyrogram)
 # ──────────────────────────────────────────────
 
+import asyncio
 import random
 from datetime import datetime
 from pyrogram import Client, filters
@@ -38,6 +39,64 @@ uploaderdb = db.uploader
 # ──────────────────────────────────────────────
 BOT_USERNAME = "Naruto_Waifu_Husbando_Bot"
 START_VIDEOS = PHOTO_URL
+
+
+async def get_bot_username(client):
+    try:
+        me = await client.get_me()
+        if me and me.username:
+            return me.username
+    except Exception:
+        pass
+    return BOT_USERNAME
+
+
+async def play_start_animation(message, user_first_name):
+    frames = [
+        "⚡ Initializing shinobi network",
+        "🔥 Charging chakra",
+        "🌌 Summoning anime universe",
+        "✨ Preparing your dashboard",
+    ]
+    loading = await message.reply_text("🚀 Launching Naruto Universe...")
+    for idx, frame in enumerate(frames, start=1):
+        dots = "." * ((idx % 3) + 1)
+        await loading.edit_text(
+            f"{frame}{dots}\n\n👋 Welcome, **{user_first_name}**!"
+        )
+        await asyncio.sleep(0.45)
+    return loading
+
+
+async def send_start_media(client, chat_id, caption, buttons):
+    welcome_video = random.choice(START_VIDEOS) if START_VIDEOS else None
+
+    if welcome_video:
+        try:
+            await client.send_video(
+                chat_id=chat_id,
+                video=welcome_video,
+                caption=caption,
+                reply_markup=IKM(buttons),
+            )
+            return
+        except Exception:
+            try:
+                await client.send_animation(
+                    chat_id=chat_id,
+                    animation=welcome_video,
+                    caption=caption,
+                    reply_markup=IKM(buttons),
+                )
+                return
+            except Exception:
+                pass
+
+    await client.send_message(
+        chat_id=chat_id,
+        text=caption,
+        reply_markup=IKM(buttons),
+    )
 
 # ──────────────────────────────────────────────
 # Main start message
@@ -126,7 +185,17 @@ async def start_private(_, message):
         upsert=True
     )
 
-    welcome_video = random.choice(START_VIDEOS)
+    bot_username = await get_bot_username(_)
+    dynamic_buttons = [
+        [IKB("💬 Support Chat", url="https://t.me/animechatiac"),
+         IKB("📢 Updates", url="https://t.me/hidden_naruto")],
+        [IKB("➕ Add to Group", url=f"https://t.me/{bot_username}?startgroup=true")],
+        [IKB("❓ Help", callback_data="help"),
+         IKB("🌟 Credits", callback_data="credits")]
+    ]
+
+    loader = await play_start_animation(message, user.first_name)
+
     caption = f"""
 {Font.TITLE.format(f"Welcome {user.first_name}!")}
 
@@ -134,12 +203,8 @@ async def start_private(_, message):
 
 {Font.ITALIC}Use the buttons below to navigate:{Font.ITALIC}
     """
-    await _.send_video(
-        chat_id=user.id,
-        video=welcome_video,
-        caption=caption,
-        reply_markup=IKM(support_buttons)
-    )
+    await loader.delete()
+    await send_start_media(_, user.id, caption, dynamic_buttons)
 
 # ──────────────────────────────────────────────
 # /start in groups
@@ -147,6 +212,7 @@ async def start_private(_, message):
 @app.on_message(filters.command("start") & filters.group)
 @block_dec
 async def start_group(_, message):
+    bot_username = await get_bot_username(_)
     await message.reply_text(
         f"""
 {Font.TITLE.format("Naruto Collection Game")}
@@ -154,7 +220,7 @@ async def start_group(_, message):
 {Font.ITALIC}To start playing, please initiate me in DMs!{Font.ITALIC}
         """,
         reply_markup=IKM([
-            [IKB("✨ Start in DM", url=f"https://t.me/{BOT_USERNAME}?start=start")]
+            [IKB("✨ Start in DM", url=f"https://t.me/{bot_username}?start=start")]
         ])
     )
 
@@ -232,10 +298,12 @@ async def show_team(_, query):
 @app.on_callback_query(filters.regex("main"))
 async def main_menu(_, query):
     await query.message.delete()
-    welcome_video = random.choice(START_VIDEOS)
-    await _.send_video(
-        chat_id=query.from_user.id,
-        video=welcome_video,
-        caption=start_text,
-        reply_markup=IKM(support_buttons)
-    )
+    bot_username = await get_bot_username(_)
+    dynamic_buttons = [
+        [IKB("💬 Support Chat", url="https://t.me/animechatiac"),
+         IKB("📢 Updates", url="https://t.me/hidden_naruto")],
+        [IKB("➕ Add to Group", url=f"https://t.me/{bot_username}?startgroup=true")],
+        [IKB("❓ Help", callback_data="help"),
+         IKB("🌟 Credits", callback_data="credits")]
+    ]
+    await send_start_media(_, query.from_user.id, start_text, dynamic_buttons)
