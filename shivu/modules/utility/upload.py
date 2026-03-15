@@ -111,7 +111,8 @@ rarity_map = {
     22: "🎨 Artistic",
     23: "💳 VIP SLOT",
     24: "👶 Chibi",
-    25: "🏴‍☠️ Marauds"
+    25: "🏴‍☠️ Marauds",
+    26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣"
 }
 
 
@@ -539,7 +540,7 @@ async def upload_video_character(client, message):
         media_payload = await archive_media_and_get_payload(client, reply)
         media_reference = media_payload['message_link']
         media_type = media_payload['media_type']
-        rarity_text = rarity_map[1]
+        rarity_text = rarity_map[26]
 
         character = {
             'name': character_name,
@@ -561,7 +562,7 @@ async def upload_video_character(client, message):
         await message.reply_text(f"✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}")
 
         caption = (
-            f"🎉 **Character Added** 🎉\n"
+            f"🎉 ** 🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣 Added** 🎉\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
             f"🔹 **Name:** {character['name']}\n"
             f"🔸 **Anime:** {character['anime']}\n"
