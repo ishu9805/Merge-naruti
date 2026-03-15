@@ -539,56 +539,35 @@ async def upload_video_character(client, message):
         media_payload = await archive_media_and_get_payload(client, reply)
         media_reference = media_payload['message_link']
         media_type = media_payload['media_type']
+        rarity_text = rarity_map[1]
+
+        character = {
+            'name': character_name,
+            'anime': anime,
+            'rarity': rarity_text,
+            'id': available_id,
+            'slock': "false",
+            'added': message.from_user.id,
+            'message_link': media_payload['message_link'],
+        }
 
         if media_type == 'video':
-            update_set = {
-                'message_link': media_payload['message_link'],
-                'vid_url': media_reference,
-            }
-            update_unset = {'img_url': ''}
+            character['vid_url'] = media_reference
         else:
-            update_set = {
-                'message_link': media_payload['message_link'],
-                'img_url': media_reference,
-            }
-            update_unset = {'vid_url': ''}
+            character['img_url'] = media_reference
 
-        # Update character in the database (keep only one media field)
-        await collection.update_one(
-            {'id': character_id},
-            {'$set': update_set, '$unset': update_unset}
-        )
+        await collection.insert_one(character)
 
-        # Update all user collections that have this character
-        bulk_operations = []
-        async for user in user_collection.find():
-            if 'characters' in user:
-                for char in user['characters']:
-                    if char['id'] == character_id:
-                        char.update(update_set)
-                        if media_type == 'video':
-                            char.pop('img_url', None)
-                        else:
-                            char.pop('vid_url', None)
-                bulk_operations.append(
-                    UpdateOne({'_id': user['_id']}, {'$set': {'characters': user['characters']}})
-                )
+        await message.reply_text(f"✅ CHARACTER ADDED SUCCESSFULLY! ID: {available_id}")
 
-        if bulk_operations:
-            await user_collection.bulk_write(bulk_operations)
-
-        # Send confirmation message
-        await message.reply_text(f"✅ Media updated successfully for character ID: {character_id}")
-
-        # Send updated character info to channel (old caption style)
         caption = (
-            f"🔄 **Character Image Updated** 🔄\n"
+            f"🎉 **Character Added** 🎉\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
             f"🔹 **Name:** {character['name']}\n"
             f"🔸 **Anime:** {character['anime']}\n"
-            f"🔹 **ID:** {character_id}\n"
+            f"🔹 **ID:** {available_id}\n"
             f"🔸 **Rarity:** {character['rarity']}\n"
-            f"Image updated by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
+            f"Added by [{message.from_user.first_name}](tg://user?id={message.from_user.id})\n"
             f"\n━━━━━━━━━━━━━━━━━━\n"
         )
 
