@@ -228,6 +228,15 @@ async def init_user(user_id, username, first_name):
 # ──────────────────────────────────────────────
 @app.on_message(filters.command("start") & filters.private)
 async def start_private(_, message):
+    await message.reply_text(
+        text=credits_text,
+        reply_markup=IKM([
+            [IKB("👨‍💻 Developers", callback_data="sdev"),
+             IKB("👑 Sudo Users", callback_data="ssudo")],
+            [IKB("📤 Uploaders", callback_data="suploader"),
+             IKB("🔙 Back", callback_data="main")]
+        ])
+    )
     user_id = message.from_user.id
     LOGGER.info("/start received in private: user_id=%s", user_id)
 
@@ -288,7 +297,7 @@ async def start_private(_, message):
 @app.on_message(filters.command("start") & filters.group)
 @block_dec
 async def start_group(_, message):
-    LOGGER.info("/start received in group: user_id=%s chat_id=%s", message.from_user.id if message.from_user else None, message.chat.id)
+    
     try:
         bot_username = await get_bot_username(_)
         await message.reply_text(
