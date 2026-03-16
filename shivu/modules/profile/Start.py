@@ -227,18 +227,9 @@ async def init_user(user_id, username, first_name):
 # /start in private
 # ──────────────────────────────────────────────
 @app.on_message(filters.command("start") & filters.private)
-@block_dec
 async def start_private(_, message):
     user_id = message.from_user.id
-    LOGGER.info("/start received in private: user_id=%s chat_id=%s", user_id, message.chat.id)
-    if temp_block(user_id):
-        LOGGER.warning("/start ignored due to temp block: user_id=%s chat_id=%s", user_id, message.chat.id)
-        await log_start_debug(_, "start_private:temp_block", user_id, message.chat.id, "temporary rate-limit active")
-        await message.reply_text(
-            "🚫 You're temporarily rate-limited for sending messages too quickly. "
-            "Please wait a few minutes and try /start again."
-        )
-        return
+    LOGGER.info("/start received in private: user_id=%s", user_id)
 
     user = message.from_user
     bot_username = await get_bot_username(_)
