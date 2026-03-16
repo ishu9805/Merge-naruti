@@ -133,7 +133,7 @@ async def play_start_animation(message, user_first_name):
 
 
 async def send_start_media(client, chat_id, caption, buttons):
-    welcome_video = random.choice(START_VIDEOS) if START_VIDEOS else None
+    welcome_video = random.choice(PHOTO_URL) if PHOTO_URL else None
 
     if welcome_video:
         try:
