@@ -224,21 +224,57 @@ async def init_user(user_id, username, first_name):
     )
 
 # ──────────────────────────────────────────────
-# /start in private
+# /start command (private + group)
 # ──────────────────────────────────────────────
-@app.on_message(filters.command("start") & filters.private)
-async def start_private(_, message):
-    await message.reply_text(
-        text=credits_text,
-        reply_markup=IKM([
-            [IKB("👨‍💻 Developers", callback_data="sdev"),
-             IKB("👑 Sudo Users", callback_data="ssudo")],
-            [IKB("📤 Uploaders", callback_data="suploader"),
-             IKB("🔙 Back", callback_data="main")]
-        ])
-    )
+@app.on_message(filters.command("start"))
+async def start_command(_, message):
+    chat_type = getattr(message.chat, "type", None)
+
+    if chat_type in {"group", "supergroup"}:
+        try:
+            bot_username = await get_bot_username(_)
+            await message.reply_text(
+                f"""
+{Font.TITLE.format("Naruto Collection Game")}
+
+{Font.ITALIC}To start playing, please initiate me in DMs!{Font.ITALIC}
+                """,
+                reply_markup=IKM([
+                    [IKB("✨ Start in DM", url=f"https://t.me/{bot_username}?start=start")]
+                ])
+            )
+        except Exception as error:
+            LOGGER.exception("Failed to reply to /start in group: chat_id=%s", message.chat.id)
+            await log_start_error(_, "start_group:reply", error, message.from_user.id if message.from_user else None, message.chat.id)
+        return
+
+    if chat_type != "private":
+        return
+
+    payload = None
+    if len(message.command) > 1:
+        payload = (message.command[1] or "").strip().lower()
+        # Keep non-reserved payloads available for other feature handlers.
+        if payload and payload not in {"start", "help", "credits", "main"}:
+            return
+
+    if not message.from_user:
+        return
+
     user_id = message.from_user.id
-    LOGGER.info("/start received in private: user_id=%s", user_id)
+    LOGGER.info("/start received in private: user_id=%s payload=%s", user_id, payload)
+
+    if payload == "credits":
+        await message.reply_text(
+            text=credits_text,
+            reply_markup=IKM([
+                [IKB("👨‍💻 Developers", callback_data="sdev"),
+                 IKB("👑 Sudo Users", callback_data="ssudo")],
+                [IKB("📤 Uploaders", callback_data="suploader"),
+                 IKB("🔙 Back", callback_data="main")]
+            ])
+        )
+        return
 
     user = message.from_user
     bot_username = await get_bot_username(_)
@@ -292,28 +328,6 @@ async def start_private(_, message):
         )
 
 # ──────────────────────────────────────────────
-# /start in groups
-# ──────────────────────────────────────────────
-@app.on_message(filters.command("start") & filters.group)
-@block_dec
-async def start_group(_, message):
-    
-    try:
-        bot_username = await get_bot_username(_)
-        await message.reply_text(
-        f"""
-{Font.TITLE.format("Naruto Collection Game")}
-
-{Font.ITALIC}To start playing, please initiate me in DMs!{Font.ITALIC}
-        """,
-        reply_markup=IKM([
-            [IKB("✨ Start in DM", url=f"https://t.me/{bot_username}?start=start")]
-        ])
-    )
-    except Exception as error:
-        LOGGER.exception("Failed to reply to /start in group: chat_id=%s", message.chat.id)
-        await log_start_error(_, "start_group:reply", error, message.from_user.id if message.from_user else None, message.chat.id)
-
 # ──────────────────────────────────────────────
 # /credits command
 # ──────────────────────────────────────────────
