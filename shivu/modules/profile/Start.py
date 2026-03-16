@@ -3,6 +3,7 @@
 # ──────────────────────────────────────────────
 
 import asyncio
+import logging
 import random
 import traceback
 from datetime import datetime
@@ -41,6 +42,7 @@ uploaderdb = db.uploader
 # ──────────────────────────────────────────────
 BOT_USERNAME = "Naruto_Waifu_Husbando_Bot"
 START_VIDEOS = PHOTO_URL
+LOGGER = logging.getLogger(__name__)
 
 
 async def get_bot_username(client):
@@ -56,6 +58,25 @@ async def get_bot_username(client):
 
 
 
+
+
+
+async def log_start_debug(client, where, user_id=None, chat_id=None, note=None):
+    details = [
+        "ℹ️ #start_debug",
+        f"Where: `{where}`",
+    ]
+    if user_id is not None:
+        details.append(f"User ID: `{user_id}`")
+    if chat_id is not None:
+        details.append(f"Chat ID: `{chat_id}`")
+    if note:
+        details.append(f"Note: `{note}`")
+
+    try:
+        await client.send_message(LOG_CHANNEL, "\n".join(details))
+    except Exception:
+        pass
 
 async def log_start_error(client, where, error, user_id=None, chat_id=None):
     details = [
@@ -209,7 +230,14 @@ async def init_user(user_id, username, first_name):
 @block_dec
 async def start_private(_, message):
     user_id = message.from_user.id
+    LOGGER.info("/start received in private: user_id=%s chat_id=%s", user_id, message.chat.id)
     if temp_block(user_id):
+        LOGGER.warning("/start ignored due to temp block: user_id=%s chat_id=%s", user_id, message.chat.id)
+        await log_start_debug(_, "start_private:temp_block", user_id, message.chat.id, "temporary rate-limit active")
+        await message.reply_text(
+            "🚫 You're temporarily rate-limited for sending messages too quickly. "
+            "Please wait a few minutes and try /start again."
+        )
         return
 
     user = message.from_user
@@ -255,6 +283,7 @@ async def start_private(_, message):
 
     try:
         await send_start_media(_, user.id, caption, dynamic_buttons)
+        LOGGER.info("/start media sent successfully: user_id=%s chat_id=%s", user.id, message.chat.id)
     except Exception as error:
         await log_start_error(_, "start_private:send_start_media", error, user.id, message.chat.id)
         await message.reply_text(
@@ -268,6 +297,7 @@ async def start_private(_, message):
 @app.on_message(filters.command("start") & filters.group)
 @block_dec
 async def start_group(_, message):
+    LOGGER.info("/start received in group: user_id=%s chat_id=%s", message.from_user.id if message.from_user else None, message.chat.id)
     try:
         bot_username = await get_bot_username(_)
         await message.reply_text(
@@ -281,6 +311,7 @@ async def start_group(_, message):
         ])
     )
     except Exception as error:
+        LOGGER.exception("Failed to reply to /start in group: chat_id=%s", message.chat.id)
         await log_start_error(_, "start_group:reply", error, message.from_user.id if message.from_user else None, message.chat.id)
 
 # ──────────────────────────────────────────────
