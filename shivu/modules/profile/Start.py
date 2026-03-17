@@ -255,8 +255,9 @@ async def start_command(_, message):
         payload = None
         if len(message.command) > 1:
             payload = (message.command[1] or "").strip().lower()
-            # Keep non-reserved payloads available for other feature handlers.
-            if payload and payload not in {"start", "help", "credits", "main"}:
+            # Pass through only known deep-link flows handled by other modules.
+            passthrough_prefixes = ("shopconfirm_", "redeem_", "buy_", "claim_")
+            if payload and payload.startswith(passthrough_prefixes):
                 return
 
         if not message.from_user:
