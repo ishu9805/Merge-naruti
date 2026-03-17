@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: naruto
+    env: python # or 'node'
+    plan: free
+    buildCommand: pip install -r requirements.txt # or 'npm install'
+    startCommand: python3 -m shivu # your bot's entry file
+    
