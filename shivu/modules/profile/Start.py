@@ -7,7 +7,7 @@ import logging
 import random
 import traceback
 from datetime import datetime
-from pyrogram import Client, filters
+from pyrogram import Client, StopPropagation, filters
 from pyrogram.types import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
 from shivu import (
     shivuups as app,
@@ -226,8 +226,7 @@ async def init_user(user_id, username, first_name):
 # ──────────────────────────────────────────────
 # /start command (private + group)
 # ──────────────────────────────────────────────
-@app.on_message(filters.command("start"))
-@block_dec
+@app.on_message(filters.command("start"), group=-1)
 async def start_command(_, message):
     chat_type = getattr(message.chat, "type", None)
 
@@ -247,7 +246,7 @@ async def start_command(_, message):
         except Exception as error:
             LOGGER.exception("Failed to reply to /start in group: chat_id=%s", message.chat.id)
             await log_start_error(_, "start_group:reply", error, message.from_user.id if message.from_user else None, message.chat.id)
-        return
+        raise StopPropagation
 
     if chat_type != "private":
         return
@@ -276,7 +275,7 @@ async def start_command(_, message):
                      IKB("🔙 Back", callback_data="main")]
                 ])
             )
-            return
+            raise StopPropagation
 
         user = message.from_user
         bot_username = await get_bot_username(_)
@@ -329,12 +328,15 @@ async def start_command(_, message):
                 reply_markup=IKM(dynamic_buttons),
             )
 
+        raise StopPropagation
+
     except Exception as error:
         await log_start_error(_, "start_private:unexpected", error, message.from_user.id if message.from_user else None, message.chat.id)
         try:
             await message.reply_text("⚠️ Start failed unexpectedly. Please try again in a moment.")
         except Exception:
             pass
+        raise StopPropagation
 
 # ──────────────────────────────────────────────
 # /credits command
