@@ -68,12 +68,25 @@ countdown_tasks = {}
 SUPPORT_GROUP_LINK = "https://t.me/animechatiac"
 SUPPORT_BUTTON_TEXT = "✨ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ✨"
 
-"""server = Flask(__name__)
+from flask import Flask
+from threading import Thread
+import os
+
+# Create a simple Flask app
+server = Flask(__name__)
+
 @server.route("/")
 def home():
-    return "Bot is running"
-"""
-    
+    return "Bot is running 24/7"
+
+def run_server():
+    # Render provides a PORT environment variable automatically
+    port = int(os.environ.get("PORT", 8080))
+    server.run(host="0.0.0.0", port=port)
+
+
+
+
 LOG_RARITIES = {
     "🔮 Limited Edition",
     "💸 Premium Edition",
@@ -1142,12 +1155,14 @@ def main() -> None:
     asyncio.create_task(application.run_polling(drop_pending_updates=True))
    
     
-    
+# Start the server in a separate thread so it doesn't block the bot
 if __name__ == "__main__":
-    """t = Thread(target=run)
-    t.start()"""
+    t = Thread(target=run_server)
+    t.daemon = True # This ensures the thread dies when the main process dies
+    t.start()
+    
+    # Your existing bot startup code
     shivuu.start()
-    #app.start()
     userbot.start()
-  
     main()
+    
