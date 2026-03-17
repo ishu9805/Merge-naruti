@@ -227,6 +227,7 @@ async def init_user(user_id, username, first_name):
 # /start command (private + group)
 # ──────────────────────────────────────────────
 @app.on_message(filters.command("start"))
+@block_dec
 async def start_command(_, message):
     chat_type = getattr(message.chat, "type", None)
 
@@ -251,83 +252,90 @@ async def start_command(_, message):
     if chat_type != "private":
         return
 
-    payload = None
-    if len(message.command) > 1:
-        payload = (message.command[1] or "").strip().lower()
-        # Keep non-reserved payloads available for other feature handlers.
-        if payload and payload not in {"start", "help", "credits", "main"}:
+    try:
+        payload = None
+        if len(message.command) > 1:
+            payload = (message.command[1] or "").strip().lower()
+            # Keep non-reserved payloads available for other feature handlers.
+            if payload and payload not in {"start", "help", "credits", "main"}:
+                return
+
+        if not message.from_user:
             return
 
-    if not message.from_user:
-        return
+        user_id = message.from_user.id
+        LOGGER.info("/start received in private: user_id=%s payload=%s", user_id, payload)
 
-    user_id = message.from_user.id
-    LOGGER.info("/start received in private: user_id=%s payload=%s", user_id, payload)
+        if payload == "credits":
+            await message.reply_text(
+                text=credits_text,
+                reply_markup=IKM([
+                    [IKB("👨‍💻 Developers", callback_data="sdev"),
+                     IKB("👑 Sudo Users", callback_data="ssudo")],
+                    [IKB("📤 Uploaders", callback_data="suploader"),
+                     IKB("🔙 Back", callback_data="main")]
+                ])
+            )
+            return
 
-    if payload == "credits":
-        await message.reply_text(
-            text=credits_text,
-            reply_markup=IKM([
-                [IKB("👨‍💻 Developers", callback_data="sdev"),
-                 IKB("👑 Sudo Users", callback_data="ssudo")],
-                [IKB("📤 Uploaders", callback_data="suploader"),
-                 IKB("🔙 Back", callback_data="main")]
-            ])
-        )
-        return
+        user = message.from_user
+        bot_username = await get_bot_username(_)
+        dynamic_buttons = build_support_buttons(bot_username)
+        safe_first_name = escape_markdown_text(user.first_name)
 
-    user = message.from_user
-    bot_username = await get_bot_username(_)
-    dynamic_buttons = build_support_buttons(bot_username)
-    safe_first_name = escape_markdown_text(user.first_name)
+        try:
+            await init_user(user.id, user.username, user.first_name)
+            await pmusers.update_one(
+                {"user_id": user.id},
+                {"$set": {
+                    "user_id": user.id,
+                    "first_name": user.first_name,
+                    "username": user.username,
+                    "blocked": False,
+                    "started_at": datetime.now()
+                }},
+                upsert=True
+            )
+        except Exception as error:
+            await log_start_error(_, "start_private:db_init", error, user.id, message.chat.id)
 
-    try:
-        await init_user(user.id, user.username, user.first_name)
-        await pmusers.update_one(
-            {"user_id": user.id},
-            {"$set": {
-                "user_id": user.id,
-                "first_name": user.first_name,
-                "username": user.username,
-                "blocked": False,
-                "started_at": datetime.now()
-            }},
-            upsert=True
-        )
-    except Exception as error:
-        await log_start_error(_, "start_private:db_init", error, user.id, message.chat.id)
+        loader = None
+        try:
+            loader = await play_start_animation(message, safe_first_name)
+        except Exception as error:
+            await log_start_error(_, "start_private:animation", error, user.id, message.chat.id)
 
-    loader = None
-    try:
-        loader = await play_start_animation(message, safe_first_name)
-    except Exception as error:
-        await log_start_error(_, "start_private:animation", error, user.id, message.chat.id)
-
-    caption = f"""
+        caption = f"""
 {Font.TITLE.format(f"Welcome {safe_first_name}!")}
 
 {Font.HIGHLIGHT.format("Ready to start your collection?")}
 
 {Font.ITALIC}Use the buttons below to navigate:{Font.ITALIC}
-    """
+        """
 
-    if loader:
+        if loader:
+            try:
+                await loader.delete()
+            except Exception:
+                pass
+
         try:
-            await loader.delete()
+            await send_start_media(_, message.chat.id, caption, dynamic_buttons)
+            LOGGER.info("/start media sent successfully: user_id=%s chat_id=%s", user.id, message.chat.id)
+        except Exception as error:
+            await log_start_error(_, "start_private:send_start_media", error, user.id, message.chat.id)
+            await message.reply_text(
+                "⚠️ Something went wrong while loading media. Please try /start again.",
+                reply_markup=IKM(dynamic_buttons),
+            )
+
+    except Exception as error:
+        await log_start_error(_, "start_private:unexpected", error, message.from_user.id if message.from_user else None, message.chat.id)
+        try:
+            await message.reply_text("⚠️ Start failed unexpectedly. Please try again in a moment.")
         except Exception:
             pass
 
-    try:
-        await send_start_media(_, user.id, caption, dynamic_buttons)
-        LOGGER.info("/start media sent successfully: user_id=%s chat_id=%s", user.id, message.chat.id)
-    except Exception as error:
-        await log_start_error(_, "start_private:send_start_media", error, user.id, message.chat.id)
-        await message.reply_text(
-            "⚠️ Something went wrong while loading media. Please try /start again.",
-            reply_markup=IKM(dynamic_buttons),
-        )
-
-# ──────────────────────────────────────────────
 # ──────────────────────────────────────────────
 # /credits command
 # ──────────────────────────────────────────────
