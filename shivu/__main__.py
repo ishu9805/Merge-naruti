@@ -1,3 +1,4 @@
+import os
 import asyncio
 import datetime
 import importlib
@@ -78,11 +79,13 @@ server = Flask(__name__)
 @server.route("/")
 def home():
     return "Bot is running 24/7"
-
-def run_server():
-    # Render provides a PORT environment variable automatically
-    port = int(os.environ.get("PORT", 8080))
+    
+    
+def run():
+    # Render automatically sets the PORT environment variable
+    port = int(os.environ.get('PORT', 8080))
     server.run(host="0.0.0.0", port=port)
+
 
 
 
@@ -1157,7 +1160,7 @@ def main() -> None:
     
 # Start the server in a separate thread so it doesn't block the bot
 if __name__ == "__main__":
-    t = Thread(target=run_server)
+    t = Thread(target=run)
     t.daemon = True # This ensures the thread dies when the main process dies
     t.start()
     
