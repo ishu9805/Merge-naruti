@@ -1148,15 +1148,14 @@ def main() -> None:
     application.add_handler(CommandHandler("unlock", unlock, block=False))
     #application.add_handler(CommandHandler("fav", fav, block=False))
     application.add_handler(MessageHandler(filters.ALL, message_counter, block=False))
-    #application.add_handler(CommandHandler("mecount", show_message_count, block=False))
     
-    # Use asyncio.create_task to run the bot in the background
-    
-    
-    asyncio.gather(update_total_characters_for_all_users(), create_indexes(), upgrade_chat_data())
+    loop = asyncio.get_event_loop()
+    loop.create_task(create_indexes())
+
     application.add_error_handler(error_handler)
-    asyncio.create_task(application.run_polling(drop_pending_updates=True))
-   
+    
+    print("Bot is starting...")
+    application.run_polling(drop_pending_updates=True)
     
 # Start the server in a separate thread so it doesn't block the bot
 if __name__ == "__main__":
