@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blade Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="siteLoader" class="site-loader">
+    <div class="loader-orb"></div>
+    <p>Loading colorful experience...</p>
+</div>
+
+<header class="app-header">
+    <div class="brand-block">
+        <h1>Blade Network</h1>
+        <p>Section-wise Telegram Mini App</p>
+    </div>
+
+    <div class="telegram-profile">
+        <img id="telegramAvatar" src="" alt="Telegram profile picture">
+        <div>
+            <h3 id="telegramName">Telegram User</h3>
+            <p id="telegramUsername">@username</p>
+        </div>
+    </div>
+</header>
+
+<main class="main-shell">
+    <section id="homePage" class="page active">
+        <div class="hero-card">
+            <h2>Choose Your Database</h2>
+            <p>Professional colorful interface with 3D card effects, smooth transitions, and realistic interactions.</p>
+            <div class="home-link-grid">
+                <button class="hero-link-btn" id="openBotDbBtn">Bot Database</button>
+                <button class="hero-link-btn" id="openUserDbBtn">User Database</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="searchPage" class="page">
+        <section class="search-panel">
+            <h2 class="section-title">Search Section</h2>
+
+            <div class="mode-switch-row">
+                <button class="mode-btn active" id="botModeBtn">Bot Search</button>
+                <button class="mode-btn" id="userModeBtn">User Search</button>
+            </div>
+
+            <h3 id="searchHeading">Bot Database Search</h3>
+            <div class="filters-grid" id="searchFilters">
+                <input type="text" id="userIdInput" class="hidden-field" placeholder="User ID (required)">
+
+                <div class="input-wrap">
+                    <input type="text" id="searchName" placeholder="Character name">
+                    <div class="suggestions" id="searchSuggestions"></div>
+                </div>
+
+                <input type="text" id="searchAnime" placeholder="Anime name">
+
+                <div class="rarity-select">
+                    <button id="rarityBtn">🎖 All</button>
+                    <div class="rarity-dropdown" id="rarityDropdown"></div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button id="mainSearchBtn" class="action-btn animated-search-btn">Search Bot Collection</button>
+                <button class="clear-btn" id="clearBtn">Clear</button>
+            </div>
+        </section>
+
+        <section class="profile-card profile-layout" id="userProfileCard">
+            <img id="profileAvatar" src="" alt="User profile">
+            <div>
+                <h3 id="profileDisplayName">Telegram User</h3>
+                <p id="profileUsername">@username</p>
+                <p class="mini-meta">User ID: <span id="userid">-</span> • Username: <span id="username">No username</span></p>
+                <p id="profileMeta">Bot mode active. Switch to user mode for profile details.</p>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <p id="searchMeta">Viewing bot collection.</p>
+        </section>
+
+        <section class="media-grid" id="mediaGrid"></section>
+    </section>
+
+    <section id="shopPage" class="page">
+        <div class="section-card">
+            <h2>Shop Section</h2>
+            <p>Coming soon.</p>
+        </div>
+    </section>
+
+    <section id="leaderboardPage" class="page">
+        <div class="section-card">
+            <h2>Leaderboard Section</h2>
+            <p>Top users and rankings will appear here.</p>
+        </div>
+    </section>
+</main>
+
+<nav class="bottom-nav">
+    <button class="bottom-nav-btn active" data-page="homePage">Home</button>
+    <button class="bottom-nav-btn" data-page="searchPage">Search</button>
+    <button class="bottom-nav-btn" data-page="shopPage">Shop</button>
+    <button class="bottom-nav-btn" data-page="leaderboardPage">Leaderboard</button>
+</nav>
+
+<script src="/js/scripts.js"></script>
+</body>
+</html>

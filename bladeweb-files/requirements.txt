@@ -1,0 +1,12 @@
+
+Flask-Cors
+Flask-JWT-Extended
+
+python-dotenv
+gunicorn
+requests
+Werkzeug
+Flask
+
+pymongo
+dnspython
