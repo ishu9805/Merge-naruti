@@ -25,8 +25,8 @@ from shivu import (
 giveaway_character = None
 participants = []
 
-ADMIN_ID = 7378476666
-CHAT_ID = -1001999201034
+ADMIN_ID = 8213641719
+CHAT_ID = -1003611322630
 
 class GiveawayState:
     def __init__(self):
@@ -45,7 +45,7 @@ async def start_giveaway(client: Client, message: Message):
     global giveaway_character, participants
 
     # Check if the user is an admin (replace ADMIN_ID with your ID)
-    ADMIN_ID = 7378476666
+    ADMIN_ID = 8213641719
     if message.from_user.id != ADMIN_ID:
         #await message.reply("🚫 **You are not authorized to start a giveaway.**")
         return
@@ -72,7 +72,7 @@ async def start_giveaway(client: Client, message: Message):
     # Send a photo with caption to the specified chat ID
     try:
         await client.send_photo(
-            chat_id=-1001999201034,  # Replace with your chat ID
+            chat_id=-1003611322630,  # Replace with your chat ID
             photo=character.get("img_url"),
             caption=(
                 f"🎉 **Giveaway Started!**\n"
@@ -105,7 +105,7 @@ async def participate_giveaway(client: Client, message: Message):
     giveaway.participants.append(user_id)
     await message.reply(f"✅ **You have successfully joined the giveaway!**\n👥 **Total Participants:** {len(giveaway.participants)}")
     await client.send_message(
-        chat_id=-1002606804832,
+        chat_id=-1002783891820,
         text=(
             f"[{message.from_user.first_name}](tg://user?id={user_id}) participated\n"
             f"👥 **Total Participants:** {len(giveaway.participants)}"

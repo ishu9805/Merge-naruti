@@ -430,7 +430,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     alls_characters = [c for c in all_characters if not c.get('slock', False)]
     
     if not alls_characters:
-        await update.effective_chat.send_message("No characters available to spawn right now.")
+        await preload_characters(context)
+        #await update.effective_chat.send_message("No characters available to spawn right now.")
         return
 
 

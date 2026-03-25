@@ -47,7 +47,10 @@ uploaderdb = db.uploader
 BOT_USERNAME = "Naruto_Waifu_Husbando_Bot"
 START_VIDEOS = PHOTO_URL
 LOGGER = logging.getLogger(__name__)
+FORCE_CHANNEL = -1003855295896
+FORCE_CHANNEL_LINK = "https://t.me/art_guru_naruto"
 
+CHANNEL_ID = -1003855295896
 
 async def get_bot_username(client):
     try:
@@ -306,15 +309,75 @@ async def start_command_ptb(update: Update, context: CallbackContext):
             parse_mode=ParseMode.MARKDOWN,
         )
         return
-
+  
     if chat.type != "private" or not update.effective_user:
         return
-
+    
     payload = (context.args[0].strip().lower() if context.args else None)
     user = update.effective_user
 
     LOGGER.info("/start received in private (ptb): user_id=%s payload=%s", user.id, payload)
+    
 
+    # 🔥 DOWNLOAD SYSTEM (DEEP LINK)
+    if payload and payload.isdigit():
+        post_id = payload
+
+    # 🔒 force join check
+        try:
+            member = await context.bot.get_chat_member(FORCE_CHANNEL, update.effective_user.id)
+            if member.status not in ["member", "administrator", "creator"]:
+                return await message.reply_text(
+                   "🔒 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴅᴏᴡɴʟᴏᴀᴅ",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("📢 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url=FORCE_CHANNEL_LINK)],
+                        [InlineKeyboardButton("✅ ᴄʜᴇᴄᴋ ᴀɢᴀɪɴ", callback_data=f"check_{post_id}")]
+                    ])
+                )
+        except:
+            pass
+
+    # 📦 fetch from DB
+        data = await db.art_posts.find_one({"post_id": post_id})
+
+        if not data:
+            return await message.reply_text("❌ ɴᴏᴛ ғᴏᴜɴᴅ")
+
+    # 📥 send files
+        for file_id in data["file_ids"]:
+            await context.bot.send_photo(chat_id=chat.id, photo=file_id)
+
+    # 🔢 update downloads
+        new_count = data.get("downloads", 0) + 1
+
+        await db.art_posts.update_one(
+            {"post_id": post_id},
+            {"$set": {"downloads": new_count}}
+        )
+
+    # 🔄 update button in channel
+        bot_username = await get_bot_username_ptb(context)
+
+        await context.bot.edit_message_reply_markup(
+            chat_id=CHANNEL_ID,
+            message_id=int(post_id),
+            reply_markup=InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton(
+                        f"📥 ᴅᴏᴡɴʟᴏᴀᴅ ({new_count})",
+                        url=f"https://t.me/{bot_username}?start={post_id}"
+                    ),
+                    InlineKeyboardButton(
+                        "👤 ᴄʀᴇᴀᴛᴏʀ",
+                        url="https://t.me/naruto_artist"
+                    )
+                ]
+            ])
+        )
+
+        return  # ⚠️ VERY IMPORTANT (stops normal start)
+
+ 
     if payload == "credits":
         await message.reply_text(
             text=credits_text,
@@ -548,3 +611,68 @@ async def main_menu(_, query):
             start_text,
             reply_markup=IKM(dynamic_buttons),
         )
+
+
+
+@block_cbq_ptb
+async def check_join_ptb(update: Update, context: CallbackContext):
+    query = update.callback_query
+    if not query:
+        return
+
+    data = query.data
+    post_id = data.split("_")[1]
+
+    user = query.from_user
+
+    # 🔒 CHECK JOIN
+    try:
+        member = await context.bot.get_chat_member(FORCE_CHANNEL, user.id)
+        if member.status not in ["member", "administrator", "creator"]:
+            return await query.answer("❌ ʏᴏᴜ sᴛɪʟʟ ʜᴀᴠᴇɴ'ᴛ ᴊᴏɪɴᴇᴅ", show_alert=True)
+    except:
+        return await query.answer("⚠️ ᴇʀʀᴏʀ", show_alert=True)
+
+    # 📦 FETCH DATA
+    data_db = await db.art_posts.find_one({"post_id": post_id})
+
+    if not data_db:
+        return await query.answer("❌ ɴᴏᴛ ғᴏᴜɴᴅ", show_alert=True)
+
+    # 📥 SEND FILES
+    for file_id in data_db["file_ids"]:
+        await context.bot.send_photo(chat_id=user.id, photo=file_id)
+
+    # 🔢 UPDATE COUNT
+    new_count = data_db.get("downloads", 0) + 1
+
+    await db.art_posts.update_one(
+        {"post_id": post_id},
+        {"$set": {"downloads": new_count}}
+    )
+
+    # 🔄 UPDATE BUTTON
+    bot_username = await get_bot_username_ptb(context)
+
+    await context.bot.edit_message_reply_markup(
+        chat_id=CHANNEL_ID,
+        message_id=int(post_id),
+        reply_markup=InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton(
+                    f"📥 ᴅᴏᴡɴʟᴏᴀᴅ ({new_count})",
+                    url=f"https://t.me/{bot_username}?start={post_id}"
+                ),
+                InlineKeyboardButton(
+                    "👤 ᴄʀᴇᴀᴛᴏʀ",
+                    url="https://t.me/naruto_artist"
+                )
+            ]
+        ])
+    )
+
+    await query.message.delete()
+    await query.answer("✅ ᴅᴏᴡɴʟᴏᴀᴅᴇᴅ")
+
+
+application.add_handler(CallbackQueryHandler(check_join_ptb, pattern=r"^check_"))

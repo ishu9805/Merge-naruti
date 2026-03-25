@@ -24,11 +24,22 @@ from shivu import (
     dbps as db,
     pmusersps as pmusers,
     ban_collectionps as ban_collection,
-    user_countps as user_count, 
+    user_countps as user_count,
     chat_dataps as chat_data,
+    userbot,
 )
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup  # noqa: F811
+
+HINT_CHANNEL_ID = -1003611322630
+SMALL_CAPS_MAP = str.maketrans({
+    "a": "ᴀ", "b": "ʙ", "c": "ᴄ", "d": "ᴅ", "e": "ᴇ", "f": "ꜰ", "g": "ɢ", "h": "ʜ", "i": "ɪ",
+    "j": "ᴊ", "k": "ᴋ", "l": "ʟ", "m": "ᴍ", "n": "ɴ", "o": "ᴏ", "p": "ᴘ", "q": "ǫ", "r": "ʀ",
+    "s": "ꜱ", "t": "ᴛ", "u": "ᴜ", "v": "ᴠ", "w": "ᴡ", "x": "x", "y": "ʏ", "z": "ᴢ",
+    "0": "0", "1": "1", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7", "8": "8", "9": "9",
+    "|": "|", " ": " ", "-": "-", "/": "/", ":": ":", "_": "_",
+})
+
 # MongoDB Collection for user sho
 
 # Handlers
@@ -37,10 +48,6 @@ from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup  
 
 last_usage_time = {}
 generated_codes = {}
-
-def generate_random_code():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
-
 
 #rom shivu import user_collection, PARTNER, shivuu as app
 
@@ -51,9 +58,55 @@ GROUP_LINK = "https://t.me/hidden_naruto"  # Replace with your group link
 generated_codes = {}  # Stores codes and their details
 user_last_daily_code = {}  # Tracks the last time a user generated a daily code
 
+
+def to_small_caps(text):
+    return text.lower().translate(SMALL_CAPS_MAP)
+
+
 # Function to generate a random code
-def generate_random_code():  # noqa: F811
+def generate_random_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
+
+
+def build_hint(code):
+    hidden_character = code[-1]
+    hint_code = f"{code[:-1]}_"
+    hint_label = "one digit" if hidden_character.isdigit() else "one letter"
+    return hint_code, hint_label
+
+
+def build_channel_caption(amount, quantity, code, source_label):
+    hint_code, hint_label = build_hint(code)
+    return (
+        "┏━━━━━━━━━━━━━━┓\n"
+        f"💰 {to_small_caps(source_label)} drop ✨\n"
+        "┗━━━━━━━━━━━━━━┛\n\n"
+        f"🪙 Coins: {amount}\n"
+        f"🎯 Quantity: {quantity}\n\n"
+        f"💡 {to_small_caps(f'hint: fill {hint_label}')} → {hint_code}\n\n"
+        f"💌 /credeem {hint_code}\n"
+        f"✨ {to_small_caps('signature: naruto bot')}"
+    )
+
+
+async def send_hint_drop(amount, quantity, code, source_label):
+    try:
+        await app.send_message(
+            chat_id=HINT_CHANNEL_ID,
+            text=build_channel_caption(amount, quantity, code, source_label),
+        )
+    except Exception:
+        pass
+
+
+async def try_delete_credeem_message(message: Message):
+    if not getattr(userbot, "is_connected", False):
+        return
+
+    try:
+        await userbot.delete_messages(message.chat.id, message.id)
+    except Exception:
+        pass
 
 
 # Daily code generation
@@ -93,6 +146,8 @@ async def daily_code(client: Client, message: Message):
 @app.on_message(filters.command("credeem"))
 @command_lock
 async def redeem(client: Client, message: Message):
+    await try_delete_credeem_message(message)
+
     user_id = message.from_user.id
     code = " ".join(message.command[1:])
 
@@ -152,6 +207,4 @@ async def gen(client: Client, message: Message):
         f"<b>To redeem:</b> /credeem {code}"
     )
     await message.reply_text(response_text)
-
-
-
+    await send_hint_drop(amount, quantity, code, "coin")
