@@ -10,6 +10,7 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="frontend/static", static_url_path="")
 CORS(app)
+app.config["JSON_SORT_KEYS"] = False
 
 # MongoDB connection URL (restored old values)
 mongo_url = "mongodb+srv://Ishu9805:narutohinatabf@ishu9805.bsxrhw9.mongodb.net/?appName=Ishu9805"
@@ -50,6 +51,33 @@ RARITY_MAP = {
     26: "🎗️ 𝘼𝙈𝙑 𝙀𝙙𝙞𝙩𝙞𝙤𝙣",
 }
 
+DEFAULT_SHOP_ITEMS = [
+    {"id": "boost_drop", "name": "Drop Booster", "price": 1200, "description": "Increase drop chance for 30 minutes."},
+    {"id": "reroll_box", "name": "Reroll Box", "price": 850, "description": "Reroll one owned character rarity."},
+    {"id": "profile_frame", "name": "Profile Frame", "price": 600, "description": "Unlock premium profile frame styles."},
+    {"id": "collection_slot", "name": "Collection Slot +10", "price": 950, "description": "Expand your collection limit by 10."},
+]
+
+SHOP_TEMPLATES = [
+    {
+        "id": "market-neon",
+        "name": "Neon Market",
+        "description": "Cyberpunk layout with featured drops and spotlight banners.",
+        "accent": "#31d2ff",
+    },
+    {
+        "id": "market-guild",
+        "name": "Guild Hall",
+        "description": "Guild-focused storefront for limited seasonal bundles.",
+        "accent": "#a35dff",
+    },
+    {
+        "id": "market-sakura",
+        "name": "Sakura Vault",
+        "description": "Elegant premium collection storefront with animated cards.",
+        "accent": "#ff6cc5",
+    },
+]
 
 
 
@@ -312,6 +340,58 @@ def like_media():
 def get_likes(media_id):
     doc = engagement_collection.find_one({"media_id": media_id}) or {}
     return jsonify(likes=doc.get("likes", 0))
+
+
+@app.route("/shop/items", methods=["GET"])
+def get_shop_items():
+    items = []
+    try:
+        shop_collection = db["shop_items"]
+        docs = list(shop_collection.find({}, {"_id": 0}).limit(50))
+        for doc in docs:
+            if doc.get("name") and doc.get("price") is not None:
+                items.append(
+                    {
+                        "id": str(doc.get("id", doc.get("name", "")).strip().lower().replace(" ", "_")),
+                        "name": doc.get("name"),
+                        "price": int(doc.get("price")),
+                        "description": doc.get("description", "Premium item from the Naruto market."),
+                    }
+                )
+    except Exception:
+        items = []
+
+    if not items:
+        items = DEFAULT_SHOP_ITEMS
+    return jsonify({"items": items})
+
+
+@app.route("/templates", methods=["GET"])
+def get_templates():
+    return jsonify({"shop": SHOP_TEMPLATES})
+
+
+@app.route("/collections/summary", methods=["GET"])
+def collection_summary():
+    try:
+        total_media = media_collection.count_documents({})
+        total_users = user_collection.count_documents({})
+        top_users = list(
+            user_collection.find({}, {"_id": 0, "id": 1, "first_name": 1, "username": 1, "characters": 1}).limit(200)
+        )
+        top_users.sort(key=lambda item: len(item.get("characters", [])), reverse=True)
+        leaderboard = [
+            {
+                "user_id": str(user.get("id", "")),
+                "name": user.get("first_name") or user.get("username") or "Unknown User",
+                "username": user.get("username") or "",
+                "total_characters": len(user.get("characters", [])),
+            }
+            for user in top_users[:10]
+        ]
+        return jsonify({"total_media": total_media, "total_users": total_users, "leaderboard": leaderboard})
+    except Exception:
+        return jsonify({"total_media": 0, "total_users": 0, "leaderboard": []})
 
 
 if __name__ == "__main__":

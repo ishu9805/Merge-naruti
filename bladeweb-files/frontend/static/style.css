@@ -190,6 +190,48 @@ body {
 .bottom-nav-btn { background: rgba(255,255,255,.06); color: #dbe7ff; }
 .bottom-nav-btn.active { background: linear-gradient(120deg, var(--primary), var(--primary-2)); box-shadow: 0 8px 24px var(--glow); }
 
+.feature-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.feature-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: rgba(10, 18, 48, 0.75);
+  padding: 12px;
+  text-align: left;
+}
+.feature-card h4 { margin: 0 0 8px; }
+.feature-card p { margin: 0 0 8px; font-size: .88rem; color: var(--muted); }
+.price-badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(49,210,255,.16); border: 1px solid rgba(49,210,255,.5); }
+
+.stats-bar {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(7, 14, 42, 0.8);
+  color: #d7e5ff;
+}
+
+.leaderboard-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.leaderboard-item {
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(9, 15, 40, .8);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 @media (max-width: 900px) {
   .filters-grid { grid-template-columns: repeat(2, 1fr); }
 }
