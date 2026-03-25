@@ -5,6 +5,7 @@
     <title>Blade Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 <div id="siteLoader" class="site-loader">
@@ -90,15 +91,24 @@
 
     <section id="shopPage" class="page">
         <div class="section-card">
-            <h2>Shop Section</h2>
-            <p>Coming soon.</p>
+            <h2>Shop</h2>
+            <p>Use coins to upgrade your profile and collection capacity.</p>
+            <div id="shopGrid" class="feature-grid"></div>
+        </div>
+
+        <div class="section-card">
+            <h3>Shop Templates</h3>
+            <p>Visual templates for mini app storefront and seasonal campaigns.</p>
+            <div id="templateGrid" class="feature-grid"></div>
         </div>
     </section>
 
     <section id="leaderboardPage" class="page">
         <div class="section-card">
-            <h2>Leaderboard Section</h2>
-            <p>Top users and rankings will appear here.</p>
+            <h2>Collection Leaderboard</h2>
+            <p>Top collectors and current database stats.</p>
+            <div id="collectionStats" class="stats-bar">Loading collection summary...</div>
+            <div id="leaderboardList" class="leaderboard-list"></div>
         </div>
     </section>
 </main>

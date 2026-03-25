@@ -4,12 +4,13 @@
 
 import asyncio
 import logging
+import os
 import random
 import traceback
 from datetime import datetime
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from pyrogram.types import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM, WebAppInfo as PyroWebAppInfo
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler
 from shivu import (
@@ -45,6 +46,7 @@ uploaderdb = db.uploader
 # Constants
 # ──────────────────────────────────────────────
 BOT_USERNAME = "Naruto_Waifu_Husbando_Bot"
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://bladeweb-files.onrender.com")
 START_VIDEOS = PHOTO_URL
 LOGGER = logging.getLogger(__name__)
 FORCE_CHANNEL = -1003855295896
@@ -110,6 +112,7 @@ def build_support_buttons(bot_username):
     return [
         [IKB("💬 Support Chat", url="https://t.me/animechatiac"),
          IKB("📢 Updates", url="https://t.me/hidden_naruto")],
+        [IKB("🌐 Mini App", web_app=PyroWebAppInfo(url=MINI_APP_URL))],
         [IKB("➕ Add to Group", url=f"https://t.me/{bot_username}?startgroup=true")],
         [IKB("❓ Help", callback_data="help"),
          IKB("🌟 Credits", callback_data="credits")],
@@ -203,6 +206,7 @@ credits_text = f"""
 support_buttons = [
     [IKB("💬 Support Chat", url="https://t.me/animechatiac"),
      IKB("📢 Updates", url="https://t.me/hidden_naruto")],
+    [IKB("🌐 Mini App", web_app=PyroWebAppInfo(url=MINI_APP_URL))],
     [IKB("➕ Add to Group", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
     [IKB("❓ Help", callback_data="help"),
      IKB("🌟 Credits", callback_data="credits")]
@@ -247,6 +251,7 @@ def build_support_buttons_ptb(bot_username):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("💬 Support Chat", url="https://t.me/animechatiac"),
          InlineKeyboardButton("📢 Updates", url="https://t.me/hidden_naruto")],
+        [InlineKeyboardButton("🌐 Mini App", web_app=WebAppInfo(url=MINI_APP_URL))],
         [InlineKeyboardButton("➕ Add to Group", url=f"https://t.me/{bot_username}?startgroup=true")],
         [InlineKeyboardButton("❓ Help", callback_data="help"),
          InlineKeyboardButton("🌟 Credits", callback_data="credits")],

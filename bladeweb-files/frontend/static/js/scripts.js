@@ -62,6 +62,10 @@ const botModeBtn = document.getElementById("botModeBtn");
 const userModeBtn = document.getElementById("userModeBtn");
 const rarityBtn = document.getElementById("rarityBtn");
 const rarityDropdown = document.getElementById("rarityDropdown");
+const shopGrid = document.getElementById("shopGrid");
+const templateGrid = document.getElementById("templateGrid");
+const leaderboardList = document.getElementById("leaderboardList");
+const collectionStats = document.getElementById("collectionStats");
 
 function switchPage(pageId) {
   Object.values(pages).forEach((page) => page.classList.toggle("active", page.id === pageId));
@@ -70,6 +74,11 @@ function switchPage(pageId) {
   });
 
   if (pageId === "searchPage" && activeMode === "bot") loadBotMedia();
+  if (pageId === "shopPage") {
+    loadShop();
+    loadTemplates();
+  }
+  if (pageId === "leaderboardPage") loadCollectionSummary();
 }
 
 function initNavigation() {
@@ -123,6 +132,20 @@ function getTelegramUser() {
   }
 
   return { id, username, firstName, lastName, isPremium, photoUrl };
+}
+
+function initMiniAppBehavior() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  try {
+    tg.setHeaderColor?.("#131a3e");
+    tg.setBackgroundColor?.("#070c20");
+    tg.MainButton.setText("Open Search");
+    tg.MainButton.onClick(() => switchPage("searchPage"));
+    tg.MainButton.show();
+  } catch (_) {
+    // no-op for non-telegram browsers
+  }
 }
 
 function initTelegramProfile() {
@@ -296,6 +319,75 @@ async function loadProfile(userId) {
   }
 }
 
+function renderFeatureCards(target, items, kind) {
+  if (!target) return;
+  target.innerHTML = "";
+  if (!items.length) {
+    target.innerHTML = `<div class="empty-state">No ${kind} available right now.</div>`;
+    return;
+  }
+
+  items.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "feature-card";
+    card.innerHTML = `
+      <h4>${escapeHtml(item.name || "Unknown")}</h4>
+      <p>${escapeHtml(item.description || "")}</p>
+      <span class="price-badge">${item.price ? `${item.price} coins` : "Template"}</span>
+    `;
+    target.appendChild(card);
+  });
+}
+
+async function loadShop() {
+  if (!shopGrid || shopGrid.dataset.loaded === "1") return;
+  try {
+    const res = await fetch("/shop/items");
+    const data = await res.json();
+    renderFeatureCards(shopGrid, data.items || [], "shop items");
+    shopGrid.dataset.loaded = "1";
+  } catch {
+    renderFeatureCards(shopGrid, [], "shop items");
+  }
+}
+
+async function loadTemplates() {
+  if (!templateGrid || templateGrid.dataset.loaded === "1") return;
+  try {
+    const res = await fetch("/templates");
+    const data = await res.json();
+    renderFeatureCards(templateGrid, data.shop || [], "templates");
+    templateGrid.dataset.loaded = "1";
+  } catch {
+    renderFeatureCards(templateGrid, [], "templates");
+  }
+}
+
+async function loadCollectionSummary() {
+  if (!leaderboardList || !collectionStats) return;
+  try {
+    const res = await fetch("/collections/summary");
+    const data = await res.json();
+    collectionStats.textContent = `Total characters: ${data.total_media || 0} • Total users: ${data.total_users || 0}`;
+    leaderboardList.innerHTML = "";
+    const rows = data.leaderboard || [];
+    if (!rows.length) {
+      leaderboardList.innerHTML = `<div class="empty-state">No leaderboard data available.</div>`;
+      return;
+    }
+    rows.forEach((entry, index) => {
+      const div = document.createElement("div");
+      div.className = "leaderboard-item";
+      const uname = entry.username ? `@${String(entry.username).replace(/^@/, "")}` : "No username";
+      div.innerHTML = `<strong>#${index + 1} ${escapeHtml(entry.name || "Unknown")}</strong><span>${escapeHtml(uname)} • ${entry.total_characters || 0} chars</span>`;
+      leaderboardList.appendChild(div);
+    });
+  } catch {
+    collectionStats.textContent = "Unable to load collection summary.";
+    leaderboardList.innerHTML = `<div class="empty-state">Leaderboard unavailable.</div>`;
+  }
+}
+
 function setSearchMode(mode) {
   activeMode = mode;
   const isUser = mode === "user";
@@ -414,6 +506,7 @@ function bindActions() {
 showSiteLoader();
 initNavigation();
 initTelegramProfile();
+initMiniAppBehavior();
 bindSuggestionInput();
 bindActions();
 buildRarityDropdown();
