@@ -66,7 +66,7 @@ Update values in `moto/Config.py` for your environment.
 ### Run
 
 ```bash
-python -m shivu
+python run_both.py
 ```
 
 Or use Makefile shortcuts:
@@ -74,7 +74,7 @@ Or use Makefile shortcuts:
 ```bash
 make install
 make check
-make run
+make run  # starts bladeweb-files web app + Telegram bot
 ```
 
 ## 🤝 Contributing

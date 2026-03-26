@@ -6,7 +6,7 @@ install:
 	$(PYTHON) -m pip install -r requirements.txt
 
 run:
-	$(PYTHON) -m shivu
+	$(PYTHON) run_both.py
 
 check:
 	$(PYTHON) -m compileall shivu moto resolve_peer.py

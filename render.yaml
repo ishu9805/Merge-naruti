@@ -4,5 +4,5 @@ services:
     env: python # or 'node'
     plan: free
     buildCommand: pip install -r requirements.txt # or 'npm install'
-    startCommand: python3 -m shivu # your bot's entry file
+    startCommand: python3 run_both.py # runs bladeweb Flask app + Telegram bot together
     
