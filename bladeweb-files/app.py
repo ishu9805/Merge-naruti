@@ -58,6 +58,14 @@ DEFAULT_SHOP_ITEMS = [
     {"id": "collection_slot", "name": "Collection Slot +10", "price": 950, "description": "Expand your collection limit by 10."},
 ]
 
+POOL_LABELS = {
+    "events": "🧧 Events",
+    "special": "💮 Special",
+    "limited": "🔮 Limited Edition",
+    "premium": "💸 Premium",
+    "seasonal": "🌤 Seasonal",
+}
+
 SHOP_TEMPLATES = [
     {
         "id": "market-neon",
@@ -177,6 +185,28 @@ def normalize_user_character(character, user_id):
         "anime": character.get("anime"),
         "rarity": character.get("rarity", "Unknown"),
         "owner_user_id": str(user_id),
+    }
+
+
+def normalize_shop_item(doc):
+    character = doc.get("character", {}) if isinstance(doc.get("character"), dict) else {}
+    sold_to = doc.get("sold_to", [])
+    raw_expiry = doc.get("expires_at")
+    expires_at = raw_expiry.isoformat() if hasattr(raw_expiry, "isoformat") else str(raw_expiry or "")
+
+    return {
+        "id": doc.get("code") or str(doc.get("_id", "")),
+        "code": doc.get("code") or "",
+        "name": character.get("name") or doc.get("name") or "Unknown",
+        "anime": character.get("anime") or "Unknown",
+        "rarity": character.get("rarity") or "Unknown",
+        "image": character.get("img_url") or "",
+        "price": int(doc.get("price", 0) or 0),
+        "currency": str(doc.get("currency", "tokens")).lower(),
+        "pool": doc.get("pool") or "",
+        "pool_label": POOL_LABELS.get(doc.get("pool"), (doc.get("pool") or "Daily Shop").title()),
+        "expires_at": expires_at,
+        "sold_count": len(sold_to) if isinstance(sold_to, list) else 0,
     }
 
 
@@ -344,25 +374,56 @@ def get_likes(media_id):
 
 @app.route("/shop/items", methods=["GET"])
 def get_shop_items():
+    user_id = request.args.get("user_id", "").strip()
     items = []
     try:
-        shop_collection = db["shop_items"]
-        docs = list(shop_collection.find({}, {"_id": 0}).limit(50))
+        # Mirror Telegram Addshop source (shivu daily_shopps -> Mongo collection "sship")
+        addshop_collection = db["sship"]
+        docs = list(addshop_collection.find({}, {"_id": 0}).sort("expires_at", -1).limit(60))
         for doc in docs:
-            if doc.get("name") and doc.get("price") is not None:
-                items.append(
-                    {
-                        "id": str(doc.get("id", doc.get("name", "")).strip().lower().replace(" ", "_")),
-                        "name": doc.get("name"),
-                        "price": int(doc.get("price")),
-                        "description": doc.get("description", "Premium item from the Naruto market."),
-                    }
-                )
+            normalized = normalize_shop_item(doc)
+            if not normalized["id"] or normalized["price"] < 0:
+                continue
+            if user_id:
+                sold_to = doc.get("sold_to", [])
+                normalized["owned"] = str(user_id) in {str(value) for value in sold_to}
+            items.append(normalized)
     except Exception:
         items = []
 
+    # Backward-compatible fallback for older static shop documents
+    if not items:
+        try:
+            shop_collection = db["shop_items"]
+            docs = list(shop_collection.find({}, {"_id": 0}).limit(50))
+            for doc in docs:
+                if doc.get("name") and doc.get("price") is not None:
+                    items.append(
+                        {
+                            "id": str(doc.get("id", doc.get("name", "")).strip().lower().replace(" ", "_")),
+                            "name": doc.get("name"),
+                            "price": int(doc.get("price")),
+                            "description": doc.get("description", "Premium item from the Naruto market."),
+                            "currency": "coins",
+                            "pool_label": "Shop",
+                            "sold_count": 0,
+                            "image": "",
+                            "anime": "",
+                            "rarity": "",
+                        }
+                    )
+        except Exception:
+            items = []
+
     if not items:
         items = DEFAULT_SHOP_ITEMS
+        for item in items:
+            item.setdefault("currency", "coins")
+            item.setdefault("pool_label", "Shop")
+            item.setdefault("sold_count", 0)
+            item.setdefault("image", "")
+            item.setdefault("anime", "")
+            item.setdefault("rarity", "")
     return jsonify({"items": items})
 
 

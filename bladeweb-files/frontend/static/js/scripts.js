@@ -134,6 +134,26 @@ function getTelegramUser() {
   return { id, username, firstName, lastName, isPremium, photoUrl };
 }
 
+function initTelegramWebAppConsole() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) {
+    console.log("Telegram WebApp SDK not found.");
+    return;
+  }
+
+  tg.expand();
+  const user = tg.initDataUnsafe?.user;
+
+  if (user) {
+    console.log(`User ID: ${user.id}`);
+    console.log(`First Name: ${user.first_name}`);
+    console.log(`Username: ${user.username}`);
+    console.log(`Language: ${user.language_code}`);
+  } else {
+    console.log("App is not running inside Telegram.");
+  }
+}
+
 function initMiniAppBehavior() {
   const tg = window.Telegram?.WebApp;
   if (!tg) return;
@@ -330,10 +350,21 @@ function renderFeatureCards(target, items, kind) {
   items.forEach((item) => {
     const card = document.createElement("article");
     card.className = "feature-card";
+    const priceText = item.price ? `${item.price} ${item.currency || "coins"}` : "Template";
+    const badgeText = item.pool_label || "Shop";
+    const rarityText = item.rarity ? `<small>${escapeHtml(item.rarity)}</small>` : "";
+    const image = item.image ? `<img loading="lazy" src="${item.image}" alt="${escapeHtml(item.name || "Shop item")}">` : "";
+    const soldText = Number.isFinite(item.sold_count) ? `<small>Sold: ${item.sold_count}</small>` : "";
+    const animeText = item.anime ? `<small>${escapeHtml(item.anime)}</small>` : "";
     card.innerHTML = `
+      ${image}
       <h4>${escapeHtml(item.name || "Unknown")}</h4>
       <p>${escapeHtml(item.description || "")}</p>
-      <span class="price-badge">${item.price ? `${item.price} coins` : "Template"}</span>
+      ${animeText}
+      ${rarityText}
+      ${soldText}
+      <span class="price-badge">${priceText}</span>
+      <span class="price-badge">${escapeHtml(badgeText)}</span>
     `;
     target.appendChild(card);
   });
@@ -342,7 +373,9 @@ function renderFeatureCards(target, items, kind) {
 async function loadShop() {
   if (!shopGrid || shopGrid.dataset.loaded === "1") return;
   try {
-    const res = await fetch("/shop/items");
+    const userId = userIdInput?.value?.trim() || "";
+    const endpoint = userId ? `/shop/items?user_id=${encodeURIComponent(userId)}` : "/shop/items";
+    const res = await fetch(endpoint);
     const data = await res.json();
     renderFeatureCards(shopGrid, data.items || [], "shop items");
     shopGrid.dataset.loaded = "1";
@@ -504,6 +537,7 @@ function bindActions() {
 }
 
 showSiteLoader();
+initTelegramWebAppConsole();
 initNavigation();
 initTelegramProfile();
 initMiniAppBehavior();
