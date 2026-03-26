@@ -30,3 +30,11 @@ log.txt
 build/
 dist/
 *.egg-info/
+
+# Binary/session artifacts
+*.session
+*.session-journal
+*.jpg
+*.jpeg
+*.png
+*.gif
