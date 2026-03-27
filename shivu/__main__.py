@@ -1160,10 +1160,11 @@ def main() -> None:
     
 # Start the server in a separate thread so it doesn't block the bot
 if __name__ == "__main__":
-    t = Thread(target=run)
-    t.daemon = True # This ensures the thread dies when the main process dies
-    t.start()
-    
+    if os.environ.get("DISABLE_INTERNAL_WEB") != "1":
+        t = Thread(target=run)
+        t.daemon = True # This ensures the thread dies when the main process dies
+        t.start()
+
     # Your existing bot startup code
     shivuu.start()
     userbot.start()

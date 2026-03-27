@@ -206,6 +206,8 @@ body {
 }
 .feature-card h4 { margin: 0 0 8px; }
 .feature-card p { margin: 0 0 8px; font-size: .88rem; color: var(--muted); }
+.feature-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--panel-border); }
+.feature-card small { display: block; color: #bdd1ff; margin-bottom: 6px; font-size: .78rem; }
 .price-badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(49,210,255,.16); border: 1px solid rgba(49,210,255,.5); }
 
 .stats-bar {

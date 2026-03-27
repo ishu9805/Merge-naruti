@@ -27,3 +27,5 @@ telegraph==2.2.0
 bs4
 tgcrypto==1.2.5
 flask
+flask-cors
+gunicorn
